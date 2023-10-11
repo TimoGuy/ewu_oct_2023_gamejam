@@ -6,9 +6,9 @@
     - [x] Fork from TimoEngine v1 and compile
     - [x] Remove gondolasystem
     - [x] Make all voxelfields static.
-- [ ] Set up setting
-    - [ ] Create a sample hallway thingo.
-    - [ ] Bake lighting
+- [x] Set up setting
+    - [x] Create a sample hallway thingo.
+    - [x] Bake lighting
 - [ ] Build camera
     - [ ] Remove camera from mouse
     - [ ] Create triggers
