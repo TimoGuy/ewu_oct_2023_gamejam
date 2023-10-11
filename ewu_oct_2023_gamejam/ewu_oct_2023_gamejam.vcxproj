@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{140495e9-7713-4736-8d34-57385ad3889e}</ProjectGuid>
+    <RootNamespace>solaninevulkan</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;BT_THREADSAFE=1;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_USE_AVX2;JPH_USE_AVX;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD;_DEBUG;_DEVELOP;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(SolutionDir)libs;$(SolutionDir)libs\fmod_core\inc;$(SolutionDir)libs\fmod_fsbank\inc;$(SolutionDir)libs\fmod_studio\inc;$(SolutionDir)libs\jolt_physics\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <ExceptionHandling>false</ExceptionHandling>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;$(SolutionDir)libs\fmod_core\lib;$(SolutionDir)libs\fmod_fsbank\lib;$(SolutionDir)libs\fmod_studio\lib;$(SolutionDir)libs\cglm;$(SolutionDir)libs\jolt_physics\lib_$(ConfigurationName)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;fmod$(Suffix)_vc.lib;fmodstudio$(Suffix)_vc.lib;cglm.lib;Jolt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+    </Link>
+    <PostBuildEvent>
+      <Command>set /p BuildNumberForSolanine=&lt;build_number.txt
+set /A BuildNumberForSolanine+=1
+&gt;"build_number.txt" echo(%BuildNumberForSolanine%
+
+copy $(VK_SDK_PATH)\Bin\SDL2.dll $(OutDirfullPath)SDL2.dll
+copy $(SolutionDir)libs\fmod_core\lib\fmod.dll $(OutDirfullPath)fmod.dll
+copy $(SolutionDir)libs\fmod_studio\lib\fmodstudio.dll $(OutDirfullPath)fmodstudio.dll
+copy $(SolutionDir)libs\cglm\cglm.dll $(OutDirfullPath)cglm.dll</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;BT_THREADSAFE=1;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_USE_AVX2;JPH_USE_AVX;JPH_USE_SSE4_1;JPH_USE_SSE4_2;JPH_USE_LZCNT;JPH_USE_TZCNT;JPH_USE_F16C;JPH_USE_FMADD;NDEBUG;_DEVELOP;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(VK_SDK_PATH)\Include;$(SolutionDir)libs;$(SolutionDir)libs\fmod_core\inc;$(SolutionDir)libs\fmod_fsbank\inc;$(SolutionDir)libs\fmod_studio\inc;$(SolutionDir)libs\jolt_physics\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <ExceptionHandling>false</ExceptionHandling>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;$(SolutionDir)libs\fmod_core\lib;$(SolutionDir)libs\fmod_fsbank\lib;$(SolutionDir)libs\fmod_studio\lib;$(SolutionDir)libs\cglm;$(SolutionDir)libs\jolt_physics\lib_$(ConfigurationName)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;fmod$(Suffix)_vc.lib;fmodstudio$(Suffix)_vc.lib;cglm.lib;Jolt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>set /p BuildNumberForSolanine=&lt;build_number.txt
+set /A BuildNumberForSolanine+=1
+&gt;"build_number.txt" echo(%BuildNumberForSolanine%
+
+copy $(VK_SDK_PATH)\Bin\SDL2.dll $(OutDirfullPath)SDL2.dll
+copy $(SolutionDir)libs\fmod_core\lib\fmod.dll $(OutDirfullPath)fmod.dll
+copy $(SolutionDir)libs\fmod_studio\lib\fmodstudio.dll $(OutDirfullPath)fmodstudio.dll
+copy $(SolutionDir)libs\cglm\cglm.dll $(OutDirfullPath)cglm.dll</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="shader\color.frag" />
+    <None Include="shader\color_textbox_bg.frag" />
+    <None Include="shader\debug_physics_object.frag" />
+    <None Include="shader\debug_physics_object.vert" />
+    <None Include="shader\filtercube.vert" />
+    <None Include="shader\genbrdflut.frag" />
+    <None Include="shader\genbrdflut.vert" />
+    <None Include="shader\irradiancecube.frag" />
+    <None Include="shader\pbr.vert" />
+    <None Include="shader\pbr_khr.frag" />
+    <None Include="shader\pbr_khr_zprepass.frag" />
+    <None Include="shader\pbr_zprepass.vert" />
+    <None Include="shader\physengineDebugVis.frag" />
+    <None Include="shader\physengineDebugVis.vert" />
+    <None Include="shader\picking.frag" />
+    <None Include="shader\picking.vert" />
+    <None Include="shader\postprocess.frag" />
+    <None Include="shader\prefilterenvmap.frag" />
+    <None Include="shader\sdf.frag" />
+    <None Include="shader\sdf.vert" />
+    <None Include="shader\shadow_depthpass.frag" />
+    <None Include="shader\shadow_depthpass.vert" />
+    <None Include="shader\skybox.frag" />
+    <None Include="shader\skybox.vert" />
+    <None Include="shader\wireframe_color.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\AudioEngine.h" />
+    <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Debug.h" />
+    <ClInclude Include="src\EntityManager.h" />
+    <ClInclude Include="src\GenerateGUID.h" />
+    <ClInclude Include="src\GlobalState.h" />
+    <ClInclude Include="src\HarvestableItem.h" />
+    <ClInclude Include="src\imgui\imgui_stdlib.h" />
+    <ClInclude Include="src\ImportGLM.h" />
+    <ClInclude Include="src\NoteTaker.h" />
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\RenderObject.h" />
+    <ClInclude Include="src\ReplaySystem.h" />
+    <ClInclude Include="src\ScannableItem.h" />
+    <ClInclude Include="src\SceneManagement.h" />
+    <ClInclude Include="src\Entity.h" />
+    <ClInclude Include="src\DataSerialization.h" />
+    <ClInclude Include="src\GLSLToSPIRVHelper.h" />
+    <ClInclude Include="src\imgui\imconfig.h" />
+    <ClInclude Include="src\imgui\imgui.h" />
+    <ClInclude Include="src\imgui\ImGuizmo.h" />
+    <ClInclude Include="src\imgui\imgui_impl_sdl.h" />
+    <ClInclude Include="src\imgui\imgui_impl_vulkan.h" />
+    <ClInclude Include="src\imgui\imgui_internal.h" />
+    <ClInclude Include="src\imgui\implot.h" />
+    <ClInclude Include="src\imgui\implot_internal.h" />
+    <ClInclude Include="src\imgui\imstb_rectpack.h" />
+    <ClInclude Include="src\imgui\imstb_textedit.h" />
+    <ClInclude Include="src\imgui\imstb_truetype.h" />
+    <ClInclude Include="src\Imports.h" />
+    <ClInclude Include="src\InputManager.h" />
+    <ClInclude Include="src\Character.h" />
+    <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\Textbox.h" />
+    <ClInclude Include="src\TextMesh.h" />
+    <ClInclude Include="src\VkBootstrap.h" />
+    <ClInclude Include="src\VkDataStructures.h" />
+    <ClInclude Include="src\VkglTFModel.h" />
+    <ClInclude Include="src\VkInitializers.h" />
+    <ClInclude Include="src\VkPipelineBuilderUtil.h" />
+    <ClInclude Include="src\VkTextures.h" />
+    <ClInclude Include="src\VulkanEngine.h" />
+    <ClInclude Include="src\StringHelper.h" />
+    <ClInclude Include="src\PhysUtil.h" />
+    <ClInclude Include="src\VoxelField.h" />
+    <ClInclude Include="src\PhysicsEngine.h" />
+    <ClInclude Include="src\HotswapResources.h" />
+    <ClInclude Include="src\VkDescriptorBuilderUtil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AudioEngine.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Debug.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
+    <ClCompile Include="src\EntityManager.cpp" />
+    <ClCompile Include="src\GenerateGUID.cpp" />
+    <ClCompile Include="src\GlobalState.cpp" />
+    <ClCompile Include="src\HarvestableItem.cpp" />
+    <ClCompile Include="src\imgui\imgui.cpp" />
+    <ClCompile Include="src\imgui\ImGuizmo.cpp" />
+    <ClCompile Include="src\imgui\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_sdl.cpp" />
+    <ClCompile Include="src\imgui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="src\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="src\imgui\imgui_tables.cpp" />
+    <ClCompile Include="src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\imgui\implot.cpp" />
+    <ClCompile Include="src\imgui\implot_demo.cpp" />
+    <ClCompile Include="src\imgui\implot_items.cpp" />
+    <ClCompile Include="src\InputManager.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\NoteTaker.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\Character.cpp" />
+    <ClCompile Include="src\DataSerialization.cpp" />
+    <ClCompile Include="src\RenderObject.cpp" />
+    <ClCompile Include="src\ReplaySystem.cpp" />
+    <ClCompile Include="src\ScannableItem.cpp" />
+    <ClCompile Include="src\SceneManagement.cpp" />
+    <ClCompile Include="src\Textbox.cpp" />
+    <ClCompile Include="src\TextMesh.cpp" />
+    <ClCompile Include="src\VkBootstrap.cpp" />
+    <ClCompile Include="src\VkglTFModel.cpp" />
+    <ClCompile Include="src\VkInitializers.cpp" />
+    <ClCompile Include="src\VkPipelineBuilderUtil.cpp" />
+    <ClCompile Include="src\VkTextures.cpp" />
+    <ClCompile Include="src\VulkanEngine.cpp" />
+    <ClCompile Include="src\PhysUtil.cpp" />
+    <ClCompile Include="src\VoxelField.cpp" />
+    <ClCompile Include="src\PhysicsEngine.cpp" />
+    <ClCompile Include="src\HotswapResources.cpp" />
+    <ClCompile Include="src\VkDescriptorBuilderUtil.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\core.vcxproj">
+      <Project>{3b549595-d7a2-4497-900c-8e997b1fee13}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
