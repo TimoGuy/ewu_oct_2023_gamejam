@@ -19,7 +19,6 @@
 #include "GlobalState.h"
 #include "StringHelper.h"
 #include "HarvestableItem.h"
-#include "ScannableItem.h"
 #include "Debug.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
@@ -305,36 +304,7 @@ struct Character_XData
     KnockbackStage knockbackMode = KnockbackStage::NONE;
     float_t        knockedbackTime = 0.35f;
     float_t        knockedbackTimer = 0.0f;
-
-    std::vector<size_t> harvestableItemsIdsToSpawnAfterDeath;
-    std::vector<size_t> scannableItemsIdsToSpawnAfterDeath;
 };
-
-void processOutOfHealth(EntityManager* em, Entity* e, Character_XData* d)
-{
-    // Drop off items and then destroy self.
-    for (size_t id : d->harvestableItemsIdsToSpawnAfterDeath)
-    {
-        DataSerializer ds;
-        ds.dumpString(e->getGUID());  // Use this guid to force a guid recalculation.
-        ds.dumpVec3(d->position);
-        float_t hii = (float_t)id;
-        ds.dumpFloat(hii);
-        DataSerialized dsd = ds.getSerializedData();
-        new HarvestableItem(em, d->rom, &dsd);
-    }
-    for (size_t id : d->scannableItemsIdsToSpawnAfterDeath)
-    {
-        DataSerializer ds;
-        ds.dumpString(e->getGUID());  // Use this guid to force a guid recalculation.
-        ds.dumpVec3(d->position);
-        float_t hii = (float_t)id;
-        ds.dumpFloat(hii);
-        DataSerialized dsd = ds.getSerializedData();
-        new ScannableItem(em, d->rom, &dsd);
-    }
-    em->destroyEntity(e);
-}
 
 void pushPlayerNotification(const std::string& message, Character_XData* d)
 {
@@ -2497,24 +2467,6 @@ void Character::dump(DataSerializer& ds)
 
     float_t healthF = _data->health;
     ds.dumpFloat(healthF);
-
-    // Harvestable item ids
-    float_t numHarvestableItems = (float_t)_data->harvestableItemsIdsToSpawnAfterDeath.size();
-    ds.dumpFloat(numHarvestableItems);
-    for (size_t id : _data->harvestableItemsIdsToSpawnAfterDeath)
-    {
-        float_t idF = (float_t)id;
-        ds.dumpFloat(idF);
-    }
-
-    // Scannable item ids
-    float_t numScannableItems = (float_t)_data->scannableItemsIdsToSpawnAfterDeath.size();
-    ds.dumpFloat(numScannableItems);
-    for (size_t id : _data->scannableItemsIdsToSpawnAfterDeath)
-    {
-        float_t idF = (float_t)id;
-        ds.dumpFloat(idF);
-    }
 }
 
 void Character::load(DataSerialized& ds)
@@ -2527,28 +2479,6 @@ void Character::load(DataSerialized& ds)
     float_t healthF;
     ds.loadFloat(healthF);
     _data->health = (int32_t)healthF;
-
-    // Harvestable item ids
-    float_t numHarvestableItemsF;
-    ds.loadFloat(numHarvestableItemsF);
-    _data->harvestableItemsIdsToSpawnAfterDeath.resize((size_t)numHarvestableItemsF);
-    for (size_t& idRef : _data->harvestableItemsIdsToSpawnAfterDeath)
-    {
-        float_t idF;
-        ds.loadFloat(idF);
-        idRef = (size_t)idF;
-    }
-
-    // Scannable item ids
-    float_t numScannableItemsF;
-    ds.loadFloat(numScannableItemsF);
-    _data->scannableItemsIdsToSpawnAfterDeath.resize((size_t)numScannableItemsF);
-    for (size_t& idRef : _data->scannableItemsIdsToSpawnAfterDeath)
-    {
-        float_t idF;
-        ds.loadFloat(idF);
-        idRef = (size_t)idF;
-    }
 }
 
 void updateInteractionUI()
@@ -2652,9 +2582,6 @@ bool Character::processMessage(DataSerialized& message)
 
             _data->triggerLaunchVelocity = true;  // @TODO: right here, do calculations for poise and stuff!
 
-            if (_data->health <= 0)
-                processOutOfHealth(_em, this, _data);
-
             return true;
         }
     }
@@ -2754,67 +2681,6 @@ void defaultRenderImGui(Character_XData* d)
         ImGui::DragFloat("wazaHitTimescale", &d->wazaHitTimescale);
         ImGui::DragFloat("wazaHitTimescaleOnHit", &d->wazaHitTimescaleOnHit);
         ImGui::DragFloat("wazaHitTimescaleReturnToOneSpeed", &d->wazaHitTimescaleReturnToOneSpeed);
-    }
-
-    if (ImGui::CollapsingHeader("Item Drops", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        // Harvestable item
-        ImGui::Text("Harvestable item drops");
-        ImGui::SameLine();
-        if (ImGui::Button("Add..##Harvestable Item Drop"))
-            ImGui::OpenPopup("add_harvestable_popup");
-        if (ImGui::BeginPopup("add_harvestable_popup"))
-        {
-            for (size_t i = 0; i < globalState::getNumHarvestableItemIds(); i++)
-            {
-                if (ImGui::Button(globalState::getHarvestableItemByIndex(i)->name.c_str()))
-                {
-                    d->harvestableItemsIdsToSpawnAfterDeath.push_back(i);
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            ImGui::EndPopup();
-        }
-        for (size_t i = 0; i < d->harvestableItemsIdsToSpawnAfterDeath.size(); i++)
-        {
-            size_t id = d->harvestableItemsIdsToSpawnAfterDeath[i];
-            ImGui::Text(globalState::getHarvestableItemByIndex(id)->name.c_str());
-            ImGui::SameLine();
-            if (ImGui::Button(("X##HIITSAD" + std::to_string(i)).c_str()))
-            {
-                d->harvestableItemsIdsToSpawnAfterDeath.erase(d->harvestableItemsIdsToSpawnAfterDeath.begin() + i);
-                break;
-            }
-        }
-
-        // Scannable item
-        ImGui::Text("Scannable item drops");
-        ImGui::SameLine();
-        if (ImGui::Button("Add..##Scannable Item Drop"))
-            ImGui::OpenPopup("add_scannable_popup");
-        if (ImGui::BeginPopup("add_scannable_popup"))
-        {
-            for (size_t i = 0; i < globalState::getNumScannableItemIds(); i++)
-            {
-                if (ImGui::Button(globalState::getAncientWeaponItemByIndex(i)->name.c_str()))
-                {
-                    d->scannableItemsIdsToSpawnAfterDeath.push_back(i);
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            ImGui::EndPopup();
-        }
-        for (size_t i = 0; i < d->scannableItemsIdsToSpawnAfterDeath.size(); i++)
-        {
-            size_t id = d->scannableItemsIdsToSpawnAfterDeath[i];
-            ImGui::Text(globalState::getAncientWeaponItemByIndex(id)->name.c_str());
-            ImGui::SameLine();
-            if (ImGui::Button(("X##SIITSAD" + std::to_string(i)).c_str()))
-            {
-                d->scannableItemsIdsToSpawnAfterDeath.erase(d->scannableItemsIdsToSpawnAfterDeath.begin() + i);
-                break;
-            }
-        }
     }
 
     ImGui::Separator();

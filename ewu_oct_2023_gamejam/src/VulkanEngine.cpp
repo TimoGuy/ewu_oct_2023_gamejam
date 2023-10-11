@@ -56,7 +56,7 @@ void VulkanEngine::init()
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
 
 	_window = SDL_CreateWindow(
-		("Solanine Prealpha - Vulkan" + buildNumber).c_str(),
+		("EWU October 2023 GameJam Prealpha - Vulkan" + buildNumber).c_str(),
 		SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED,
 		_windowExtent.width,
@@ -1656,7 +1656,7 @@ void VulkanEngine::initVulkan()
 	//
 	vkb::InstanceBuilder builder;
 
-	auto instance = builder.set_app_name("Hawsoo_Solanine_x64")
+	auto instance = builder.set_app_name("Hawsoo_EWU_Oct_2023_GameJam_x64")
 		.request_validation_layers(true)
 		.require_api_version(1, 3, 0)
 		.use_default_debug_messenger()

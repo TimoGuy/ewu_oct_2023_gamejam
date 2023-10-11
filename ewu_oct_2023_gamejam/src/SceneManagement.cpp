@@ -13,7 +13,6 @@
 #include "Character.h"
 #include "NoteTaker.h"
 #include "VoxelField.h"
-#include "ScannableItem.h"
 #include "HarvestableItem.h"
 
 
@@ -22,14 +21,12 @@ const std::vector<std::string> ENTITY_TYPE_NAMES = {
     ":character",
     ":notetaker",
     ":voxelfield",
-    ":scannableitem",
     ":harvestableitem",
 };
 const std::string Character::TYPE_NAME        = ENTITY_TYPE_NAMES[0];
 const std::string NoteTaker::TYPE_NAME        = ENTITY_TYPE_NAMES[1];
 const std::string VoxelField::TYPE_NAME       = ENTITY_TYPE_NAMES[2];
-const std::string ScannableItem::TYPE_NAME    = ENTITY_TYPE_NAMES[3];
-const std::string HarvestableItem::TYPE_NAME  = ENTITY_TYPE_NAMES[4];
+const std::string HarvestableItem::TYPE_NAME  = ENTITY_TYPE_NAMES[3];
 
 
 namespace scene
@@ -48,8 +45,6 @@ namespace scene
             ent = new NoteTaker(engine->_entityManager, engine->_roManager, ds);
         if (objectName == VoxelField::TYPE_NAME)
             ent = new VoxelField(engine, engine->_entityManager, engine->_roManager, ds);
-        if (objectName == ScannableItem::TYPE_NAME)
-            ent = new ScannableItem(engine->_entityManager, engine->_roManager, ds);
         if (objectName == HarvestableItem::TYPE_NAME)
             ent = new HarvestableItem(engine->_entityManager, engine->_roManager, ds);
 

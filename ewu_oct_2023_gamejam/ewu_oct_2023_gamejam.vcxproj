@@ -162,7 +162,6 @@ copy $(SolutionDir)libs\cglm\cglm.dll $(OutDirfullPath)cglm.dll</Command>
     <ClInclude Include="src\NoteTaker.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\RenderObject.h" />
-    <ClInclude Include="src\ScannableItem.h" />
     <ClInclude Include="src\SceneManagement.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\DataSerialization.h" />
@@ -229,7 +228,6 @@ copy $(SolutionDir)libs\cglm\cglm.dll $(OutDirfullPath)cglm.dll</Command>
     <ClCompile Include="src\Character.cpp" />
     <ClCompile Include="src\DataSerialization.cpp" />
     <ClCompile Include="src\RenderObject.cpp" />
-    <ClCompile Include="src\ScannableItem.cpp" />
     <ClCompile Include="src\SceneManagement.cpp" />
     <ClCompile Include="src\Textbox.cpp" />
     <ClCompile Include="src\TextMesh.cpp" />
