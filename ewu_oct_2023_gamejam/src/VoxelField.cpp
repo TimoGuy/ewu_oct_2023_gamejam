@@ -22,6 +22,7 @@ struct VoxelField_XData
     VulkanEngine* engine;
     RenderObjectManager* rom;
     vkglTF::Model* voxelModel;
+    vkglTF::Model* triggerModel;
     std::vector<RenderObject*> voxelRenderObjs;
     std::vector<mat4s> voxelRenderObjLocalTransforms;
 
@@ -34,7 +35,7 @@ struct VoxelField_XData
     {
         bool editing = false;
         enum class EditType {
-            APPEND, REMOVE, CHANGE_TO_SLOPE
+            APPEND, REMOVE, CHANGE_TO_SLOPE, CHANGE_TO_CAMERA_TRIGGER_VOLUME
         } editType;
         ivec3 flatAxis = { 0, 0, 0 };
         ivec3 editStartPosition = { 0, 0, 0 };
@@ -45,7 +46,7 @@ struct VoxelField_XData
 };
 
 inline void buildDefaultVoxelData(VoxelField_XData& data, const std::string& myGuid);
-inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string& attachedEntityGuid, std::vector<physengine::VoxelFieldCollisionShape>& inCollisionShapes);
+inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string& attachedEntityGuid, std::vector<physengine::VoxelFieldCollisionShape>& inCollisionShapes, std::vector<physengine::VoxelFieldCollisionShape>& inTriggerShapes);
 inline void deleteVoxelRenderObjects(VoxelField_XData& data);
 void triggerLoadLightingIfExists(VoxelField_XData& d, const std::string& guid);
 
@@ -70,9 +71,11 @@ VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectMana
         buildDefaultVoxelData(*_data, getGUID());
 
     _data->voxelModel = _data->rom->getModel("DevBoxWood", this, [](){});
+    _data->triggerModel = _data->rom->getModel("DevBoxTriggerVolume", this, [](){});
     std::vector<physengine::VoxelFieldCollisionShape> shapes;
-    physengine::cookVoxelDataIntoShape(*_data->vfpd, getGUID(), shapes);
-    assembleVoxelRenderObjects(*_data, getGUID(), shapes);
+    std::vector<physengine::VoxelFieldCollisionShape> triggers;
+    physengine::cookVoxelDataIntoShape(*_data->vfpd, getGUID(), shapes, triggers);
+    assembleVoxelRenderObjects(*_data, getGUID(), shapes, triggers);
     triggerLoadLightingIfExists(*_data, getGUID());
 }
 
@@ -402,7 +405,7 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                 // Exit editing with no changes
                 _data->editorState.editing = false;
             }
-            else if (input::keyEnterPressed || (!prevCorXorVPressed && (input::keyCPressed || input::keyXPressed || input::keyVPressed)))
+            else if (input::keyEnterPressed || (!prevCorXorVPressed && (input::keyCPressed || input::keyXPressed || input::keyVPressed || input::keyBPressed)))
             {
                 // Exit editing, saving changes
                 bool rebuildRenderObjs = false;
@@ -421,7 +424,8 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                     std::cout << "ENDING EDITING, saving changes at { " << _data->editorState.editEndPosition[0] << ", " << _data->editorState.editEndPosition[1] << ", " << _data->editorState.editEndPosition[2] << " }" << std::endl;
 
                     if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::APPEND ||
-                        _data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE)
+                        _data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE ||
+                        _data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_CAMERA_TRIGGER_VOLUME)
                     {
                         if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::APPEND &&
                             glm_ivec3_distance2(_data->editorState.editStartPosition, _data->editorState.editEndPosition) == 0)
@@ -444,9 +448,11 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                         glm_translate(_data->vfpd->transform, vec3{ (float_t)offset[0], (float_t)offset[1], (float_t)offset[2] });
 
                         // Find which voxel type (for only slopes).
-                        uint8_t slopeSpaceId = 2;
+                        uint8_t slopeSpaceId;
                         if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE)
                         {
+                            slopeSpaceId = 2;
+
                             float_t maxCardinalDirDot = -1.0f;
                             mat3 rotation;
                             glm_mat4_pick3(_data->vfpd->interpolTransform, rotation);
@@ -487,6 +493,38 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                             }
                         }
 
+                        // Find which voxel type (for only trigger volumes).
+                        if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_CAMERA_TRIGGER_VOLUME)
+                        {
+                            // @TODO: @NOCHECKIN
+                            slopeSpaceId = 6;
+
+                            float_t maxAbsValCardinalDirDot = -1.0f;
+                            mat3 rotation;
+                            glm_mat4_pick3(_data->vfpd->interpolTransform, rotation);
+
+                            vec3 north = {  0.0f, 0.0f,  1.0f };
+                            vec3 east  = {  1.0f, 0.0f,  0.0f };
+                            glm_mat3_mulv(rotation, north, north);
+                            glm_mat3_mulv(rotation, east, east);
+
+                            vec3 normCamFD;
+                            glm_vec3_normalize_to(_data->engine->_camera->sceneCamera.facingDirection, normCamFD);
+
+                            // Find which direction is closest.
+                            float_t dot;
+                            if ((dot = std::abs(glm_vec3_dot(normCamFD, north))) > maxAbsValCardinalDirDot)
+                            {
+                                maxAbsValCardinalDirDot = dot;
+                                slopeSpaceId = 6;
+                            }
+                            if ((dot = std::abs(glm_vec3_dot(normCamFD, east))) > maxAbsValCardinalDirDot)
+                            {
+                                maxAbsValCardinalDirDot = dot;
+                                slopeSpaceId = 7;
+                            }
+                        }
+
                         // Create new voxels (for every spot that's empty) in range.
                         int32_t x, y, z;
                         for (x = _data->editorState.editStartPosition[0]; ; x = physutil::moveTowards(x, _data->editorState.editEndPosition[0], 1))
@@ -500,7 +538,8 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                                         if (setVoxelDataAtPositionNonDestructive(_data->vfpd, ivec3{ x, y, z }, 1))
                                             rebuildRenderObjs = true;
                                     }
-                                    else if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE)
+                                    else if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE ||
+                                        _data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_CAMERA_TRIGGER_VOLUME)
                                     {
                                         if (editVoxelDataAtPositionNoAdd(_data->vfpd, ivec3{ x, y, z }, slopeSpaceId))
                                             rebuildRenderObjs = true;
@@ -545,14 +584,15 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                 if (rebuildRenderObjs)
                 {
                     std::vector<physengine::VoxelFieldCollisionShape> shapes;
-                    physengine::cookVoxelDataIntoShape(*_data->vfpd, getGUID(), shapes);
-                    assembleVoxelRenderObjects(*_data, getGUID(), shapes);
+                    std::vector<physengine::VoxelFieldCollisionShape> triggers;
+                    physengine::cookVoxelDataIntoShape(*_data->vfpd, getGUID(), shapes, triggers);
+                    assembleVoxelRenderObjects(*_data, getGUID(), shapes, triggers);
                     _data->isLightingDirty = true;
                 }
             }
         }
         else if (!prevCorXorVPressed &&
-            (input::keyCPressed || input::keyXPressed || input::keyVPressed) &&
+            (input::keyCPressed || input::keyXPressed || input::keyVPressed || input::keyBPressed) &&
             raycastMouseToVoxel(_data->engine, _data->vfpd, _data->editorState.editStartPosition, _data->editorState.flatAxis))
         {
             // Enter editing mode
@@ -573,10 +613,15 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                 _data->editorState.editType = VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE;
                 editTypeStr = "CHANGE_TO_SLOPE";
             }
+            else if (input::keyBPressed)
+            {
+                _data->editorState.editType = VoxelField_XData::EditorState::EditType::CHANGE_TO_CAMERA_TRIGGER_VOLUME;
+                editTypeStr = "CHANGE_TO_CAMERA_TRIGGER_VOLUME";
+            }
             std::cout << "STARTING EDITING (" << editTypeStr << ") at { " << _data->editorState.editStartPosition[0] << ", " << _data->editorState.editStartPosition[1] << ", " << _data->editorState.editStartPosition[2] << " } with axis { " << _data->editorState.flatAxis[0] << ", " << _data->editorState.flatAxis[1] << ", " << _data->editorState.flatAxis[2] << " }" << std::endl;
         }
 
-        prevCorXorVPressed = input::keyCPressed || input::keyXPressed || input::keyVPressed;
+        prevCorXorVPressed = input::keyCPressed || input::keyXPressed || input::keyVPressed || input::keyBPressed;
         _data->isPicked = false;
     }
 }
@@ -1226,7 +1271,28 @@ inline void buildDefaultVoxelData(VoxelField_XData& data, const std::string& myG
     data.vfpd = physengine::createVoxelField(myGuid, identity, sizeX, sizeY, sizeZ, vd);
 }
 
-inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string& attachedEntityGuid, std::vector<physengine::VoxelFieldCollisionShape>& inCollisionShapes)
+inline void createInRO(VoxelField_XData& data, vkglTF::Model* model, const std::string& attachedEntityGuid, physengine::VoxelFieldCollisionShape& shape, std::vector<RenderObject>& inROs)
+{
+    RenderObject newRO = {
+        .model = model,
+        .renderLayer = RenderLayer::BUILDER,
+        .attachedEntityGuid = attachedEntityGuid,
+    };
+
+    mat4s localTransform;
+    glm_mat4_identity(localTransform.raw);
+    glm_translate(localTransform.raw, shape.origin);
+    glm_quat_rotate(localTransform.raw, shape.rotation, localTransform.raw);
+    vec3 extent2;
+    glm_vec3_scale(shape.extent, 2.0f, extent2);
+    glm_scale(localTransform.raw, extent2);
+    data.voxelRenderObjLocalTransforms.push_back(localTransform);
+
+    glm_mat4_mul(data.vfpd->transform, localTransform.raw, newRO.transformMatrix);
+    inROs.push_back(newRO);
+}
+
+inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string& attachedEntityGuid, std::vector<physengine::VoxelFieldCollisionShape>& inCollisionShapes, std::vector<physengine::VoxelFieldCollisionShape>& inTriggerShapes)
 {
     std::lock_guard<std::mutex> lg(*data.editorState.editingVoxelRenderObjsMutex);
 
@@ -1236,25 +1302,9 @@ inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string
     std::vector<RenderObject> inROs;
     std::vector<RenderObject**> outRORefs;
     for (auto& shape : inCollisionShapes)
-    {
-        RenderObject newRO = {
-            .model = data.voxelModel,
-            .renderLayer = RenderLayer::BUILDER,
-            .attachedEntityGuid = attachedEntityGuid,
-        };
-
-        mat4s localTransform;
-        glm_mat4_identity(localTransform.raw);
-        glm_translate(localTransform.raw, shape.origin);
-        glm_quat_rotate(localTransform.raw, shape.rotation, localTransform.raw);
-        vec3 extent2;
-        glm_vec3_scale(shape.extent, 2.0f, extent2);
-        glm_scale(localTransform.raw, extent2);
-        data.voxelRenderObjLocalTransforms.push_back(localTransform);
-
-        glm_mat4_mul(data.vfpd->transform, localTransform.raw, newRO.transformMatrix);
-        inROs.push_back(newRO);
-    }
+        createInRO(data, data.voxelModel, attachedEntityGuid, shape, inROs);
+    for (auto& shape : inTriggerShapes)
+        createInRO(data, data.triggerModel, attachedEntityGuid, shape, inROs);
 
     data.voxelRenderObjs.resize(inROs.size(), nullptr);
     for (size_t i = 0; i < data.voxelRenderObjs.size(); i++)

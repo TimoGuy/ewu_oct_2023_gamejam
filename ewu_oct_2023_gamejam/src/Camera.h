@@ -93,6 +93,14 @@ struct MainCamMode
 		vec3    DOFPropsRelaxedState = { 50.0f, 50.0f, 40.0f };
 	} opponentTargetTransition;
 
+	struct CameraRailSettings
+	{
+		bool    active = true; //false;    // @NOTE: expectation is to use the camera rails all the time (ONLY FOR EWU GAME JAM)  -Timo 2023/10/11
+		vec2    targetOrbitAngles = GLM_VEC2_ZERO_INIT;
+		vec2    orbitAnglesVelocities;
+		float_t orbitAnglesSmoothTime = 0.1f;
+	} cameraRailSettings;
+
 	// Tweak variables
 	float_t   lookDistance           = 5.0f;
 	float_t   lookDistanceSmoothTime = 0.075f;

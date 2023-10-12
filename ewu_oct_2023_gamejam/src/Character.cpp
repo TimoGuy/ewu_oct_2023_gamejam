@@ -2922,51 +2922,97 @@ void Character::renderImGui()
         defaultRenderImGui(_data);
 }
 
-void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings)
+inline float_t deltaAngle(float_t fromRad, float_t toRad)  // @NOCHECKIN: @COPYPASTA with Camera.cpp (put this in a util header ... but idk how to make inline functions with a prototype)
 {
-    Character_XData::MovingPlatformAttachment& mpa = _data->movingPlatformAttachment;
+	// Get closest delta angle within the same 360deg to the target.
+	float_t normalizedDeltaAngle = toRad - fromRad;
+	while (normalizedDeltaAngle >= glm_rad(180.0f))  // "Normalize" I guess... delta angle.
+		normalizedDeltaAngle -= glm_rad(360.0f);
+	while (normalizedDeltaAngle < glm_rad(-180.0f))
+		normalizedDeltaAngle += glm_rad(360.0f);
+	return normalizedDeltaAngle;
+}
 
-    if (otherBody.IsStatic())
+void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact)
+{
+    if (otherBody.IsSensor())
     {
-        mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage::NO_ATTACHMENT;
-        return;
-    }
+        if (!persistedContact && _data->characterType == CHARACTER_TYPE_PLAYER)
+        {
+            // Process the camera rail trigger if it's marked as one.
+            bool isCamRailTrigger = false;
+            float_t newTargetYOrbitAngle = 0.0f;
+            switch (physengine::UserDataMeaning(otherBody.GetUserData()))
+            {
+                case physengine::UserDataMeaning::IS_NS_CAMERA_RAIL_TRIGGER:
+                    isCamRailTrigger = true;
+                    newTargetYOrbitAngle = otherBody.GetRotation().GetEulerAngles().GetY();
+                    break;
 
-    JPH::Vec3 attachmentNormal = -manifold.mWorldSpaceNormal;
-    if (physengine::isSlopeTooSteepForCharacter(*_data->cpd, attachmentNormal))
-    {
-        mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage::NO_ATTACHMENT;
-        return;
-    }
+                case physengine::UserDataMeaning::IS_EW_CAMERA_RAIL_TRIGGER:
+                    isCamRailTrigger = true;
+                    newTargetYOrbitAngle = otherBody.GetRotation().GetEulerAngles().GetY() + glm_rad(90.0f);
+                    break;
+            }
 
-    // std::cout << "ATT NORM: " << attachmentNormal.GetX() << ",\t" <<  attachmentNormal.GetY() << ",\t" <<  attachmentNormal.GetZ() << ",\t" << std::endl;
-
-    if (mpa.attachmentStage == Character_XData::MovingPlatformAttachment::AttachmentStage::NO_ATTACHMENT ||
-        mpa.attachedBodyId != otherBody.GetID())
-    {
-        // Initial attachment.
-        mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage::INITIAL_ATTACHMENT;
-        mpa.attachedBodyId = otherBody.GetID();
+            if (isCamRailTrigger)
+            {
+                _data->camera->mainCamMode.cameraRailSettings.active = true;
+                if (std::abs(deltaAngle(newTargetYOrbitAngle, _data->facingDirection)) > glm_rad(90.0f))
+                    newTargetYOrbitAngle += glm_rad(180.0f);
+                if (std::abs(deltaAngle(_data->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1], newTargetYOrbitAngle)) > glm_rad(135.0f))
+                    newTargetYOrbitAngle += glm_rad(180.0f);
+                _data->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1] = newTargetYOrbitAngle;
+            }
+        }
     }
     else
     {
-        // Calc where in the attachment amortization chain.
-        if (mpa.attachmentStage != Character_XData::MovingPlatformAttachment::AttachmentStage::RECURRING_ATTACHMENT)
-            mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage((int32_t)mpa.attachmentStage + 1);
+        // Process moving platform
+        Character_XData::MovingPlatformAttachment& mpa = _data->movingPlatformAttachment;
 
-        // This is past the initial attachment! Calculate how much has moved.
-        JPH::RVec3 attachmentDeltaPos = otherBody.GetWorldTransform() * mpa.attachmentPositionLocal - mpa.attachmentPositionWorld;
-        mpa.nextDeltaPosition[0] = attachmentDeltaPos[0];
-        mpa.nextDeltaPosition[1] = attachmentDeltaPos[1];
-        mpa.nextDeltaPosition[2] = attachmentDeltaPos[2];
+        if (otherBody.IsStatic())
+        {
+            mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage::NO_ATTACHMENT;
+            return;
+        }
+
+        JPH::Vec3 attachmentNormal = -manifold.mWorldSpaceNormal;
+        if (physengine::isSlopeTooSteepForCharacter(*_data->cpd, attachmentNormal))
+        {
+            mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage::NO_ATTACHMENT;
+            return;
+        }
+
+        // std::cout << "ATT NORM: " << attachmentNormal.GetX() << ",\t" <<  attachmentNormal.GetY() << ",\t" <<  attachmentNormal.GetZ() << ",\t" << std::endl;
+
+        if (mpa.attachmentStage == Character_XData::MovingPlatformAttachment::AttachmentStage::NO_ATTACHMENT ||
+            mpa.attachedBodyId != otherBody.GetID())
+        {
+            // Initial attachment.
+            mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage::INITIAL_ATTACHMENT;
+            mpa.attachedBodyId = otherBody.GetID();
+        }
+        else
+        {
+            // Calc where in the attachment amortization chain.
+            if (mpa.attachmentStage != Character_XData::MovingPlatformAttachment::AttachmentStage::RECURRING_ATTACHMENT)
+                mpa.attachmentStage = Character_XData::MovingPlatformAttachment::AttachmentStage((int32_t)mpa.attachmentStage + 1);
+
+            // This is past the initial attachment! Calculate how much has moved.
+            JPH::RVec3 attachmentDeltaPos = otherBody.GetWorldTransform() * mpa.attachmentPositionLocal - mpa.attachmentPositionWorld;
+            mpa.nextDeltaPosition[0] = attachmentDeltaPos[0];
+            mpa.nextDeltaPosition[1] = attachmentDeltaPos[1];
+            mpa.nextDeltaPosition[2] = attachmentDeltaPos[2];
+        }
+
+        // Calculate attachment to body!
+        mpa.attachmentPositionWorld = manifold.GetWorldSpaceContactPointOn1(0) + _data->cpd->radius * attachmentNormal;  // Suck it into the capsule's base sphere origin point.
+        mpa.attachmentPositionLocal = otherBody.GetWorldTransform().Inversed() * mpa.attachmentPositionWorld;
+        mpa.attachmentYAxisAngularVelocity = otherBody.GetAngularVelocity().GetY();
+
+        // ioSettings->mCombinedFriction = 1000.0f;
+
+        mpa.attachmentIsStale = false;
     }
-
-    // Calculate attachment to body!
-    mpa.attachmentPositionWorld = manifold.GetWorldSpaceContactPointOn1(0) + _data->cpd->radius * attachmentNormal;  // Suck it into the capsule's base sphere origin point.
-    mpa.attachmentPositionLocal = otherBody.GetWorldTransform().Inversed() * mpa.attachmentPositionWorld;
-    mpa.attachmentYAxisAngularVelocity = otherBody.GetAngularVelocity().GetY();
-
-    // ioSettings->mCombinedFriction = 1000.0f;
-
-    mpa.attachmentIsStale = false;
 }

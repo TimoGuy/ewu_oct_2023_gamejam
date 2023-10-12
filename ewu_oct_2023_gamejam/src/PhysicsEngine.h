@@ -33,6 +33,14 @@ namespace physengine
 
     float_t getPhysicsAlpha();
 
+    enum class UserDataMeaning
+    {
+        NOTHING = 0,
+        IS_CHARACTER = 1,
+        IS_NS_CAMERA_RAIL_TRIGGER = 2,
+        IS_EW_CAMERA_RAIL_TRIGGER = 3,
+    };
+
     struct VoxelFieldPhysicsData
     {
         std::string entityGuid;
@@ -47,6 +55,8 @@ namespace physengine
         //        3: slope space (uphill East)
         //        4: slope space (uphill South)
         //        5: slope space (uphill West)
+        //        6: camera trigger volume (North/South)
+        //        7: camera trigger volume (East/West)
         //
         // For the future:
         //        half-height space (bottom)
@@ -66,6 +76,8 @@ namespace physengine
         mat4 prevTransform = GLM_MAT4_IDENTITY_INIT;
         mat4 interpolTransform = GLM_MAT4_IDENTITY_INIT;
         JPH::BodyID bodyId;
+        JPH::BodyID nsTriggerBodyId;
+        JPH::BodyID ewTriggerBodyId;
     };
 
     struct VoxelFieldCollisionShape
@@ -81,7 +93,7 @@ namespace physengine
     bool setVoxelDataAtPosition(const VoxelFieldPhysicsData& vfpd, const int32_t& x, const int32_t& y, const int32_t& z, uint8_t data);
     void expandVoxelFieldBounds(VoxelFieldPhysicsData& vfpd, ivec3 boundsMin, ivec3 boundsMax, ivec3& outOffset);
     void shrinkVoxelFieldBoundsAuto(VoxelFieldPhysicsData& vfpd, ivec3& outOffset);
-    void cookVoxelDataIntoShape(VoxelFieldPhysicsData& vfpd, const std::string& entityGuid, std::vector<VoxelFieldCollisionShape>& outShapes);
+    void cookVoxelDataIntoShape(VoxelFieldPhysicsData& vfpd, const std::string& entityGuid, std::vector<VoxelFieldCollisionShape>& outShapes, std::vector<VoxelFieldCollisionShape>& outTriggers);
     void setVoxelFieldBodyTransform(VoxelFieldPhysicsData& vfpd, vec3 newPosition, versor newRotation);
     void moveVoxelFieldBodyKinematic(VoxelFieldPhysicsData& vfpd, vec3 newPosition, versor newRotation, const float_t& physicsDeltaTime);
     void setVoxelFieldBodyKinematic(VoxelFieldPhysicsData& vfpd, bool isKinematic);  // `false` is dynamic body.

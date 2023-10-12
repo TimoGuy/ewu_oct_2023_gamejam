@@ -320,7 +320,7 @@ void clampXOrbitAngle(float_t& outXOrbitAngle)
 
 void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent changeEvent)
 {
-	bool allowInput = true;
+	bool allowInput = !mainCamMode.cameraRailSettings.active;
 	if (changeEvent != CameraModeChangeEvent::NONE)
 	{
 		// Calculate orbit angles from the delta angle to focus position
@@ -346,6 +346,8 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 
 			glm_vec3_zero(mainCamMode.opponentTargetTransition.DOFPropsVelocities);
 		}
+
+		glm_vec2_zero(mainCamMode.cameraRailSettings.orbitAnglesVelocities);
 
 		allowInput = false;
 	}
@@ -535,6 +537,34 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 
 		if (mainCamMode.opponentTargetObject != nullptr)  // Add to target Y orbit angle if opponent. (smol @HACK)
 			mainCamMode.opponentTargetTransition.targetYOrbitAngle += mouseDeltaFloatSwizzled[1] * sensitivityRadians[1];
+	}
+
+	//
+	// Adhere to camera rail.
+	//
+	auto& crs = mainCamMode.cameraRailSettings;
+	if (crs.active)
+	{
+		// Move to target orbit angles.
+		mainCamMode.orbitAngles[1] =
+			smoothDampAngle(
+				mainCamMode.orbitAngles[1],
+				crs.targetOrbitAngles[1],
+				crs.orbitAnglesVelocities[1],
+				crs.orbitAnglesSmoothTime,
+				std::numeric_limits<float_t>::max(),
+				deltaTime
+			);
+
+		mainCamMode.orbitAngles[0] =
+			smoothDamp(
+				mainCamMode.orbitAngles[0],
+				crs.targetOrbitAngles[0],
+				crs.orbitAnglesVelocities[0],
+				crs.orbitAnglesSmoothTime,
+				std::numeric_limits<float_t>::max(),
+				deltaTime
+			);
 	}
 
 	// Update actual look distance.

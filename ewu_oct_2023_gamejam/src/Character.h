@@ -33,7 +33,7 @@ public:
     void reportMoved(mat4* matrixMoved);
     void renderImGui();
 
-    void reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings);
+    void reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact);
 
 private:
     Character_XData* _data;

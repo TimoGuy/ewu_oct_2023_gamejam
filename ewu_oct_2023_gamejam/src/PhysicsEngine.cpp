@@ -70,12 +70,6 @@ namespace physengine
     PhysicsSystem* physicsSystem = nullptr;
     std::map<uint32_t, std::string> bodyIdToEntityGuidMap;
 
-    enum class UserDataMeaning
-    {
-        NOTHING = 0,
-        IS_CHARACTER,
-    };
-
 #ifdef _DEVELOP
     struct DebugStats
     {
@@ -518,7 +512,7 @@ namespace physengine
             return ValidateResult::AcceptAllContactsForThisBodyPair;
         }
 
-        void processUserDataMeaning(const Body& thisBody, const Body& otherBody, const ContactManifold& manifold, ContactSettings& ioSettings)
+        void processUserDataMeaning(const Body& thisBody, const Body& otherBody, const ContactManifold& manifold, ContactSettings& ioSettings, bool persistedContact)
         {
             switch (UserDataMeaning(thisBody.GetUserData()))
             {
@@ -530,23 +524,27 @@ namespace physengine
                     uint32_t id = thisBody.GetID().GetIndex();
                     ::Character* entityAsChar;
                     if (entityAsChar = dynamic_cast<::Character*>(entityManager->getEntityViaGUID(bodyIdToEntityGuidMap[id])))
-                        entityAsChar->reportPhysicsContact(otherBody, manifold, &ioSettings);
+                        entityAsChar->reportPhysicsContact(otherBody, manifold, &ioSettings, persistedContact);
                 } return;
+
+                case UserDataMeaning::IS_NS_CAMERA_RAIL_TRIGGER:  // @NOTE: these are supposed to be processed in the character's `reportPhysicsContact`.
+                case UserDataMeaning::IS_EW_CAMERA_RAIL_TRIGGER:
+                    return;
             }
         }
 
         virtual void OnContactAdded(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings) override
         {
             //std::cout << "A contact was added" << std::endl;
-            processUserDataMeaning(inBody1, inBody2, inManifold, ioSettings);
-            processUserDataMeaning(inBody2, inBody1, inManifold.SwapShapes(), ioSettings);
+            processUserDataMeaning(inBody1, inBody2, inManifold, ioSettings, false);
+            processUserDataMeaning(inBody2, inBody1, inManifold.SwapShapes(), ioSettings, false);
         }
 
         virtual void OnContactPersisted(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings) override
         {
             //std::cout << "A contact was persisted" << std::endl;
-            processUserDataMeaning(inBody1, inBody2, inManifold, ioSettings);
-            processUserDataMeaning(inBody2, inBody1, inManifold.SwapShapes(), ioSettings);
+            processUserDataMeaning(inBody1, inBody2, inManifold, ioSettings, true);
+            processUserDataMeaning(inBody2, inBody1, inManifold.SwapShapes(), ioSettings, true);
         }
 
         virtual void OnContactRemoved(const SubShapeIDPair& inSubShapePair) override
@@ -709,6 +707,8 @@ namespace physengine
             vfpd.sizeZ = sizeZ;
             vfpd.voxelData = voxelData;
             vfpd.bodyId = JPH::BodyID();
+            vfpd.nsTriggerBodyId = JPH::BodyID();
+            vfpd.ewTriggerBodyId = JPH::BodyID();
 
             return &vfpd;
         }
@@ -851,7 +851,7 @@ namespace physengine
         std::cout << "Shurnk to { " << vfpd.sizeX << ", " << vfpd.sizeY << ", " << vfpd.sizeZ << " }" << std::endl;
     }
 
-    void cookVoxelDataIntoShape(VoxelFieldPhysicsData& vfpd, const std::string& entityGuid, std::vector<VoxelFieldCollisionShape>& outShapes)
+    void cookVoxelDataIntoShape(VoxelFieldPhysicsData& vfpd, const std::string& entityGuid, std::vector<VoxelFieldCollisionShape>& outShapes, std::vector<VoxelFieldCollisionShape>& outTriggers)
     {
         BodyInterface& bodyInterface = physicsSystem->GetBodyInterface();
 
@@ -866,6 +866,8 @@ namespace physengine
         // (Simple greedy algorithm that pushes as far as possible in one dimension, then in another while throwing away portions that don't fit)
         // (Actually..... right now it's not a greedy algorithm and it's just a simple depth first flood that's good enough for now)  -Timo 2023/09/27
         Ref<StaticCompoundShapeSettings> compoundShape = new StaticCompoundShapeSettings;
+        Ref<StaticCompoundShapeSettings> compoundNSTriggerShape = new StaticCompoundShapeSettings;
+        Ref<StaticCompoundShapeSettings> compoundEWTriggerShape = new StaticCompoundShapeSettings;
 
         bool* processed = new bool[vfpd.sizeX * vfpd.sizeY * vfpd.sizeZ];  // Init processing datastructure
         for (size_t i = 0; i < vfpd.sizeX * vfpd.sizeY * vfpd.sizeZ; i++)
@@ -880,8 +882,10 @@ namespace physengine
                 continue;
             
             // Start greedy search.
-            if (vfpd.voxelData[idx] == 1)
+            if (vfpd.voxelData[idx] == 1 || (6 <= vfpd.voxelData[idx] && vfpd.voxelData[idx] <= 7))
             {
+                uint8_t myType = vfpd.voxelData[idx];
+
                 // Filled space search.
                 size_t encX = 1,  // Encapsulation sizes. Multiply it all together to get the count of encapsulation.
                     encY = 1,
@@ -890,7 +894,7 @@ namespace physengine
                 {
                     // Test whether next position is viable.
                     size_t idx = x * vfpd.sizeY * vfpd.sizeZ + j * vfpd.sizeZ + k;
-                    bool viable = (vfpd.voxelData[idx] == 1 && !processed[idx]);
+                    bool viable = (vfpd.voxelData[idx] == myType && !processed[idx]);
                     if (!viable)
                         break;  // Exit if not viable.
                     
@@ -903,7 +907,7 @@ namespace physengine
                     for (size_t x = i; x < i + encX; x++)
                     {
                         size_t idx = x * vfpd.sizeY * vfpd.sizeZ + y * vfpd.sizeZ + k;
-                        viable &= (vfpd.voxelData[idx] == 1 && !processed[idx]);
+                        viable &= (vfpd.voxelData[idx] == myType && !processed[idx]);
                         if (!viable)
                             break;
                     }
@@ -921,7 +925,7 @@ namespace physengine
                     for (size_t y = j; y < j + encY; y++)
                     {
                         size_t idx = x * vfpd.sizeY * vfpd.sizeZ + y * vfpd.sizeZ + z;
-                        viable &= (vfpd.voxelData[idx] == 1 && !processed[idx]);
+                        viable &= (vfpd.voxelData[idx] == myType && !processed[idx]);
                         if (!viable)
                             break;
                     }
@@ -945,16 +949,25 @@ namespace physengine
                 Vec3 extent((float_t)encX * 0.5f, (float_t)encY * 0.5f, (float_t)encZ * 0.5f);
                 Vec3 origin((float_t)i + extent.GetX(), (float_t)j + extent.GetY(), (float_t)k + extent.GetZ());
                 Quat rotation = Quat::sIdentity();
-                compoundShape->AddShape(origin, rotation, new BoxShape(extent));
+                if (myType == 1)
+                    compoundShape->AddShape(origin, rotation, new BoxShape(extent));
+                else if (myType == 6)
+                    compoundNSTriggerShape->AddShape(origin, rotation, new BoxShape(extent));
+                else if (myType == 7)
+                    compoundEWTriggerShape->AddShape(origin, rotation, new BoxShape(extent));
+
 
                 // Add shape props to `outShapes`.
                 VoxelFieldCollisionShape vfcs = {};
                 glm_vec3_copy(vec3{ origin.GetX(), origin.GetY(), origin.GetZ() }, vfcs.origin);
                 glm_quat_copy(versor{ rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW() }, vfcs.rotation);
                 glm_vec3_copy(vec3{ extent.GetX(), extent.GetY(), extent.GetZ() }, vfcs.extent);
-                outShapes.push_back(vfcs);
+                if (myType == 1)
+                    outShapes.push_back(vfcs);
+                else if (myType == 6 || myType == 7)
+                    outTriggers.push_back(vfcs);
             }
-            else if (vfpd.voxelData[idx] >= 2)
+            else if (2 <= vfpd.voxelData[idx] && vfpd.voxelData[idx] <= 5)
             {
                 uint8_t myType = vfpd.voxelData[idx];
                 bool even = (myType == 2 || myType == 4);
@@ -1049,10 +1062,7 @@ namespace physengine
             }
         }
 
-        if (compoundShape->mSubShapes.size() == 0)
-            return;  // Cannot create empty body.
-
-        // Create body.
+        // Get body creation transform.
         vec4 pos;
         mat4 rot;
         vec3 sca;
@@ -1060,13 +1070,43 @@ namespace physengine
         versor rotV;
         glm_mat4_quat(rot, rotV);
 
-        // DYNAMIC is set so that voxel field can move around with the influence of other physics objects.
-        vfpd.bodyId = bodyInterface.CreateBody(BodyCreationSettings(compoundShape, RVec3(pos[0], pos[1], pos[2]), Quat(rotV[0], rotV[1], rotV[2], rotV[3]), EMotionType::Static, Layers::NON_MOVING))->GetID();
-        // bodyInterface.SetGravityFactor(vfpd.bodyId, 0.0f);
-        bodyInterface.AddBody(vfpd.bodyId, EActivation::DontActivate);
+        if (compoundShape->mSubShapes.size() > 0)
+        {
+            // Create collision body.
+            // DYNAMIC is set so that voxel field can move around with the influence of other physics objects.
+            vfpd.bodyId = bodyInterface.CreateBody(BodyCreationSettings(compoundShape, RVec3(pos[0], pos[1], pos[2]), Quat(rotV[0], rotV[1], rotV[2], rotV[3]), EMotionType::Static, Layers::NON_MOVING))->GetID();
+            // bodyInterface.SetGravityFactor(vfpd.bodyId, 0.0f);
+            bodyInterface.AddBody(vfpd.bodyId, EActivation::DontActivate);
 
-        // Add guid into references.
-        bodyIdToEntityGuidMap[vfpd.bodyId.GetIndex()] = entityGuid;
+            // Add guid into references.
+            bodyIdToEntityGuidMap[vfpd.bodyId.GetIndex()] = entityGuid;
+        }
+
+        if (compoundNSTriggerShape->mSubShapes.size() > 0)
+        {
+            // Create NS trigger.
+            BodyCreationSettings bcs(compoundNSTriggerShape, RVec3(pos[0], pos[1], pos[2]), Quat(rotV[0], rotV[1], rotV[2], rotV[3]), EMotionType::Static, Layers::NON_MOVING);
+            bcs.mIsSensor = true;
+            bcs.mUserData = (uint64_t)physengine::UserDataMeaning::IS_NS_CAMERA_RAIL_TRIGGER;
+            vfpd.nsTriggerBodyId = bodyInterface.CreateBody(bcs)->GetID();
+            bodyInterface.AddBody(vfpd.nsTriggerBodyId, EActivation::DontActivate);
+            
+            // Add guid into references.
+            bodyIdToEntityGuidMap[vfpd.nsTriggerBodyId.GetIndex()] = entityGuid;
+        }
+
+        if (compoundEWTriggerShape->mSubShapes.size() > 0)
+        {
+            // Create NS trigger.
+            BodyCreationSettings bcs(compoundEWTriggerShape, RVec3(pos[0], pos[1], pos[2]), Quat(rotV[0], rotV[1], rotV[2], rotV[3]), EMotionType::Static, Layers::NON_MOVING);
+            bcs.mIsSensor = true;
+            bcs.mUserData = (uint64_t)physengine::UserDataMeaning::IS_EW_CAMERA_RAIL_TRIGGER;
+            vfpd.ewTriggerBodyId = bodyInterface.CreateBody(bcs)->GetID();
+            bodyInterface.AddBody(vfpd.ewTriggerBodyId, EActivation::DontActivate);
+            
+            // Add guid into references.
+            bodyIdToEntityGuidMap[vfpd.ewTriggerBodyId.GetIndex()] = entityGuid;
+        }
     }
 
     void setVoxelFieldBodyTransform(VoxelFieldPhysicsData& vfpd, vec3 newPosition, versor newRotation)

@@ -32,6 +32,7 @@ namespace input
 		keyCPressed,
 		keyXPressed,
 		keyVPressed,
+		keyBPressed,
 		keyEscPressed,
 		keyEnterPressed,
 		keyTargetPressed,

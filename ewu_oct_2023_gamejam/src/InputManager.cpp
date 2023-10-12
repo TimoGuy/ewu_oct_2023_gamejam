@@ -35,6 +35,7 @@ extern bool input::keyDPressed = false;
 extern bool input::keyCPressed = false;
 extern bool input::keyXPressed = false;
 extern bool input::keyVPressed = false;
+extern bool input::keyBPressed = false;
 extern bool input::keyEscPressed = false;
 extern bool input::keyEnterPressed = false;
 extern bool input::keyTargetPressed = false;
@@ -137,6 +138,7 @@ void input::processInput(bool* isRunning, bool* isWindowMinimized)
 			if (e.key.keysym.sym == SDLK_c)                                           input::keyCPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_x)                                           input::keyXPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_v)                                           input::keyVPressed = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_b)                                           input::keyBPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_ESCAPE)                                      input::keyEscPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_RETURN)                                      input::keyEnterPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_LSHIFT)                                      input::keyTargetPressed = (e.key.type == SDL_KEYDOWN);
