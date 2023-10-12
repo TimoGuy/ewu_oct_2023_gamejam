@@ -163,8 +163,13 @@ void triggerLoadLightingIfExists(VoxelField_XData& d, const std::string& guid)
 void calculateObjectSpaceCameraLinecastPoints(VulkanEngine* engine, physengine::VoxelFieldPhysicsData* vfpd, vec3& outLinecastPt1, vec3& outLinecastPt2)
 {
 	vec3 linecastPt1, linecastPt2;
-    glm_vec3_copy(engine->_camera->sceneCamera.gpuCameraData.cameraPosition, linecastPt1);
     ImGuiIO& io = ImGui::GetIO();
+    glm_unproject(
+        vec3{ io.MousePos.x, io.MousePos.y, 0.0f },
+        engine->_camera->sceneCamera.gpuCameraData.projectionView,
+        vec4{ 0, 0, (float_t)engine->_windowExtent.width, (float_t)engine->_windowExtent.height },
+        linecastPt1
+    );
     glm_unproject(
         vec3{ io.MousePos.x, io.MousePos.y, 1.0f },
         engine->_camera->sceneCamera.gpuCameraData.projectionView,
@@ -197,6 +202,7 @@ bool intersectAABB(vec3 rayOrigin, vec3 rayDirection, vec3 aabbMin, vec3 aabbMax
     glm_vec3_maxv(tMin, tMax, t2);
 
     float_t tNear = glm_vec3_max(t1);
+    tNear = std::max(0.0f, tNear);  // For preventing intersects happening behind ray origin.
     float_t tFar = glm_vec3_min(t2);
 
     if (tNear > tFar)  // No intersection.
