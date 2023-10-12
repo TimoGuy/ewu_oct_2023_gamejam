@@ -20,7 +20,7 @@
     > NOPE NOPE NOPE!!!! We're just gonna do the voxel based camera thing. This will make things easiest and quickest to author the level.
 
     - [x] Create camera switching direction with voxel triggers.
-    - [ ] Add them to smol level.
+    - [x] Add them to smol level.
         - [x] Fix the mouse raycast to voxel field bug.
 
     - [ ] Create camera rails (Just have them be line segments with control points on the ends)
