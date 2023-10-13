@@ -113,6 +113,7 @@ struct MainCamMode
 	void setMainCamTargetObject(RenderObject* targetObject);
 	void setOpponentCamTargetObject(physengine::CapsulePhysicsData* targetObject);
 	void setCameraRail(CameraRail* cameraRail);
+	void flipCameraRail();
 };
 
 #ifdef _DEVELOP

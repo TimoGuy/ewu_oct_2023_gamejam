@@ -9,7 +9,7 @@
 - [x] Set up setting
     - [x] Create a sample hallway thingo.
     - [x] Bake lighting
-- [ ] Build camera
+- [x] Build camera
     - [x] Remove camera from mouse
     - [~] ~~Create triggers~~
     - [~] ~~Set the triggers to move the camera angles.~~
@@ -27,6 +27,7 @@
         - [x] Have them be something with an OBB that will be used for detection (what point is closest to the OBB), then set the rail direction (this will be an infinite line that the camera will ride on, or more accurately, have the target position (the player) be clamped onto the line).
     - [x] Detect closest camera rail and set camera to it.
         - [x] Use distance from point to line segment algo.
+    - [x] Flip the camera after walking towards it for half a second.
 
 - [ ] Build 3 monsters to chase.
 - [ ] Create prompt to press 'spacebar' to 'catch' a monster.

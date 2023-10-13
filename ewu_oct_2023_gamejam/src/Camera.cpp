@@ -172,6 +172,11 @@ void MainCamMode::setCameraRail(CameraRail* cameraRail)
 	MainCamMode::cameraRailSettings.active = true;
 }
 
+void MainCamMode::flipCameraRail()
+{
+	MainCamMode::cameraRailSettings.targetOrbitAngles[1] += glm_rad(180.0f);
+}
+
 
 //
 // Camera

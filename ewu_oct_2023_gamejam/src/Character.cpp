@@ -252,6 +252,8 @@ struct Character_XData
     } notification;
 
     vec3 worldSpaceInput = GLM_VEC3_ZERO_INIT;
+    float_t moveBackwardsRailFlipTime = 0.5f;
+    float_t moveBackwardsRailFlipTimer = 0.0f;
 #ifdef _DEVELOP
     bool    disableInput = false;  // @DEBUG for level editor
 #endif
@@ -1601,6 +1603,17 @@ void updateWazaTimescale(const float_t& physicsDeltaTime, Character_XData* d)
     globalState::timescale = d->wazaHitTimescale;
 }
 
+inline float_t deltaAngle(float_t fromRad, float_t toRad)  // @NOCHECKIN: @COPYPASTA with Camera.cpp (put this in a util header ... but idk how to make inline functions with a prototype)
+{
+	// Get closest delta angle within the same 360deg to the target.
+	float_t normalizedDeltaAngle = toRad - fromRad;
+	while (normalizedDeltaAngle >= glm_rad(180.0f))  // "Normalize" I guess... delta angle.
+		normalizedDeltaAngle -= glm_rad(360.0f);
+	while (normalizedDeltaAngle < glm_rad(-180.0f))
+		normalizedDeltaAngle += glm_rad(360.0f);
+	return normalizedDeltaAngle;
+}
+
 void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, EntityManager* em, const std::string& myGuid)
 {
     if (d->currentWaza == nullptr)
@@ -1635,7 +1648,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
         glm_normalize(flatCamRight);
         glm_vec3_muladds(flatCamRight, input[0], d->worldSpaceInput);
 
-        bool isMoving = glm_vec3_norm2(d->worldSpaceInput) < 0.01f;
+        bool isMoving = glm_vec3_norm2(d->worldSpaceInput) < 0.01f;  // @NOCHECKIN: this name sucks. Should be `isIdle`.
         if (isMoving)
         {
             glm_vec3_zero(d->worldSpaceInput);
@@ -1643,6 +1656,8 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
                 isMoving != d->prevIsMoving))
                 d->characterRenderObj->animator->setTrigger("goto_idle");
+
+            d->moveBackwardsRailFlipTimer = 0.0f;
         }
         else
         {
@@ -1654,6 +1669,21 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
                 isMoving != d->prevIsMoving))
                 d->characterRenderObj->animator->setTrigger("goto_run");
+
+            // Check if moving against the camera while on a camera rail.
+            if (d->characterType == CHARACTER_TYPE_PLAYER &&
+                d->camera->mainCamMode.cameraRailSettings.active &&
+                std::abs(deltaAngle(d->facingDirection, d->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1])) > glm_rad(150.0f))
+            {
+                d->moveBackwardsRailFlipTimer += physicsDeltaTime;
+                if (d->moveBackwardsRailFlipTimer > d->moveBackwardsRailFlipTime)
+                {
+                    d->camera->mainCamMode.flipCameraRail();
+                    d->moveBackwardsRailFlipTimer = 0.0f;
+                }
+            }
+            else
+                d->moveBackwardsRailFlipTimer = 0.0f;
         }
         if (!d->prevIsGrounded &&
             d->prevIsGrounded != d->prevPrevIsGrounded &&
@@ -2920,17 +2950,6 @@ void Character::renderImGui()
         attackWazaEditorRenderImGui(_data);
     else
         defaultRenderImGui(_data);
-}
-
-inline float_t deltaAngle(float_t fromRad, float_t toRad)  // @NOCHECKIN: @COPYPASTA with Camera.cpp (put this in a util header ... but idk how to make inline functions with a prototype)
-{
-	// Get closest delta angle within the same 360deg to the target.
-	float_t normalizedDeltaAngle = toRad - fromRad;
-	while (normalizedDeltaAngle >= glm_rad(180.0f))  // "Normalize" I guess... delta angle.
-		normalizedDeltaAngle -= glm_rad(360.0f);
-	while (normalizedDeltaAngle < glm_rad(-180.0f))
-		normalizedDeltaAngle += glm_rad(360.0f);
-	return normalizedDeltaAngle;
 }
 
 void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact)
