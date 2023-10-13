@@ -4,6 +4,7 @@
 #include "Debug.h"
 #include "StringHelper.h"
 #include "Camera.h"
+#include "CameraRail.h"
 
 
 namespace globalState
@@ -253,5 +254,44 @@ namespace globalState
         } while (!getCanMaterializeScannableItemByIndex(selectedScannableItemId));
 
         return true;  // New id was found and got selected.
+    }
+
+    // Camera Rail manager.
+    std::vector<CameraRail*> cameraRails;
+    void addCameraRail(CameraRail* cameraRail)
+    {
+        if (std::find(cameraRails.begin(), cameraRails.end(), cameraRail) == cameraRails.end())
+            cameraRails.push_back(cameraRail);
+    }
+
+    void removeCameraRail(CameraRail* cameraRail)
+    {
+        cameraRails.erase(
+            std::remove(
+                cameraRails.begin(),
+                cameraRails.end(),
+                cameraRail
+            ),
+            cameraRails.end()
+        );
+    }
+
+    CameraRail* getNearestCameraRailToDesiredRailDirection(vec3 queryPos, vec3 queryDir)
+    {
+        float_t closestDistance = std::numeric_limits<float_t>::max();
+        size_t closestIdx = (size_t)-1;
+        for (size_t i = 0; i < cameraRails.size(); i++)
+        {
+            float_t currentDistance;
+            if ((currentDistance = cameraRails[i]->findDistance2FromRailIfInlineEnough(queryPos, queryDir)) < closestDistance)
+            {
+                closestDistance = currentDistance;
+                closestIdx = i;
+            }
+        }
+
+        if (closestIdx == (size_t)-1)
+            return nullptr;
+        return cameraRails[closestIdx];
     }
 }

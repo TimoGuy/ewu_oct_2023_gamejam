@@ -2,6 +2,7 @@
 
 #include "Imports.h"
 struct SceneCamera;
+class CameraRail;
 
 
 namespace globalState
@@ -79,4 +80,8 @@ namespace globalState
     size_t getSelectedScannableItemId();
     void setSelectedScannableItemId(size_t scannableItemId);
     bool selectNextCanMaterializeScannableItemId();
+
+    void addCameraRail(CameraRail* cameraRail);
+    void removeCameraRail(CameraRail* cameraRail);
+    CameraRail* getNearestCameraRailToDesiredRailDirection(vec3 queryPos, vec3 queryDir);
 }

@@ -10,6 +10,7 @@
 #include "VulkanEngine.h"  // VulkanEngine
 #include "GlobalState.h"
 #include "Debug.h"
+#include "CameraRail.h"
 
 
 //
@@ -163,6 +164,12 @@ void MainCamMode::setOpponentCamTargetObject(physengine::CapsulePhysicsData* tar
 {
 	MainCamMode::opponentTargetObject = targetObject;
 	MainCamMode::opponentTargetTransition.first = true;
+}
+
+void MainCamMode::setCameraRail(CameraRail* cameraRail)
+{
+	MainCamMode::cameraRailSettings.cameraRail = cameraRail;
+	MainCamMode::cameraRailSettings.active = true;
 }
 
 
@@ -479,6 +486,41 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 				ott.first = false;
 		}
 
+		// Adhere to camera rail.
+		auto& crs = mainCamMode.cameraRailSettings;
+		if (crs.active)
+		{
+			// Move to target orbit angles.
+			mainCamMode.orbitAngles[1] =
+				smoothDampAngle(
+					mainCamMode.orbitAngles[1],
+					crs.targetOrbitAngles[1],
+					crs.orbitAnglesVelocities[1],
+					crs.orbitAnglesSmoothTime,
+					std::numeric_limits<float_t>::max(),
+					deltaTime
+				);
+
+			mainCamMode.orbitAngles[0] =
+				smoothDamp(
+					mainCamMode.orbitAngles[0],
+					crs.targetOrbitAngles[0],
+					crs.orbitAnglesVelocities[0],
+					crs.orbitAnglesSmoothTime,
+					std::numeric_limits<float_t>::max(),
+					deltaTime
+				);
+
+			// Move target position to projected position (@NOTE: XZ only).
+			if (crs.cameraRail != nullptr)
+			{
+				vec3 projectedPosition;
+				crs.cameraRail->projectPositionOnRail(targetPosition, projectedPosition);
+				targetPosition[0] = projectedPosition[0];
+				targetPosition[2] = projectedPosition[2];
+			}
+		}
+
 		// Update camera focus position based off the targetPosition.
 		if (mainCamMode.focusSmoothTimeXZ > 0.0f)
 		{
@@ -537,34 +579,6 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 
 		if (mainCamMode.opponentTargetObject != nullptr)  // Add to target Y orbit angle if opponent. (smol @HACK)
 			mainCamMode.opponentTargetTransition.targetYOrbitAngle += mouseDeltaFloatSwizzled[1] * sensitivityRadians[1];
-	}
-
-	//
-	// Adhere to camera rail.
-	//
-	auto& crs = mainCamMode.cameraRailSettings;
-	if (crs.active)
-	{
-		// Move to target orbit angles.
-		mainCamMode.orbitAngles[1] =
-			smoothDampAngle(
-				mainCamMode.orbitAngles[1],
-				crs.targetOrbitAngles[1],
-				crs.orbitAnglesVelocities[1],
-				crs.orbitAnglesSmoothTime,
-				std::numeric_limits<float_t>::max(),
-				deltaTime
-			);
-
-		mainCamMode.orbitAngles[0] =
-			smoothDamp(
-				mainCamMode.orbitAngles[0],
-				crs.targetOrbitAngles[0],
-				crs.orbitAnglesVelocities[0],
-				crs.orbitAnglesSmoothTime,
-				std::numeric_limits<float_t>::max(),
-				deltaTime
-			);
 	}
 
 	// Update actual look distance.

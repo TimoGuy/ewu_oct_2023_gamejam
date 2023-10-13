@@ -6,6 +6,7 @@ class VulkanEngine;
 struct RenderObject;
 struct GPUPBRShadingProps;
 namespace physengine { struct CapsulePhysicsData; }
+class CameraRail;
 
 
 struct GPUCameraData
@@ -32,8 +33,8 @@ struct SceneCamera
 	vec3 facingDirection = { -0.570508420, -0.390730739, 0.722388268 };
 	float_t   fov             = glm_rad(70.0f);
 	float_t   aspect;
-	float_t   zNear           = 1.0f;
-	float_t   zFar            = 1000.0f;
+	float_t   zNear           = 0.1f;  //1.0f;
+	float_t   zFar            = 100.0f;  //1000.0f;
 	float_t   zFarShadow      = 60.0f;
 	vec3 boxCastExtents;
 	GPUCameraData gpuCameraData;
@@ -95,21 +96,23 @@ struct MainCamMode
 
 	struct CameraRailSettings
 	{
-		bool    active = true; //false;    // @NOTE: expectation is to use the camera rails all the time (ONLY FOR EWU GAME JAM)  -Timo 2023/10/11
-		vec2    targetOrbitAngles = GLM_VEC2_ZERO_INIT;
-		vec2    orbitAnglesVelocities;
-		float_t orbitAnglesSmoothTime = 0.1f;
+		bool        active = true; //false;    // @NOTE: expectation is to use the camera rails all the time (ONLY FOR EWU GAME JAM)  -Timo 2023/10/11
+		vec2        targetOrbitAngles = GLM_VEC2_ZERO_INIT;
+		vec2        orbitAnglesVelocities;
+		float_t     orbitAnglesSmoothTime = 0.25f;
+		CameraRail* cameraRail = nullptr;
 	} cameraRailSettings;
 
 	// Tweak variables
 	float_t   lookDistance           = 5.0f;
-	float_t   lookDistanceSmoothTime = 0.075f;
-	float_t   focusSmoothTimeXZ      = 0.075f;
+	float_t   lookDistanceSmoothTime = 0.25f;  //0.075f;
+	float_t   focusSmoothTimeXZ      = 0.25f;  //0.075f;
 	float_t   focusSmoothTimeY       = 0.3f;
 	vec3      focusPositionOffset    = { 0, 2.333333f, 0 };
 
 	void setMainCamTargetObject(RenderObject* targetObject);
 	void setOpponentCamTargetObject(physengine::CapsulePhysicsData* targetObject);
+	void setCameraRail(CameraRail* cameraRail);
 };
 
 #ifdef _DEVELOP

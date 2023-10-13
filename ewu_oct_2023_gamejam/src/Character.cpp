@@ -2957,12 +2957,21 @@ void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::Cont
 
             if (isCamRailTrigger)
             {
-                _data->camera->mainCamMode.cameraRailSettings.active = true;
                 if (std::abs(deltaAngle(newTargetYOrbitAngle, _data->facingDirection)) > glm_rad(90.0f))
                     newTargetYOrbitAngle += glm_rad(180.0f);
                 if (std::abs(deltaAngle(_data->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1], newTargetYOrbitAngle)) > glm_rad(135.0f))
                     newTargetYOrbitAngle += glm_rad(180.0f);
                 _data->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1] = newTargetYOrbitAngle;
+
+                // @THOUGHT: Ummmm, why is the Character.cpp taking care of this instead of Camera.cpp????  -Timo 2023/10/12
+                mat4 rotation;
+                glm_euler_zyx(vec3{ 0.0f, newTargetYOrbitAngle, 0.0f }, rotation);
+                vec3 forward;
+                glm_mat4_mulv3(rotation, vec3{ 0.0f, 0.0f, 1.0f }, 0.0f, forward);
+                _data->camera->mainCamMode.cameraRailSettings.cameraRail =
+                    globalState::getNearestCameraRailToDesiredRailDirection(_data->position, forward);
+
+                _data->camera->mainCamMode.cameraRailSettings.active = true;
             }
         }
     }

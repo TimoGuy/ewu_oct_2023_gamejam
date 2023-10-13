@@ -14,6 +14,7 @@
 #include "NoteTaker.h"
 #include "VoxelField.h"
 #include "HarvestableItem.h"
+#include "CameraRail.h"
 
 
 // @PALETTE: where to add serialized names for the entities
@@ -22,11 +23,13 @@ const std::vector<std::string> ENTITY_TYPE_NAMES = {
     ":notetaker",
     ":voxelfield",
     ":harvestableitem",
+    ":camerarail",
 };
 const std::string Character::TYPE_NAME        = ENTITY_TYPE_NAMES[0];
 const std::string NoteTaker::TYPE_NAME        = ENTITY_TYPE_NAMES[1];
 const std::string VoxelField::TYPE_NAME       = ENTITY_TYPE_NAMES[2];
 const std::string HarvestableItem::TYPE_NAME  = ENTITY_TYPE_NAMES[3];
+const std::string CameraRail::TYPE_NAME       = ENTITY_TYPE_NAMES[4];
 
 
 namespace scene
@@ -47,6 +50,8 @@ namespace scene
             ent = new VoxelField(engine, engine->_entityManager, engine->_roManager, ds);
         if (objectName == HarvestableItem::TYPE_NAME)
             ent = new HarvestableItem(engine->_entityManager, engine->_roManager, ds);
+        if (objectName == CameraRail::TYPE_NAME)
+            ent = new CameraRail(engine->_entityManager, engine->_roManager, ds);
 
         if (ent == nullptr)
         {
