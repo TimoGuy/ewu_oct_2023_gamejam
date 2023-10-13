@@ -16,6 +16,8 @@ struct CameraRail_XData
     RenderObject* renderObj;
     vec3 position = GLM_VEC3_ZERO_INIT;
     vec3 forward = { 0.0f, 0.0f, 1.0f };
+    vec3 right = { 1.0f, 0.0f, 0.0f };
+    float_t scrollAlongRightAmount = 0.0f;
 
     bool isPicked = false;
 };
@@ -66,12 +68,24 @@ void CameraRail::physicsUpdate(const float_t& physicsDeltaTime)
     if (alwaysShowRailLine || _data->isPicked)
     {
         constexpr float_t lineDistance = 100.0f;
-        vec3 pt1, pt2;
-        glm_vec3_copy(_data->position, pt1);
-        glm_vec3_copy(_data->position, pt2);
-        glm_vec3_muladds(_data->forward, -lineDistance, pt1);
-        glm_vec3_muladds(_data->forward, lineDistance, pt2);
-        physengine::drawDebugVisLine(pt1, pt2, physengine::DebugVisLineType::YUUJUUFUDAN);
+        {
+            vec3 pt1, pt2;
+            glm_vec3_copy(_data->position, pt1);
+            glm_vec3_copy(_data->position, pt2);
+            glm_vec3_muladds(_data->forward, -lineDistance, pt1);
+            glm_vec3_muladds(_data->forward, lineDistance, pt2);
+            physengine::drawDebugVisLine(pt1, pt2, physengine::DebugVisLineType::YUUJUUFUDAN);
+        }
+
+        if (_data->scrollAlongRightAmount > 0.0f)
+        {
+            vec3 pt1, pt2;
+            glm_vec3_copy(_data->position, pt1);
+            glm_vec3_copy(_data->position, pt2);
+            glm_vec3_muladds(_data->right, -_data->scrollAlongRightAmount, pt1);
+            glm_vec3_muladds(_data->right, _data->scrollAlongRightAmount, pt2);
+            physengine::drawDebugVisLine(pt1, pt2, physengine::DebugVisLineType::SUCCESS);
+        }
 
         _data->isPicked = false;
     }
@@ -95,6 +109,8 @@ void CameraRail::dump(DataSerializer& ds)
     Entity::dump(ds);
     ds.dumpVec3(_data->position);
     ds.dumpVec3(_data->forward);
+    ds.dumpVec3(_data->right);
+    ds.dumpFloat(_data->scrollAlongRightAmount);
 }
 
 void CameraRail::load(DataSerialized& ds)
@@ -102,6 +118,12 @@ void CameraRail::load(DataSerialized& ds)
     Entity::load(ds);
     ds.loadVec3(_data->position);
     ds.loadVec3(_data->forward);
+    if (ds.getSerializedValuesCount() >= 1)
+        ds.loadVec3(_data->right);
+    else
+        glm_vec3_crossn(_data->forward, vec3{ 0.0f, 1.0f, 0.0f }, _data->right);
+    if (ds.getSerializedValuesCount() >= 1)
+        ds.loadFloat(_data->scrollAlongRightAmount);
 }
 
 bool CameraRail::processMessage(DataSerialized& message)
@@ -122,12 +144,14 @@ void CameraRail::reportMoved(mat4* matrixMoved)
     glm_decompose(*matrixMoved, pos, rot, sca);
     glm_vec3_copy(pos, _data->position);
     glm_mat4_mulv3(rot, vec3{ 0.0f, 0.0f, 1.0f }, 0.0f, _data->forward);
+    glm_mat4_mulv3(rot, vec3{ 1.0f, 0.0f, 0.0f }, 0.0f, _data->right);
 }
 
 void CameraRail::renderImGui()
 {
     _data->isPicked = true;
     ImGui::Checkbox("Toggle showing all camera rails", &alwaysShowRailLine);
+    ImGui::DragFloat("Scroll Along Right Amount", &_data->scrollAlongRightAmount, 0.1f, 0.0f, 100.0f);
 }
 
 float_t CameraRail::findDistance2FromRailIfInlineEnough(vec3 queryPos, vec3 queryDir)
@@ -147,6 +171,14 @@ void CameraRail::projectPositionOnRail(vec3 pos, vec3& outProjectedPosition)
     vec3 delta;
     glm_vec3_sub(pos, _data->position, delta);
     vec3 projVec;
-    glm_vec3_proj(delta, _data->forward, projVec);  // @NOCHECKIN
+    glm_vec3_proj(delta, _data->forward, projVec);
     glm_vec3_add(_data->position, projVec, outProjectedPosition);
+
+    if (_data->scrollAlongRightAmount > 0.0f)
+    {
+        vec3 rightProjVec;
+        glm_vec3_proj(delta, _data->right, rightProjVec);
+        glm_vec3_scale_as(rightProjVec, glm_min(glm_vec3_norm(rightProjVec), _data->scrollAlongRightAmount), rightProjVec);
+        glm_vec3_add(outProjectedPosition, rightProjVec, outProjectedPosition);
+    }
 }

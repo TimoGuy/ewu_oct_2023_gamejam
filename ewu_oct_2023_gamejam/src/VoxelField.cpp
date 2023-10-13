@@ -450,9 +450,6 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
                         glm_ivec3_add(_data->editorState.editStartPosition, offset, _data->editorState.editStartPosition);  // Change the edit positions to account for the offset.
                         glm_ivec3_add(_data->editorState.editEndPosition, offset, _data->editorState.editEndPosition);
 
-                        // Insert the resized offset into renderobject offsets.
-                        glm_translate(_data->vfpd->transform, vec3{ (float_t)offset[0], (float_t)offset[1], (float_t)offset[2] });
-
                         // Find which voxel type (for only slopes).
                         uint8_t slopeSpaceId;
                         if (_data->editorState.editType == VoxelField_XData::EditorState::EditType::CHANGE_TO_SLOPE)
@@ -1277,11 +1274,11 @@ inline void buildDefaultVoxelData(VoxelField_XData& data, const std::string& myG
     data.vfpd = physengine::createVoxelField(myGuid, identity, sizeX, sizeY, sizeZ, vd);
 }
 
-inline void createInRO(VoxelField_XData& data, vkglTF::Model* model, const std::string& attachedEntityGuid, physengine::VoxelFieldCollisionShape& shape, std::vector<RenderObject>& inROs)
+inline void createInRO(VoxelField_XData& data, vkglTF::Model* model, RenderLayer renderLayer, const std::string& attachedEntityGuid, physengine::VoxelFieldCollisionShape& shape, std::vector<RenderObject>& inROs)
 {
     RenderObject newRO = {
         .model = model,
-        .renderLayer = RenderLayer::BUILDER,
+        .renderLayer = renderLayer,
         .attachedEntityGuid = attachedEntityGuid,
     };
 
@@ -1308,9 +1305,9 @@ inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string
     std::vector<RenderObject> inROs;
     std::vector<RenderObject**> outRORefs;
     for (auto& shape : inCollisionShapes)
-        createInRO(data, data.voxelModel, attachedEntityGuid, shape, inROs);
+        createInRO(data, data.voxelModel, RenderLayer::VISIBLE, attachedEntityGuid, shape, inROs);
     for (auto& shape : inTriggerShapes)
-        createInRO(data, data.triggerModel, attachedEntityGuid, shape, inROs);
+        createInRO(data, data.triggerModel, RenderLayer::BUILDER, attachedEntityGuid, shape, inROs);
 
     data.voxelRenderObjs.resize(inROs.size(), nullptr);
     for (size_t i = 0; i < data.voxelRenderObjs.size(); i++)

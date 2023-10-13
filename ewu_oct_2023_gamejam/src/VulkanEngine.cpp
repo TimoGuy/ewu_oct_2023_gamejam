@@ -109,7 +109,7 @@ void VulkanEngine::init()
 constexpr size_t numPerfs = 15;
 uint64_t perfs[numPerfs];
 
-vec4 lightDir = { 0.144958f, 0.849756f, 0.506855f, 0.0f };
+vec4 lightDir = { 0.144958f, 0.01f, 0.506855f, 0.0f };
 
 void VulkanEngine::run()
 {

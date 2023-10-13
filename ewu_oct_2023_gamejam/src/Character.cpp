@@ -252,7 +252,7 @@ struct Character_XData
     } notification;
 
     vec3 worldSpaceInput = GLM_VEC3_ZERO_INIT;
-    float_t moveBackwardsRailFlipTime = 0.5f;
+    float_t moveBackwardsRailFlipTime = 0.75f;
     float_t moveBackwardsRailFlipTimer = 0.0f;
 #ifdef _DEVELOP
     bool    disableInput = false;  // @DEBUG for level editor
@@ -2413,7 +2413,7 @@ void Character::update(const float_t& deltaTime)
         // Poll keydown inputs.
         if (_data->knockbackMode == Character_XData::KnockbackStage::NONE)
         {
-            _data->inputFlagJump |= !_data->disableInput && input::onKeyJumpPress;
+            // _data->inputFlagJump |= !_data->disableInput && input::onKeyJumpPress;  // @NOTE: disabled jump (for EWU Game Jam).  -Timo 2023/10/12
             _data->inputFlagAttack |= !_data->disableInput && input::onLMBPress;
             _data->inputFlagRelease |= !_data->disableInput && input::onRMBPress;
         }
