@@ -29,6 +29,12 @@
         - [x] Use distance from point to line segment algo.
     - [x] Flip the camera after walking towards it for half a second.
 
+    - [x] Fix camera mistakes in the larger map.
+
+- [ ] Quality of life improvements
+    - [ ] Change characters to be billboard sprite.
+    - [ ] Add camera collision. Use spherecast.
+
 - [ ] Build 3 monsters to chase.
 - [ ] Create prompt to press 'spacebar' to 'catch' a monster.
 - [ ] Build 2 other 'competitors' that are also chasing the 3 monsters.
