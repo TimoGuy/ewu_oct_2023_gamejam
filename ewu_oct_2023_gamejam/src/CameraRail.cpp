@@ -17,6 +17,7 @@ struct CameraRail_XData
     vec3 position = GLM_VEC3_ZERO_INIT;
     vec3 forward = { 0.0f, 0.0f, 1.0f };
     vec3 right = { 1.0f, 0.0f, 0.0f };
+    float_t scrollAlongForwardAmount = 100.0f;
     float_t scrollAlongRightAmount = 0.0f;
 
     bool isPicked = false;
@@ -67,18 +68,39 @@ void CameraRail::physicsUpdate(const float_t& physicsDeltaTime)
 {
     if (alwaysShowRailLine || _data->isPicked)
     {
-        constexpr float_t lineDistance = 100.0f;
+        if (_data->scrollAlongForwardAmount > 0.0f)
         {
             vec3 pt1, pt2;
             glm_vec3_copy(_data->position, pt1);
             glm_vec3_copy(_data->position, pt2);
-            glm_vec3_muladds(_data->forward, -lineDistance, pt1);
-            glm_vec3_muladds(_data->forward, lineDistance, pt2);
-            physengine::drawDebugVisLine(pt1, pt2, physengine::DebugVisLineType::YUUJUUFUDAN);
-        }
+            glm_vec3_muladds(_data->forward, -_data->scrollAlongForwardAmount, pt1);
+            glm_vec3_muladds(_data->forward, _data->scrollAlongForwardAmount, pt2);
 
-        if (_data->scrollAlongRightAmount > 0.0f)
+            if (_data->scrollAlongRightAmount == 0.0f)
+                physengine::drawDebugVisLine(pt1, pt2, physengine::DebugVisLineType::YUUJUUFUDAN);
+            else
+            {
+                // Render all lines.
+                vec3 wpt1 = GLM_VEC3_ZERO_INIT;
+                vec3 wpt2 = GLM_VEC3_ZERO_INIT;
+                glm_vec3_muladds(_data->right, -_data->scrollAlongRightAmount, wpt1);
+                glm_vec3_muladds(_data->right, _data->scrollAlongRightAmount, wpt2);
+
+                vec3 lpt1, rpt1, lpt2, rpt2;
+                glm_vec3_add(pt1, wpt1, lpt1);
+                glm_vec3_add(pt1, wpt2, rpt1);
+                glm_vec3_add(pt2, wpt1, lpt2);
+                glm_vec3_add(pt2, wpt2, rpt2);
+
+                physengine::drawDebugVisLine(lpt1, lpt2, physengine::DebugVisLineType::YUUJUUFUDAN);
+                physengine::drawDebugVisLine(rpt1, rpt2, physengine::DebugVisLineType::YUUJUUFUDAN);
+                physengine::drawDebugVisLine(lpt1, rpt1, physengine::DebugVisLineType::SUCCESS);
+                physengine::drawDebugVisLine(lpt2, rpt2, physengine::DebugVisLineType::SUCCESS);
+            }
+        }
+        else if (_data->scrollAlongRightAmount > 0.0f)
         {
+            // Render just width line.
             vec3 pt1, pt2;
             glm_vec3_copy(_data->position, pt1);
             glm_vec3_copy(_data->position, pt2);
@@ -110,6 +132,7 @@ void CameraRail::dump(DataSerializer& ds)
     ds.dumpVec3(_data->position);
     ds.dumpVec3(_data->forward);
     ds.dumpVec3(_data->right);
+    ds.dumpFloat(_data->scrollAlongForwardAmount);
     ds.dumpFloat(_data->scrollAlongRightAmount);
 }
 
@@ -122,6 +145,8 @@ void CameraRail::load(DataSerialized& ds)
         ds.loadVec3(_data->right);
     else
         glm_vec3_crossn(_data->forward, vec3{ 0.0f, 1.0f, 0.0f }, _data->right);
+    if (ds.getSerializedValuesCount() >= 1)
+        ds.loadFloat(_data->scrollAlongForwardAmount);
     if (ds.getSerializedValuesCount() >= 1)
         ds.loadFloat(_data->scrollAlongRightAmount);
 }
@@ -151,6 +176,7 @@ void CameraRail::renderImGui()
 {
     _data->isPicked = true;
     ImGui::Checkbox("Toggle showing all camera rails", &alwaysShowRailLine);
+    ImGui::DragFloat("Scroll Along Forward Amount", &_data->scrollAlongForwardAmount, 0.1f, 0.0f, 100.0f);
     ImGui::DragFloat("Scroll Along Right Amount", &_data->scrollAlongRightAmount, 0.1f, 0.0f, 100.0f);
 }
 
@@ -168,11 +194,18 @@ float_t CameraRail::findDistance2FromRailIfInlineEnough(vec3 queryPos, vec3 quer
 
 void CameraRail::projectPositionOnRail(vec3 pos, vec3& outProjectedPosition)
 {
+    glm_vec3_copy(_data->position, outProjectedPosition);
+
     vec3 delta;
     glm_vec3_sub(pos, _data->position, delta);
-    vec3 projVec;
-    glm_vec3_proj(delta, _data->forward, projVec);
-    glm_vec3_add(_data->position, projVec, outProjectedPosition);
+
+    if (_data->scrollAlongForwardAmount > 0.0f)
+    {
+        vec3 projVec;
+        glm_vec3_proj(delta, _data->forward, projVec);
+        glm_vec3_scale_as(projVec, glm_min(glm_vec3_norm(projVec), _data->scrollAlongForwardAmount), projVec);
+        glm_vec3_add(outProjectedPosition, projVec, outProjectedPosition);
+    }
 
     if (_data->scrollAlongRightAmount > 0.0f)
     {

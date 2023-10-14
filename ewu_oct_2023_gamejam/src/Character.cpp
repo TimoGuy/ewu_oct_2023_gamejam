@@ -28,7 +28,7 @@
 
 
 std::string CHARACTER_TYPE_PLAYER = "PLAYER";
-std::string CHARACTER_TYPE_NPC = "NPC";
+std::string CHARACTER_TYPE_MONSTER = "MONSTER";
 
 struct Character_XData
 {
