@@ -34,6 +34,8 @@ public:
     void renderImGui();
 
     void reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact);
+    bool isPlayer();
+    float_t getFacingDirection();
 
 private:
     Character_XData* _data;

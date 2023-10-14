@@ -47,7 +47,7 @@ namespace scene
         if (objectName == NoteTaker::TYPE_NAME)
             ent = new NoteTaker(engine->_entityManager, engine->_roManager, ds);
         if (objectName == VoxelField::TYPE_NAME)
-            ent = new VoxelField(engine, engine->_entityManager, engine->_roManager, ds);
+            ent = new VoxelField(engine, engine->_entityManager, engine->_roManager, engine->_camera, ds);
         if (objectName == HarvestableItem::TYPE_NAME)
             ent = new HarvestableItem(engine->_entityManager, engine->_roManager, ds);
         if (objectName == CameraRail::TYPE_NAME)

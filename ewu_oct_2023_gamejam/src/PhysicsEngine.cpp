@@ -39,6 +39,7 @@
 #include "PhysUtil.h"
 #include "EntityManager.h"
 #include "Character.h"
+#include "VoxelField.h"
 #include "GlobalState.h"
 #include "imgui/imgui.h"
 #include "imgui/implot.h"
@@ -529,7 +530,19 @@ namespace physengine
 
                 case UserDataMeaning::IS_NS_CAMERA_RAIL_TRIGGER:  // @NOTE: these are supposed to be processed in the character's `reportPhysicsContact`.
                 case UserDataMeaning::IS_EW_CAMERA_RAIL_TRIGGER:
-                    return;
+                {
+                    if (UserDataMeaning(otherBody.GetUserData()) == UserDataMeaning::IS_CHARACTER)
+                    {
+                        ::Character* entityAsChar = dynamic_cast<::Character*>(entityManager->getEntityViaGUID(bodyIdToEntityGuidMap[otherBody.GetID().GetIndex()]));
+                        if (entityAsChar && entityAsChar->isPlayer())
+                        {
+                            uint32_t id = thisBody.GetID().GetIndex();
+                            VoxelField* entityAsVF;
+                            if (entityAsVF = dynamic_cast<VoxelField*>(entityManager->getEntityViaGUID(bodyIdToEntityGuidMap[id])))
+                                entityAsVF->reportPlayerInCameraRailTrigger(otherBody, entityAsChar->getFacingDirection());
+                        }
+                    }
+                } return;
             }
         }
 

@@ -83,5 +83,6 @@ namespace globalState
 
     void addCameraRail(CameraRail* cameraRail);
     void removeCameraRail(CameraRail* cameraRail);
+    
     CameraRail* getNearestCameraRailToDesiredRailDirection(vec3 queryPos, vec3 queryDir);
 }

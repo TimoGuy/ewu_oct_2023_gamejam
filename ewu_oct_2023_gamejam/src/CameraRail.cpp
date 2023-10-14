@@ -180,6 +180,16 @@ void CameraRail::renderImGui()
     ImGui::DragFloat("Scroll Along Right Amount", &_data->scrollAlongRightAmount, 0.1f, 0.0f, 100.0f);
 }
 
+float_t CameraRail::getOrbitY()
+{
+    return std::atan2f(_data->forward[0], _data->forward[2]);
+}
+
+void CameraRail::getPosition(vec3& outPosition)
+{
+    glm_vec3_copy(_data->position, outPosition);
+}
+
 float_t CameraRail::findDistance2FromRailIfInlineEnough(vec3 queryPos, vec3 queryDir)
 {
     if (std::abs(glm_vec3_dot(queryDir, _data->forward)) < std::cos(glm_rad(30.0f)))

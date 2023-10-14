@@ -25,6 +25,7 @@
 #ifdef _DEVELOP
 #include "HotswapResources.h"
 #endif
+#include "VoxelField.h"
 
 
 std::string CHARACTER_TYPE_PLAYER = "PLAYER";
@@ -2954,47 +2955,7 @@ void Character::renderImGui()
 
 void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact)
 {
-    if (otherBody.IsSensor())
-    {
-        if (!persistedContact && _data->characterType == CHARACTER_TYPE_PLAYER)
-        {
-            // Process the camera rail trigger if it's marked as one.
-            bool isCamRailTrigger = false;
-            float_t newTargetYOrbitAngle = 0.0f;
-            switch (physengine::UserDataMeaning(otherBody.GetUserData()))
-            {
-                case physengine::UserDataMeaning::IS_NS_CAMERA_RAIL_TRIGGER:
-                    isCamRailTrigger = true;
-                    newTargetYOrbitAngle = otherBody.GetRotation().GetEulerAngles().GetY();
-                    break;
-
-                case physengine::UserDataMeaning::IS_EW_CAMERA_RAIL_TRIGGER:
-                    isCamRailTrigger = true;
-                    newTargetYOrbitAngle = otherBody.GetRotation().GetEulerAngles().GetY() + glm_rad(90.0f);
-                    break;
-            }
-
-            if (isCamRailTrigger)
-            {
-                if (std::abs(deltaAngle(newTargetYOrbitAngle, _data->facingDirection)) > glm_rad(90.0f))
-                    newTargetYOrbitAngle += glm_rad(180.0f);
-                if (std::abs(deltaAngle(_data->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1], newTargetYOrbitAngle)) > glm_rad(135.0f))
-                    newTargetYOrbitAngle += glm_rad(180.0f);
-                _data->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1] = newTargetYOrbitAngle;
-
-                // @THOUGHT: Ummmm, why is the Character.cpp taking care of this instead of Camera.cpp????  -Timo 2023/10/12
-                mat4 rotation;
-                glm_euler_zyx(vec3{ 0.0f, newTargetYOrbitAngle, 0.0f }, rotation);
-                vec3 forward;
-                glm_mat4_mulv3(rotation, vec3{ 0.0f, 0.0f, 1.0f }, 0.0f, forward);
-                _data->camera->mainCamMode.cameraRailSettings.cameraRail =
-                    globalState::getNearestCameraRailToDesiredRailDirection(_data->position, forward);
-
-                _data->camera->mainCamMode.cameraRailSettings.active = true;
-            }
-        }
-    }
-    else
+    if (!otherBody.IsSensor())
     {
         // Process moving platform
         Character_XData::MovingPlatformAttachment& mpa = _data->movingPlatformAttachment;
@@ -3043,4 +3004,14 @@ void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::Cont
 
         mpa.attachmentIsStale = false;
     }
+}
+
+bool Character::isPlayer()
+{
+    return (_data->characterType == CHARACTER_TYPE_PLAYER);
+}
+
+float_t Character::getFacingDirection()
+{
+    return _data->facingDirection;
 }

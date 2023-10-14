@@ -101,6 +101,8 @@ struct MainCamMode
 		vec2        orbitAnglesVelocities;
 		float_t     orbitAnglesSmoothTime = 0.25f;
 		CameraRail* cameraRail = nullptr;
+
+		void refreshTargetOrbits(float_t facingDirection);
 	} cameraRailSettings;
 
 	// Tweak variables

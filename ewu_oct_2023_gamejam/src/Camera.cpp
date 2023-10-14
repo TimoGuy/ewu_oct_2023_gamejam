@@ -152,9 +152,30 @@ void SceneCamera::recalculateCascadeViewProjs(GPUPBRShadingProps& pbrShadingProp
 	}
 }
 
+inline float_t deltaAngle(float_t fromRad, float_t toRad)
+{
+	// Get closest delta angle within the same 360deg to the target.
+	float_t normalizedDeltaAngle = toRad - fromRad;
+	while (normalizedDeltaAngle >= glm_rad(180.0f))  // "Normalize" I guess... delta angle.
+		normalizedDeltaAngle -= glm_rad(360.0f);
+	while (normalizedDeltaAngle < glm_rad(-180.0f))
+		normalizedDeltaAngle += glm_rad(360.0f);
+	return normalizedDeltaAngle;
+}
+
 //
 // MainCamMode
 //
+void MainCamMode::CameraRailSettings::refreshTargetOrbits(float_t facingDirection)
+{
+	float_t newTargetOrbitY = cameraRail->getOrbitY();
+	if (std::abs(deltaAngle(newTargetOrbitY, facingDirection)) > glm_rad(90.0f))
+		newTargetOrbitY += glm_rad(180.0f);
+	if (std::abs(deltaAngle(targetOrbitAngles[1], newTargetOrbitY)) > glm_rad(135.0f))
+		newTargetOrbitY += glm_rad(180.0f);
+	targetOrbitAngles[1] = newTargetOrbitY;
+}
+
 void MainCamMode::setMainCamTargetObject(RenderObject* targetObject)
 {
 	MainCamMode::targetObject = targetObject;
@@ -216,17 +237,6 @@ void Camera::update(const float_t& deltaTime)
 	// Reset all camera mode change events
 	for (size_t i = 0; i < _numCameraModes; i++)
 		_changeEvents[i] = CameraModeChangeEvent::NONE;
-}
-
-inline float_t deltaAngle(float_t fromRad, float_t toRad)
-{
-	// Get closest delta angle within the same 360deg to the target.
-	float_t normalizedDeltaAngle = toRad - fromRad;
-	while (normalizedDeltaAngle >= glm_rad(180.0f))  // "Normalize" I guess... delta angle.
-		normalizedDeltaAngle -= glm_rad(360.0f);
-	while (normalizedDeltaAngle < glm_rad(-180.0f))
-		normalizedDeltaAngle += glm_rad(360.0f);
-	return normalizedDeltaAngle;
 }
 
 // @NOTE: https://github.com/Unity-Technologies/UnityCsReference/blob/0aa4923aa67e701940c22821c137c8d0184159b2/Runtime/Export/Math/Vector2.cs#L289

@@ -4,7 +4,12 @@
 class VulkanEngine;
 class EntityManager;
 class RenderObjectManager;
+class Camera;
 struct VoxelField_XData;
+namespace JPH
+{
+    class Body;
+}
 
 
 class VoxelField : public Entity
@@ -13,7 +18,7 @@ public:
     static const std::string TYPE_NAME;
     std::string getTypeName() { return TYPE_NAME; };
 
-    VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectManager* rom, DataSerialized* ds);
+    VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds);
     ~VoxelField();
 
     void physicsUpdate(const float_t& physicsDeltaTime);
@@ -30,6 +35,8 @@ public:
     void moveBody(vec3 newPosition, versor newRotation, bool immediate, float_t physicsDeltaTime);
     void getSize(vec3& outSize);
     void getTransform(mat4& outTransform);
+
+    void reportPlayerInCameraRailTrigger(const JPH::Body& otherBody, float_t playerFacingDirection);
 
 private:
     VoxelField_XData* _data;

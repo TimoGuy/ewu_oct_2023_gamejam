@@ -27,6 +27,8 @@ public:
     void reportMoved(mat4* matrixMoved);
     void renderImGui();
 
+    float_t getOrbitY();
+    void getPosition(vec3& outPosition);
     float_t findDistance2FromRailIfInlineEnough(vec3 queryPos, vec3 queryDir);
     void projectPositionOnRail(vec3 pos, vec3& outProjectedPosition);
 

@@ -2,6 +2,8 @@
 
 #include <stb_image_write.h>
 #include <mutex>
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Body/Body.h>
 #include "Imports.h"
 #include "VkglTFModel.h"
 #include "VkTextures.h"
@@ -14,17 +16,28 @@
 #include "VulkanEngine.h"
 #include "AudioEngine.h"
 #include "Camera.h"
+#include "CameraRail.h"
 #include "imgui/imgui.h"
+#include "imgui/imgui_stdlib.h"
 
 
 struct VoxelField_XData
 {
     VulkanEngine* engine;
     RenderObjectManager* rom;
+    Camera* camera;
     vkglTF::Model* voxelModel;
     vkglTF::Model* triggerModel;
     std::vector<RenderObject*> voxelRenderObjs;
     std::vector<mat4s> voxelRenderObjLocalTransforms;
+
+    struct VoxelPosToCameraRailGuid
+    {
+        vec3 triggerOrigin;
+        std::string camRailGuid;
+        size_t correspondingROIdx;
+    };
+    std::vector<VoxelPosToCameraRailGuid> voxelPosToCameraRailGuid;
 
     size_t lightgridId = 0;  // If 0, then that means there is no light grid created.
 
@@ -51,7 +64,7 @@ inline void deleteVoxelRenderObjects(VoxelField_XData& data);
 void triggerLoadLightingIfExists(VoxelField_XData& d, const std::string& guid);
 
 
-VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) : Entity(em, ds), _data(new VoxelField_XData())
+VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds) : Entity(em, ds), _data(new VoxelField_XData())
 {
     Entity::_enablePhysicsUpdate = true;
     Entity::_enableUpdate = true;
@@ -59,6 +72,7 @@ VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectMana
 
     _data->engine = engine;
     _data->rom = rom;
+    _data->camera = camera;
     _data->editorState.editingVoxelRenderObjsMutex = new std::mutex;
 
     if (ds)
@@ -399,6 +413,21 @@ void VoxelField::physicsUpdate(const float_t& physicsDeltaTime)
 {
     if (_data->isPicked)  // @NOTE: this picked checking system, bc physicsupdate() runs outside of the render thread, could easily get out of sync, but as long as the render thread is >40fps it should be fine.
     {
+        // Render relations with camera rails and triggers.
+        for (auto& vptcrg : _data->voxelPosToCameraRailGuid)
+        {
+            CameraRail* cameraRail = dynamic_cast<CameraRail*>(_em->getEntityViaGUID(vptcrg.camRailGuid));
+            if (cameraRail)
+            {
+                vec3 triggerPosWS;
+                glm_mat4_mulv3(_data->vfpd->transform, vptcrg.triggerOrigin, 1.0f, triggerPosWS);
+                vec3 railPos;
+                cameraRail->getPosition(railPos);
+                physengine::drawDebugVisLine(triggerPosWS, railPos, physengine::DebugVisLineType::VELOCITY);
+            }
+        }
+
+        // Edit field.
         static bool prevCorXorVPressed = false;
 
         if (_data->editorState.editing)
@@ -716,6 +745,14 @@ void VoxelField::dump(DataSerializer& ds)
     voxelDataStringified += writeCount;
     voxelDataStringified += writeVoxelType;
     ds.dumpString(voxelDataStringified);
+
+    // Write out camera rail relations.
+    ds.dumpFloat((float_t)_data->voxelPosToCameraRailGuid.size());
+    for (size_t i = 0; i < _data->voxelPosToCameraRailGuid.size(); i++)
+    {
+        ds.dumpVec3(_data->voxelPosToCameraRailGuid[i].triggerOrigin);
+        ds.dumpString(_data->voxelPosToCameraRailGuid[i].camRailGuid);
+    }
 }
 
 void VoxelField::load(DataSerialized& ds)
@@ -750,6 +787,20 @@ void VoxelField::load(DataSerialized& ds)
 
     // Create Voxel Field Physics Data
     _data->vfpd = physengine::createVoxelField(getGUID(), load_transform, load_size[0], load_size[1], load_size[2], load_voxelData);
+
+    // Load in camera rail relations.
+    if (ds.getSerializedValuesCount() >= 1)
+    {
+        float_t numCamRailRelationsF;
+        ds.loadFloat(numCamRailRelationsF);
+        size_t numCamRailRelations = (size_t)numCamRailRelationsF;
+        _data->voxelPosToCameraRailGuid.resize(numCamRailRelations);
+        for (size_t i = 0; i < numCamRailRelations; i++)
+        {
+            ds.loadVec3(_data->voxelPosToCameraRailGuid[i].triggerOrigin);
+            ds.loadString(_data->voxelPosToCameraRailGuid[i].camRailGuid);
+        }
+    }
 }
 
 void VoxelField::reportMoved(mat4* matrixMoved)
@@ -1259,6 +1310,27 @@ void VoxelField::renderImGui()
         _data->isLightingDirty = false;
     }
 
+    mat4* matrixToMove = _data->engine->getMatrixToMove();
+    for (size_t i = 0; i < _data->voxelRenderObjs.size(); i++)
+    {
+        auto& vro = _data->voxelRenderObjs[i];
+        if (vro->model != _data->triggerModel)
+            continue;
+        if (&vro->transformMatrix != matrixToMove)
+            continue;
+        
+        for (auto& vptcrg : _data->voxelPosToCameraRailGuid)
+        {
+            if (vptcrg.correspondingROIdx != i)
+                continue;
+            
+            ImGui::InputText("Assigned GUID for cam rail trigger", &vptcrg.camRailGuid);
+
+            break;
+        }
+        break;
+    }
+
     _data->isPicked = true;
 }
 
@@ -1300,6 +1372,8 @@ inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string
     std::lock_guard<std::mutex> lg(*data.editorState.editingVoxelRenderObjsMutex);
 
     deleteVoxelRenderObjects(data);
+    for (auto& vptcrg : data.voxelPosToCameraRailGuid)
+        vptcrg.correspondingROIdx = (size_t)-1;
 
     // Iterate thru each shape, adding it.
     std::vector<RenderObject> inROs;
@@ -1307,7 +1381,39 @@ inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string
     for (auto& shape : inCollisionShapes)
         createInRO(data, data.voxelModel, RenderLayer::VISIBLE, attachedEntityGuid, shape, inROs);
     for (auto& shape : inTriggerShapes)
+    {
         createInRO(data, data.triggerModel, RenderLayer::BUILDER, attachedEntityGuid, shape, inROs);
+
+        // Assign corresponding render obj indices.
+        bool assigned = false;
+        for (size_t i = 0; i < data.voxelPosToCameraRailGuid.size(); i++)
+        {
+            auto& vptcrg = data.voxelPosToCameraRailGuid[i];
+            if (glm_vec3_distance2(vptcrg.triggerOrigin, shape.origin) < 0.001f)
+            {
+                vptcrg.correspondingROIdx = inROs.size() - 1;
+                assigned = true;
+                break;
+            }
+        }
+        if (!assigned)
+        {
+            // Create new record.
+            VoxelField_XData::VoxelPosToCameraRailGuid newVFTCRG = {};
+            glm_vec3_copy(shape.origin, newVFTCRG.triggerOrigin);
+            newVFTCRG.camRailGuid = "NULL";
+            newVFTCRG.correspondingROIdx = inROs.size() - 1;
+            data.voxelPosToCameraRailGuid.push_back(newVFTCRG);
+        }
+    }
+
+    // Delete dangling relationships.
+    std::erase_if(
+        data.voxelPosToCameraRailGuid,
+        [](VoxelField_XData::VoxelPosToCameraRailGuid x) {
+            return x.correspondingROIdx == (size_t)-1;
+        }
+    );
 
     data.voxelRenderObjs.resize(inROs.size(), nullptr);
     for (size_t i = 0; i < data.voxelRenderObjs.size(); i++)
@@ -1351,4 +1457,46 @@ void VoxelField::getSize(vec3& outSize)
 void VoxelField::getTransform(mat4& outTransform)
 {
     glm_mat4_copy(_data->vfpd->transform, outTransform);
+}
+
+void VoxelField::reportPlayerInCameraRailTrigger(const JPH::Body& otherBody, float_t playerFacingDirection)
+{
+    if (_data->voxelPosToCameraRailGuid.empty())
+        return;
+
+    JPH::RVec3 jphpos = otherBody.GetCenterOfMassPosition();
+    vec3 pos = {
+        jphpos[0],
+        jphpos[1],
+        jphpos[2]
+    };
+    float_t closestTriggerDist = std::numeric_limits<float_t>::max();
+    size_t closestTriggerIdx = (size_t)-1;
+    for (size_t i = 0; i < _data->voxelPosToCameraRailGuid.size(); i++)
+    {
+        auto& vptcrg = _data->voxelPosToCameraRailGuid[i];
+        vec3 triggerPosWS;
+        glm_mat4_mulv3(_data->vfpd->transform, vptcrg.triggerOrigin, 1.0f, triggerPosWS);
+        float_t dist2 = glm_vec3_distance2(triggerPosWS, pos);
+        if (dist2 < closestTriggerDist)
+        {
+            closestTriggerDist = dist2;
+            closestTriggerIdx = i;
+        }
+    }
+
+    // Update camera to use the camera rail.
+    auto& crs = _data->camera->mainCamMode.cameraRailSettings;
+    crs.cameraRail = dynamic_cast<CameraRail*>(_em->getEntityViaGUID(_data->voxelPosToCameraRailGuid[closestTriggerIdx].camRailGuid));
+    if (crs.cameraRail)
+    {
+        crs.active = true;
+        _data->camera->mainCamMode.cameraRailSettings.refreshTargetOrbits(playerFacingDirection);
+    }
+    else
+    {
+        crs.active = false;
+        std::cerr << "[VOXELFIELD REPORT PLAYER CAMERA RAIL TRIGGER]" << std::endl
+            << "ERROR: camera rail assigned does not exist: " << _data->voxelPosToCameraRailGuid[closestTriggerIdx].camRailGuid << std::endl;
+    }
 }
