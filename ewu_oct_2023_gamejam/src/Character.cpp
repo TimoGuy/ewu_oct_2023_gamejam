@@ -30,6 +30,7 @@
 
 std::string CHARACTER_TYPE_PLAYER = "PLAYER";
 std::string CHARACTER_TYPE_MONSTER = "MONSTER";
+std::string CHARACTER_TYPE_CHASER = "CHASER";
 
 struct Character_XData
 {
@@ -38,8 +39,6 @@ struct Character_XData
     RenderObjectManager*     rom;
     Camera*                  camera;
     RenderObject*            characterRenderObj;
-    RenderObject*            handleRenderObj;
-    RenderObject*            weaponRenderObj;
     std::string              weaponAttachmentJointName;
 
     physengine::CapsulePhysicsData* cpd;
@@ -296,7 +295,7 @@ struct Character_XData
     // Tweak Props
     vec3 position;
     float_t facingDirection = 0.0f;
-    float_t modelSize = 0.3f;
+    float_t modelSize = 1.0f;  //0.3f;  // @NOTE: for EWU Game Jam.
     float_t jumpHeight = 15.0f;
     
     int32_t health = 100;
@@ -408,8 +407,8 @@ void processAttack(Character_XData* d)
                     globalState::changeInventoryItemQtyByIndex(hiwq.harvestableItemId, -(int32_t)hiwq.quantity);  // Remove from inventory the materials needed.
                 d->materializedItem = sio;
                 d->currentWeaponDurability = d->materializedItem->weaponStats.durability;  // @NOTE: non-weapons will have garbage set as their durability. Just ignore.
-                d->characterRenderObj->animator->setTrigger("goto_draw_weapon");
-                d->characterRenderObj->animator->setTrigger("goto_mcm_draw_weapon");
+                // d->characterRenderObj->animator->setTrigger("goto_draw_weapon");  // @NOTE: for EWU Game Jam.
+                // d->characterRenderObj->animator->setTrigger("goto_mcm_draw_weapon");
             }
             else
             {
@@ -435,11 +434,11 @@ void processAttack(Character_XData* d)
                 // Attempt to eat.
                 globalState::savedPlayerHealth += 5;
                 d->materializedItem = nullptr;  // Ate the item off the handle.
-                d->weaponRenderObj->renderLayer = RenderLayer::INVISIBLE;
+                // d->weaponRenderObj->renderLayer = RenderLayer::INVISIBLE;  // @NOTE: for EWU Game Jam.
                 AudioEngine::getInstance().playSound("res/sfx/wip_Pl_Eating_S00.wav");
                 AudioEngine::getInstance().playSound("res/sfx/wip_Sys_ExtraHeartUp_01.wav");
-                d->characterRenderObj->animator->setTrigger("goto_sheath_weapon");  // @TODO: figure out how to prevent ice breaking sfx in hokasu event.  @REPLY: you need to make another animation that has character eating the item and then put away the weapon, and then goto that animation instead of the "break off" animation.
-                d->characterRenderObj->animator->setTrigger("goto_mcm_sheath_weapon");
+                // d->characterRenderObj->animator->setTrigger("goto_sheath_weapon");  // @NOTE: for EWU Game Jam.  // @TODO: figure out how to prevent ice breaking sfx in hokasu event.  @REPLY: you need to make another animation that has character eating the item and then put away the weapon, and then goto that animation instead of the "break off" animation.
+                // d->characterRenderObj->animator->setTrigger("goto_mcm_sheath_weapon");
             } break;
 
             case globalState::TOOL:
@@ -468,8 +467,8 @@ void processRelease(Character_XData* d)
     {
         // Release the item off the handle.
         d->materializedItem = nullptr;
-        d->characterRenderObj->animator->setTrigger("goto_sheath_weapon");
-        d->characterRenderObj->animator->setTrigger("goto_mcm_sheath_weapon");
+        // d->characterRenderObj->animator->setTrigger("goto_sheath_weapon");
+        // d->characterRenderObj->animator->setTrigger("goto_mcm_sheath_weapon");  // @NOTE: for EWU Game Jam.
     }
     textmesh::regenerateTextMeshMesh(d->uiMaterializeItem, getUIMaterializeItemText(d));
 }
@@ -1359,11 +1358,11 @@ void setWazaToCurrent(Character_XData* d, Character_XData::AttackWaza* nextWaza)
     d->wazaVelocityDecay = 0.0f;
     glm_vec3_copy((d->currentWaza != nullptr && d->currentWaza->velocitySettings.size() > 0 && d->currentWaza->velocitySettings[0].executeAtTime == 0) ? d->currentWaza->velocitySettings[0].velocity : vec3{ 0.0f, 0.0f, 0.0f }, d->wazaVelocity);  // @NOTE: this doesn't work if the executeAtTime's aren't sorted asc.
     d->wazaTimer = 0;
-    if (d->currentWaza == nullptr)
-        d->characterRenderObj->animator->setState("StateIdle");  // @TODO: this is a crutch.... need to turn this into more of a trigger based system.
-    else
-        d->characterRenderObj->animator->setState(d->currentWaza->animationState);
-    d->characterRenderObj->animator->setMask("MaskCombatMode", (d->currentWaza == nullptr));
+    // if (d->currentWaza == nullptr)    // @NOTE: for EWU Game Jam.
+    //     d->characterRenderObj->animator->setState("StateIdle");  // @TODO: this is a crutch.... need to turn this into more of a trigger based system.
+    // else
+    //     d->characterRenderObj->animator->setState(d->currentWaza->animationState);
+    // d->characterRenderObj->animator->setMask("MaskCombatMode", (d->currentWaza == nullptr));
 }
 
 Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds) : Entity(em, ds), _data(new Character_XData())
@@ -1384,12 +1383,12 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
     std::vector<vkglTF::Animator::AnimatorCallback> animatorCallbacks = {
         {
             "EventEnableMCM", [&]() {
-                _data->characterRenderObj->animator->setMask("MaskCombatMode", true);
+                // _data->characterRenderObj->animator->setMask("MaskCombatMode", true);  // @NOTE: for EWU Game Jam.  
             }
         },
         {
             "EventDisableMCM", [&]() {
-                _data->characterRenderObj->animator->setMask("MaskCombatMode", false);
+                // _data->characterRenderObj->animator->setMask("MaskCombatMode", false);  // @NOTE: for EWU Game Jam.  
             }
         },
         {
@@ -1407,7 +1406,7 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         {
             "EventMaterializeBlade", [&]() {
                 std::cout << "MATERIALIZE BLADE" << std::endl;
-                _data->weaponRenderObj->renderLayer = RenderLayer::VISIBLE;  // @TODO: in the future will have model switching.
+                // _data->weaponRenderObj->renderLayer = RenderLayer::VISIBLE;  // @NOTE: for EWU Game Jam.  // @TODO: in the future will have model switching.
                 // AudioEngine::getInstance().playSound("res/sfx/wip_Pl_Kago_Ready.wav");
                 AudioEngine::getInstance().playSound("res/sfx/wip_Weapon_Lsword_035_Blur01.wav");
             }
@@ -1415,7 +1414,7 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         {
             "EventHokasuBlade", [&]() {
                 std::cout << "HOKASU BLADE" << std::endl;
-                _data->weaponRenderObj->renderLayer = RenderLayer::INVISIBLE;  // @TODO: in the future will have model switching.
+                // _data->weaponRenderObj->renderLayer = RenderLayer::INVISIBLE;  // @NOTE: for EWU Game Jam.  // @TODO: in the future will have model switching.
                 // @TODO: leave the item on the ground if you wanna reattach or use or litter.
                 AudioEngine::getInstance().playSoundFromList({
                     "res/sfx/wip_Pl_IceBreaking00.wav",
@@ -1509,36 +1508,27 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         },*/
     };
 
-    vkglTF::Model* characterModel = _data->rom->getModel("SlimeGirl", this, [](){});
-    vkglTF::Model* handleModel = _data->rom->getModel("Handle", this, [](){});
-    vkglTF::Model* weaponModel = _data->rom->getModel("WingWeapon", this, [](){});
+    vkglTF::Model* characterModel = nullptr;
+    if (_data->characterType == CHARACTER_TYPE_PLAYER)
+        characterModel = _data->rom->getModel("CharSlimeMC", this, [](){});
+    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+        characterModel = _data->rom->getModel("CharGhost", this, [](){});
+    if (_data->characterType == CHARACTER_TYPE_CHASER)
+        characterModel = _data->rom->getModel("CharOpponent", this, [](){});
+
     _data->rom->registerRenderObjects({
             {
                 .model = characterModel,
-                .animator = new vkglTF::Animator(characterModel, animatorCallbacks),
+                // .animator = new vkglTF::Animator(characterModel, animatorCallbacks),  // @NOTE: for EWU Game Jam.
                 .renderLayer = RenderLayer::VISIBLE,
                 .attachedEntityGuid = getGUID(),
-            },
-            {
-                .model = handleModel,
-                .renderLayer = RenderLayer::VISIBLE,
-                .attachedEntityGuid = getGUID(),
-            },
-            {
-                .model = weaponModel,
-                .renderLayer = RenderLayer::INVISIBLE,
-                .attachedEntityGuid = getGUID(),
-            },
+            }
         },
-        { &_data->characterRenderObj, &_data->handleRenderObj, &_data->weaponRenderObj }
+        { &_data->characterRenderObj  }
     );
 
     // @HARDCODED: there should be a sensing algorithm to know which lightgrid to assign itself to.
     for (auto& inst : _data->characterRenderObj->calculatedModelInstances)
-        inst.voxelFieldLightingGridID = 1;
-    for (auto& inst : _data->handleRenderObj->calculatedModelInstances)
-        inst.voxelFieldLightingGridID = 1;
-    for (auto& inst : _data->weaponRenderObj->calculatedModelInstances)
         inst.voxelFieldLightingGridID = 1;
 
     bool useCCD = (_data->characterType == CHARACTER_TYPE_PLAYER);
@@ -1587,8 +1577,8 @@ Character::~Character()
         globalState::playerPositionRef = nullptr;
     }
 
-    delete _data->characterRenderObj->animator;
-    _data->rom->unregisterRenderObjects({ _data->characterRenderObj, _data->handleRenderObj, _data->weaponRenderObj });
+    // delete _data->characterRenderObj->animator;  // @NOTE: for EWU Game Jam.  
+    _data->rom->unregisterRenderObjects({ _data->characterRenderObj });
     _data->rom->removeModelCallbacks(this);
 
     physengine::destroyCapsule(_data->cpd);
@@ -1656,7 +1646,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
             if (d->prevIsGrounded &&
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
                 isMoving != d->prevIsMoving))
-                d->characterRenderObj->animator->setTrigger("goto_idle");
+                ;//d->characterRenderObj->animator->setTrigger("goto_idle");  // @NOTE: for EWU Game Jam.
 
             d->moveBackwardsRailFlipTimer = 0.0f;
         }
@@ -1669,7 +1659,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
             if (d->prevIsGrounded &&
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
                 isMoving != d->prevIsMoving))
-                d->characterRenderObj->animator->setTrigger("goto_run");
+                ;//d->characterRenderObj->animator->setTrigger("goto_run");  // @NOTE: for EWU Game Jam.
 
             // Check if moving against the camera while on a camera rail.
             if (d->characterType == CHARACTER_TYPE_PLAYER &&
@@ -1689,7 +1679,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
         if (!d->prevIsGrounded &&
             d->prevIsGrounded != d->prevPrevIsGrounded &&
             !d->prevPerformedJump)
-            d->characterRenderObj->animator->setTrigger("goto_fall");
+            ;//d->characterRenderObj->animator->setTrigger("goto_fall");  // @NOTE: for EWU Game Jam.
         d->prevIsMoving = isMoving;
         d->prevPrevIsGrounded = d->prevIsGrounded;
     }
@@ -1827,7 +1817,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
         d->prevIsGrounded = false;
         d->inputFlagJump = false;
         d->prevPerformedJump = true;
-        d->characterRenderObj->animator->setTrigger("goto_jump");
+        // d->characterRenderObj->animator->setTrigger("goto_jump");  // @NOTE: for EWU Game Jam.
     }
 
     if (d->currentWaza == nullptr)
@@ -1974,7 +1964,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
 
         if (d->forceZoneVelocity[1] < 0.0f && d->prevIsGrounded)
         {
-            d->characterRenderObj->animator->setTrigger("goto_getting_pressed");
+            // d->characterRenderObj->animator->setTrigger("goto_getting_pressed");  // @NOTE: for EWU Game Jam.
             d->inGettingPressedAnim = true;
         }
 
@@ -1984,7 +1974,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
     {
         if (d->inGettingPressedAnim)  // Exit pressed animation
         {
-            d->characterRenderObj->animator->setTrigger("goto_get_out_getting_pressed");
+            // d->characterRenderObj->animator->setTrigger("goto_get_out_getting_pressed");  // @NOTE: for EWU Game Jam.
             d->inGettingPressedAnim = false;
         }
     }
@@ -2028,7 +2018,7 @@ void calculateBladeStartEndFromHandAttachment(Character_XData* d, vec3& bladeSta
     glm_translate(offsetMat, vec3{ 0.0f, -physengine::getLengthOffsetToBase(*d->cpd) / d->modelSize, 0.0f });
 
     mat4 attachmentJointMat;
-    d->characterRenderObj->animator->getJointMatrix(d->attackWazaEditor.bladeBoneName, attachmentJointMat);
+    // d->characterRenderObj->animator->getJointMatrix(d->attackWazaEditor.bladeBoneName, attachmentJointMat);  // @NOTE: for EWU Game Jam.
     glm_mat4_mul(offsetMat, attachmentJointMat, attachmentJointMat);
 
     glm_mat4_mulv3(attachmentJointMat, vec3{ 0.0f, d->attackWazaEditor.bladeDistanceStartEnd[0], 0.0f }, 1.0f, bladeStart);
@@ -2044,7 +2034,7 @@ void attackWazaEditorPhysicsUpdate(const float_t& physicsDeltaTime, Character_XD
         d->attackWazaEditor.minTick = 0;
         d->attackWazaEditor.maxTick = aw.duration >= 0 ? aw.duration : 100;  // @HARDCODE: if duration is infinite, just cap it at 100.  -Timo 2023/09/22
 
-        d->characterRenderObj->animator->setState(aw.animationState, d->attackWazaEditor.currentTick * physicsDeltaTime);
+        // d->characterRenderObj->animator->setState(aw.animationState, d->attackWazaEditor.currentTick * physicsDeltaTime);  // @NOTE: for EWU Game Jam.
 
         d->attackWazaEditor.triggerRecalcWazaCache = false;
     }
@@ -2168,7 +2158,7 @@ void attackWazaEditorPhysicsUpdate(const float_t& physicsDeltaTime, Character_XD
         aw.hitscanNodes.clear();
         for (int16_t i = d->attackWazaEditor.bakeHitscanStartTick; i <= d->attackWazaEditor.bakeHitscanEndTick; i++)
         {
-            d->characterRenderObj->animator->setState(aw.animationState, i * physicsDeltaTime, true);
+            // d->characterRenderObj->animator->setState(aw.animationState, i * physicsDeltaTime, true);  // @NOTE: for EWU Game Jam.
 
             Character_XData::AttackWaza::HitscanFlowNode hfn;
             calculateBladeStartEndFromHandAttachment(d, hfn.nodeEnd1, hfn.nodeEnd2);
@@ -2374,7 +2364,7 @@ void Character::update(const float_t& deltaTime)
     _data->disableInput = (_data->camera->freeCamMode.enabled || ImGui::GetIO().WantTextInput);
 
     // Update twitch angle.
-    _data->characterRenderObj->animator->setTwitchAngle(_data->attackTwitchAngle);
+    // _data->characterRenderObj->animator->setTwitchAngle(_data->attackTwitchAngle);  // @NOTE: for EWU Game Jam.
     _data->attackTwitchAngle = glm_lerp(_data->attackTwitchAngle, 0.0f, std::abs(_data->attackTwitchAngle) * _data->attackTwitchAngleReturnSpeed * 60.0f * deltaTime);
 
     if (_data->characterType == CHARACTER_TYPE_PLAYER)
@@ -2483,10 +2473,10 @@ void Character::lateUpdate(const float_t& deltaTime)
     glm_scale(transform, vec3{ _data->modelSize, _data->modelSize, _data->modelSize });
     glm_mat4_copy(transform, _data->characterRenderObj->transformMatrix);
 
-    mat4 attachmentJointMat;
-    _data->characterRenderObj->animator->getJointMatrix(_data->weaponAttachmentJointName, attachmentJointMat);
-    glm_mat4_mul(_data->characterRenderObj->transformMatrix, attachmentJointMat, _data->weaponRenderObj->transformMatrix);
-    glm_mat4_copy(_data->weaponRenderObj->transformMatrix, _data->handleRenderObj->transformMatrix);
+    // mat4 attachmentJointMat;  // @NOTE: for EWU Game Jam.
+    // _data->characterRenderObj->animator->getJointMatrix(_data->weaponAttachmentJointName, attachmentJointMat);
+    // glm_mat4_mul(_data->characterRenderObj->transformMatrix, attachmentJointMat, _data->weaponRenderObj->transformMatrix);
+    // glm_mat4_copy(_data->weaponRenderObj->transformMatrix, _data->handleRenderObj->transformMatrix);
 }
 
 void Character::dump(DataSerializer& ds)
@@ -2732,8 +2722,8 @@ void defaultRenderImGui(Character_XData* d)
                 d->attackWazaEditor.triggerRecalcWazaCache = true;
                 d->attackWazaEditor.triggerRecalcHitscanLaunchVelocityCache = true;
                 d->attackWazaEditor.triggerRecalcSelfVelocitySimCache = true;
-                d->attackWazaEditor.preEditorAnimatorSpeedMultiplier = d->characterRenderObj->animator->getUpdateSpeedMultiplier();
-                d->characterRenderObj->animator->setUpdateSpeedMultiplier(0.0f);
+                // d->attackWazaEditor.preEditorAnimatorSpeedMultiplier = d->characterRenderObj->animator->getUpdateSpeedMultiplier();  // @NOTE: for EWU Game Jam.
+                // d->characterRenderObj->animator->setUpdateSpeedMultiplier(0.0f);
 
                 d->attackWazaEditor.editingWazaFname = path;
 
@@ -2773,7 +2763,7 @@ void attackWazaEditorRenderImGui(Character_XData* d)
     if (ImGui::Button("Exit Waza Editor"))
     {
         d->attackWazaEditor.isEditingMode = false;
-        d->characterRenderObj->animator->setUpdateSpeedMultiplier(d->attackWazaEditor.preEditorAnimatorSpeedMultiplier);
+        // d->characterRenderObj->animator->setUpdateSpeedMultiplier(d->attackWazaEditor.preEditorAnimatorSpeedMultiplier);  // @NOTE: for EWU Game Jam.
         // @TODO: reset animator and asm to default/root animation state.
         return;
     }
