@@ -1641,15 +1641,23 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
             {
                 vec3 playerToMeDelta;
                 glm_vec3_sub(d->position, *globalState::playerPositionRef, playerToMeDelta);
-                if (glm_vec3_norm2(playerToMeDelta) < 5.0f * 5.0f)
+                constexpr float_t UNITS_DETECTION = 20.0f;
+                if (glm_vec3_norm2(playerToMeDelta) < UNITS_DETECTION * UNITS_DETECTION)
                 {
                     glm_vec3_copy(playerToMeDelta, d->worldSpaceInput);
                     d->worldSpaceInput[1] = 0.0f;
                     glm_vec3_normalize(d->worldSpaceInput);
+
+                    vec3 rayDirection;   // @INCOMPLETE
+                    float_t l = 120.0f;  // @INCOMPLETE: Distance.
+                    float_t r = 1.0f;
+                    if (glm_vec3_dot(playerToMeDelta, rayDirection) > std::sqrtf(l * l - r * r) / l)
+                    {
+                        // Ray collided with player circle (see `etc/dot_product_to_radius_algo.png`).
+                    }
                 }
             }
         }
-
 
         bool isMoving = glm_vec3_norm2(d->worldSpaceInput) < 0.01f;  // @NOCHECKIN: this name sucks. Should be `isIdle`.
         if (isMoving)
