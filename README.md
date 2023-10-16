@@ -37,6 +37,7 @@
 
 - [ ] Build 3 monsters to chase.
     - [ ] Have monsters do a check every frame to see what is a "safe" direction to go in when getting chased.
+        - [x] Figure out formula for seeing if raycast direction hits the player.
         - [ ] Raycast in 16 directions, and if any walls are hit (not ramps), then that's a bad direction to go.
         - [ ] Mix in the player's direction (if within 20 units and visible, then move).
 - [ ] Create prompt to press 'spacebar' to 'catch' a monster.
