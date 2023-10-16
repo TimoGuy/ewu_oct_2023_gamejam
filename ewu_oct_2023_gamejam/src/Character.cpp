@@ -252,8 +252,6 @@ struct Character_XData
     } notification;
 
     vec3 worldSpaceInput = GLM_VEC3_ZERO_INIT;
-    float_t moveBackwardsRailFlipTime = 0.75f;
-    float_t moveBackwardsRailFlipTimer = 0.0f;
 #ifdef _DEVELOP
     bool    disableInput = false;  // @DEBUG for level editor
 #endif
@@ -1612,32 +1610,46 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
         //
         // Calculate input
         //
-        vec2 input = GLM_VEC2_ZERO_INIT;
+        glm_vec3_zero(d->worldSpaceInput);
 
-        if (d->characterType == CHARACTER_TYPE_PLAYER)
+        if (!d->disableInput && d->knockbackMode == Character_XData::KnockbackStage::NONE)
         {
-            input[0] += input::keyLeftPressed  ? -1.0f : 0.0f;
-            input[0] += input::keyRightPressed ?  1.0f : 0.0f;
-            input[1] += input::keyUpPressed    ?  1.0f : 0.0f;
-            input[1] += input::keyDownPressed  ? -1.0f : 0.0f;
+            if (d->characterType == CHARACTER_TYPE_PLAYER)
+            {
+                vec2 input = GLM_VEC2_ZERO_INIT;
+                input[0] += input::keyLeftPressed  ? -1.0f : 0.0f;
+                input[0] += input::keyRightPressed ?  1.0f : 0.0f;
+                input[1] += input::keyUpPressed    ?  1.0f : 0.0f;
+                input[1] += input::keyDownPressed  ? -1.0f : 0.0f;
+
+                // Transform key inputs to world space input.
+                vec3 flatCameraFacingDirection = {
+                    d->camera->sceneCamera.facingDirection[0],
+                    0.0f,
+                    d->camera->sceneCamera.facingDirection[2]
+                };
+                glm_normalize(flatCameraFacingDirection);
+
+                glm_vec3_scale(flatCameraFacingDirection, input[1], d->worldSpaceInput);
+                vec3 up = { 0.0f, 1.0f, 0.0f };
+                vec3 flatCamRight;
+                glm_vec3_cross(flatCameraFacingDirection, up, flatCamRight);
+                glm_normalize(flatCamRight);
+                glm_vec3_muladds(flatCamRight, input[0], d->worldSpaceInput);
+            }
+            else if (d->characterType == CHARACTER_TYPE_MONSTER)
+            {
+                vec3 playerToMeDelta;
+                glm_vec3_sub(d->position, *globalState::playerPositionRef, playerToMeDelta);
+                if (glm_vec3_norm2(playerToMeDelta) < 5.0f * 5.0f)
+                {
+                    glm_vec3_copy(playerToMeDelta, d->worldSpaceInput);
+                    d->worldSpaceInput[1] = 0.0f;
+                    glm_vec3_normalize(d->worldSpaceInput);
+                }
+            }
         }
 
-        if (d->disableInput || d->knockbackMode > Character_XData::KnockbackStage::NONE)
-            input[0] = input[1] = 0.0f;
-
-        vec3 flatCameraFacingDirection = {
-            d->camera->sceneCamera.facingDirection[0],
-            0.0f,
-            d->camera->sceneCamera.facingDirection[2]
-        };
-        glm_normalize(flatCameraFacingDirection);
-
-        glm_vec3_scale(flatCameraFacingDirection, input[1], d->worldSpaceInput);
-        vec3 up = { 0.0f, 1.0f, 0.0f };
-        vec3 flatCamRight;
-        glm_vec3_cross(flatCameraFacingDirection, up, flatCamRight);
-        glm_normalize(flatCamRight);
-        glm_vec3_muladds(flatCamRight, input[0], d->worldSpaceInput);
 
         bool isMoving = glm_vec3_norm2(d->worldSpaceInput) < 0.01f;  // @NOCHECKIN: this name sucks. Should be `isIdle`.
         if (isMoving)
@@ -1647,8 +1659,6 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
                 isMoving != d->prevIsMoving))
                 ;//d->characterRenderObj->animator->setTrigger("goto_idle");  // @NOTE: for EWU Game Jam.
-
-            d->moveBackwardsRailFlipTimer = 0.0f;
         }
         else
         {
@@ -1660,21 +1670,6 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
                 isMoving != d->prevIsMoving))
                 ;//d->characterRenderObj->animator->setTrigger("goto_run");  // @NOTE: for EWU Game Jam.
-
-            // Check if moving against the camera while on a camera rail.
-            if (d->characterType == CHARACTER_TYPE_PLAYER &&
-                d->camera->mainCamMode.cameraRailSettings.active &&
-                std::abs(deltaAngle(d->facingDirection, d->camera->mainCamMode.cameraRailSettings.targetOrbitAngles[1])) > glm_rad(150.0f))
-            {
-                d->moveBackwardsRailFlipTimer += physicsDeltaTime;
-                if (d->moveBackwardsRailFlipTimer > d->moveBackwardsRailFlipTime)
-                {
-                    d->camera->mainCamMode.flipCameraRail();
-                    d->moveBackwardsRailFlipTimer = 0.0f;
-                }
-            }
-            else
-                d->moveBackwardsRailFlipTimer = 0.0f;
         }
         if (!d->prevIsGrounded &&
             d->prevIsGrounded != d->prevPrevIsGrounded &&
@@ -2405,6 +2400,8 @@ void Character::update(const float_t& deltaTime)
         if (_data->knockbackMode == Character_XData::KnockbackStage::NONE)
         {
             // _data->inputFlagJump |= !_data->disableInput && input::onKeyJumpPress;  // @NOTE: disabled jump (for EWU Game Jam).  -Timo 2023/10/12
+            if (!_data->disableInput && input::onKeyJumpPress)  // @NOTE: instead, jump button is flip camera rail
+                _data->camera->mainCamMode.flipCameraRail();
             _data->inputFlagAttack |= !_data->disableInput && input::onLMBPress;
             _data->inputFlagRelease |= !_data->disableInput && input::onRMBPress;
         }
@@ -2463,7 +2460,8 @@ void Character::lateUpdate(const float_t& deltaTime)
     vec3 position;
     glm_vec3_add(_data->cpd->interpolCOMPosition, offset, position);
 
-    vec3 eulerAngles = { 0.0f, _data->facingDirection, 0.0f };
+    // vec3 eulerAngles = { 0.0f, _data->facingDirection, 0.0f };  // @NOTE: for EWU Game Jam.
+    vec3 eulerAngles = { 0.0f, std::atan2f(_data->camera->sceneCamera.facingDirection[0], _data->camera->sceneCamera.facingDirection[2]) + glm_rad(90.0f), 0.0f };
     mat4 rotation;
     glm_euler_zyx(eulerAngles, rotation);
 
@@ -2488,6 +2486,10 @@ void Character::dump(DataSerializer& ds)
 
     float_t healthF = _data->health;
     ds.dumpFloat(healthF);
+
+    ds.dumpFloat(_data->inputMaxXZSpeed);
+    ds.dumpFloat(_data->midairXZAcceleration);
+    ds.dumpFloat(_data->midairXZDeceleration);
 }
 
 void Character::load(DataSerialized& ds)
@@ -2500,6 +2502,13 @@ void Character::load(DataSerialized& ds)
     float_t healthF;
     ds.loadFloat(healthF);
     _data->health = (int32_t)healthF;
+
+    if (ds.getSerializedValuesCount() >= 1)
+        ds.loadFloat(_data->inputMaxXZSpeed);
+    if (ds.getSerializedValuesCount() >= 1)
+        ds.loadFloat(_data->midairXZAcceleration);
+    if (ds.getSerializedValuesCount() >= 1)
+        ds.loadFloat(_data->midairXZDeceleration);
 }
 
 void updateInteractionUI()

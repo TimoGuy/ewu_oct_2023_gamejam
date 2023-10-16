@@ -97,7 +97,7 @@ struct MainCamMode
 	struct CameraRailSettings
 	{
 		bool        active = true; //false;    // @NOTE: expectation is to use the camera rails all the time (ONLY FOR EWU GAME JAM)  -Timo 2023/10/11
-		vec2        targetOrbitAngles = GLM_VEC2_ZERO_INIT;
+		vec2        targetOrbitAngles = { glm_rad(15.0f), 0.0f }; //GLM_VEC2_ZERO_INIT;  // @NOTE: for EWU Game Jam.
 		vec2        orbitAnglesVelocities;
 		float_t     orbitAnglesSmoothTime = 0.25f;
 		CameraRail* cameraRail = nullptr;
