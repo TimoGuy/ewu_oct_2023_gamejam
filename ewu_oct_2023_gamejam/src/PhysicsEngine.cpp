@@ -27,9 +27,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/Physics/Collision/RayCast.h>
-#include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>  // @TODO: don't need this.
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
@@ -400,17 +398,6 @@ namespace physengine
 
 #endif // JPH_ENABLE_ASSERTS
 
-    // Layer that objects can be in, determines which other objects it can collide with
-// Typically you at least want to have 1 layer for moving bodies and 1 layer for static bodies, but you can have more
-// layers if you want. E.g. you could have a layer for high detail collision (which is not used by the physics simulation
-// but only if you do collision testing).
-    namespace Layers
-    {
-        static constexpr ObjectLayer NON_MOVING = 0;
-        static constexpr ObjectLayer MOVING = 1;
-        static constexpr ObjectLayer NUM_LAYERS = 2;
-    };
-
     /// Class that determines if two object layers can collide
     class ObjectLayerPairFilterImpl : public ObjectLayerPairFilter
     {
@@ -428,18 +415,6 @@ namespace physengine
                 return false;
             }
         }
-    };
-
-    // Each broadphase layer results in a separate bounding volume tree in the broad phase. You at least want to have
-    // a layer for non-moving and moving objects to avoid having to update a tree full of static objects every frame.
-    // You can have a 1-on-1 mapping between object layers and broadphase layers (like in this case) but if you have
-    // many object layers you'll be creating many broad phase trees, which is not efficient. If you want to fine tune
-    // your broadphase layers define JPH_TRACK_BROADPHASE_STATS and look at the stats reported on the TTY.
-    namespace BroadPhaseLayers
-    {
-        static constexpr BroadPhaseLayer NON_MOVING(0);
-        static constexpr BroadPhaseLayer MOVING(1);
-        static constexpr uint32_t NUM_LAYERS(2);
     };
 
     // BroadPhaseLayerInterface implementation
@@ -1727,23 +1702,10 @@ namespace physengine
         return 0;  // @INCOMPLETE: for now, just ignore the collision layers and check everything.
     }
 
-    bool raycast(vec3 origin, vec3 directionAndMagnitude, std::string& outHitGuid)
+    bool raycastForEntity(vec3 origin, vec3 directionAndMagnitude, std::string& outHitGuid)
     {
-#ifdef _DEVELOP
-        if (engine->generateCollisionDebugVisualization)
-        {
-            vec3 pt2;
-            glm_vec3_add(origin, directionAndMagnitude, pt2);
-            drawDebugVisLine(origin, pt2);
-        }
-#endif
-
-        RRayCast ray{
-            Vec3(origin[0], origin[1], origin[2]),
-            Vec3(directionAndMagnitude[0], directionAndMagnitude[1], directionAndMagnitude[2])
-        };
         RayCastResult result;
-        if (physicsSystem->GetNarrowPhaseQuery().CastRay(ray, result, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::MOVING), SpecifiedObjectLayerFilter(Layers::MOVING)))
+        if (raycast(origin, directionAndMagnitude, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::MOVING), SpecifiedObjectLayerFilter(Layers::MOVING), result))
         {
             const uint32_t bodyIdIdx = result.mBodyID.GetIndex();
             if (bodyIdToEntityGuidMap.find(bodyIdIdx) == bodyIdToEntityGuidMap.end())
@@ -1758,6 +1720,26 @@ namespace physengine
             return true;
         }
         return false;
+    }
+
+    bool raycast(vec3 origin, vec3 directionAndMagnitude, SpecifiedBroadPhaseLayerFilter layerFilter, SpecifiedObjectLayerFilter objectFilter, RayCastResult& outResult)
+    {
+        RRayCast ray{
+            Vec3(origin[0], origin[1], origin[2]),
+            Vec3(directionAndMagnitude[0], directionAndMagnitude[1], directionAndMagnitude[2])
+        };
+        bool success = physicsSystem->GetNarrowPhaseQuery().CastRay(ray, outResult, layerFilter, objectFilter);
+#ifdef _DEVELOP
+        if (engine->generateCollisionDebugVisualization)
+        {
+            if (success)
+                glm_vec3_scale(directionAndMagnitude, outResult.mFraction, directionAndMagnitude);
+            vec3 pt2;
+            glm_vec3_add(origin, directionAndMagnitude, pt2);
+            drawDebugVisLine(origin, pt2);
+        }
+#endif
+        return success;
     }
 
 #if 0

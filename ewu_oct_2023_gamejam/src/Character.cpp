@@ -1192,7 +1192,7 @@ void processWazaUpdate(Character_XData* d, EntityManager* em, const float_t& phy
                 glm_vec3_sub(pt2, pt1, directionAndMagnitude);
 
                 std::string hitGuid;
-                if (physengine::raycast(pt1, directionAndMagnitude, hitGuid))
+                if (physengine::raycastForEntity(pt1, directionAndMagnitude, hitGuid))
                 {
                     // Successful hitscan!
                     float_t attackLvl =
@@ -1644,17 +1644,77 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                 constexpr float_t UNITS_DETECTION = 20.0f;
                 if (glm_vec3_norm2(playerToMeDelta) < UNITS_DETECTION * UNITS_DETECTION)
                 {
-                    glm_vec3_copy(playerToMeDelta, d->worldSpaceInput);
-                    d->worldSpaceInput[1] = 0.0f;
-                    glm_vec3_normalize(d->worldSpaceInput);
+                    // Compute movement weights.
+                    constexpr size_t NUM_WEIGHTS = 16;
+                    float_t weights[NUM_WEIGHTS];
 
-                    vec3 rayDirection;   // @INCOMPLETE
-                    float_t l = 120.0f;  // @INCOMPLETE: Distance.
-                    float_t r = 1.0f;
-                    if (glm_vec3_dot(playerToMeDelta, rayDirection) > std::sqrtf(l * l - r * r) / l)
+                    vec3 rayDirection = { 0.0f, 0.0f, 1.0f };
+                    float_t l = glm_vec3_norm(playerToMeDelta);
+                    float_t r = 3.0f;
+                    float_t cosA = std::sqrtf(l * l - r * r) / l;  // @NOTE: see `etc/dot_product_to_radius_algo.png`.
+                    vec3 playerToMeDeltaNormalized;
+                    glm_vec3_normalize_to(playerToMeDelta, playerToMeDeltaNormalized);
+
+                    mat4 rotationStride;
+                    glm_euler_zyx(vec3{ 0.0f, glm_rad(360.0f / NUM_WEIGHTS), 0.0f }, rotationStride);
+
+                    float_t greatestWeight = std::numeric_limits<float_t>::min();
+                    size_t greatestWeightIdx = (size_t)-1;
+                    vec3 greatestWeightDirection;
+
+                    for (size_t i = 0; i < NUM_WEIGHTS; i++)
                     {
-                        // Ray collided with player circle (see `etc/dot_product_to_radius_algo.png`).
+                        if (i > 0)
+                            glm_mat4_mulv3(rotationStride, rayDirection, 0.0f, rayDirection);
+                        
+                        float_t weight = std::numeric_limits<float_t>::max();
+                        if (glm_vec3_dot(playerToMeDeltaNormalized, rayDirection) > cosA)
+                            weight = l;
+                        
+                        // Compute raycast.
+                        constexpr float_t RAY_MAGNITUDE = 100.0f;
+                        vec3 dirAndMag;
+                        glm_vec3_scale(rayDirection, RAY_MAGNITUDE, dirAndMag);
+                        vec3 eyeLevelPosition;
+                        glm_vec3_add(d->position, vec3{ 0.0f, 0.75f, 0.0f }, eyeLevelPosition);  // @NOTE: bc the camera triggers are on the ground, they get in the raycast. For the sake of future headaches, figure out how to disable triggers from receiving a raycast.  -Timo 2023/10/17
+                        JPH::RayCastResult result;
+                        if (physengine::raycast(
+                            eyeLevelPosition,
+                            dirAndMag,
+                            JPH::SpecifiedBroadPhaseLayerFilter(physengine::BroadPhaseLayers::NON_MOVING),
+                            JPH::SpecifiedObjectLayerFilter(physengine::Layers::NON_MOVING),
+                            result))
+                        {
+                            // Cast again to make sure it wasn't a ramp.
+                            float_t cast1MFraction = result.mFraction;
+                            vec3 positionRaised;
+                            glm_vec3_add(eyeLevelPosition, vec3{ 0.0f, 0.1f, 0.0f }, positionRaised);
+                            if (physengine::raycast(
+                                positionRaised,
+                                dirAndMag,
+                                JPH::SpecifiedBroadPhaseLayerFilter(physengine::BroadPhaseLayers::NON_MOVING),
+                                JPH::SpecifiedObjectLayerFilter(physengine::Layers::NON_MOVING),
+                                result) &&
+                                result.mFraction <= cast1MFraction) // @NOTE: For checking that it's a wall and not a ramp.
+                            {
+                                weight = std::min(weight, RAY_MAGNITUDE * result.mFraction);
+                            }
+                        }
+
+                        if (weight > greatestWeight)
+                        {
+                            greatestWeight = weight;
+                            greatestWeightIdx = i;
+                            glm_vec3_copy(rayDirection, greatestWeightDirection);
+                        }
+
+                        weights[i] = weight;
                     }
+
+                    // Use weights to compute a direction to move.
+                    float_t rotationAngle = glm_rad(360.0f / NUM_WEIGHTS * greatestWeightIdx);
+                    d->worldSpaceInput[0] = greatestWeightDirection[0];
+                    d->worldSpaceInput[2] = greatestWeightDirection[2];
                 }
             }
         }

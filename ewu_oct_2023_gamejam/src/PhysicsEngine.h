@@ -5,6 +5,9 @@
 #include "ImportGLM.h"
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Math/Mat44.h>
 #include <Jolt/Math/Vec3.h>
 #include <Jolt/Math/MathTypes.h>
@@ -39,6 +42,29 @@ namespace physengine
         IS_CHARACTER = 1,
         IS_NS_CAMERA_RAIL_TRIGGER = 2,
         IS_EW_CAMERA_RAIL_TRIGGER = 3,
+    };
+
+    // Each broadphase layer results in a separate bounding volume tree in the broad phase. You at least want to have
+    // a layer for non-moving and moving objects to avoid having to update a tree full of static objects every frame.
+    // You can have a 1-on-1 mapping between object layers and broadphase layers (like in this case) but if you have
+    // many object layers you'll be creating many broad phase trees, which is not efficient. If you want to fine tune
+    // your broadphase layers define JPH_TRACK_BROADPHASE_STATS and look at the stats reported on the TTY.
+    namespace BroadPhaseLayers
+    {
+        static constexpr JPH::BroadPhaseLayer NON_MOVING(0);
+        static constexpr JPH::BroadPhaseLayer MOVING(1);
+        static constexpr uint32_t NUM_LAYERS(2);
+    };
+
+    // Layer that objects can be in, determines which other objects it can collide with
+    // Typically you at least want to have 1 layer for moving bodies and 1 layer for static bodies, but you can have more
+    // layers if you want. E.g. you could have a layer for high detail collision (which is not used by the physics simulation
+    // but only if you do collision testing).
+    namespace Layers
+    {
+        static constexpr JPH::ObjectLayer NON_MOVING = 0;
+        static constexpr JPH::ObjectLayer MOVING = 1;
+        static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
     };
 
     struct VoxelFieldPhysicsData
@@ -131,7 +157,8 @@ namespace physengine
 
     void setWorldGravity(vec3 newGravity);
     size_t getCollisionLayer(const std::string& layerName);
-    bool raycast(vec3 origin, vec3 directionAndMagnitude, std::string& outHitGuid);
+    bool raycastForEntity(vec3 origin, vec3 directionAndMagnitude, std::string& outHitGuid);
+    bool raycast(vec3 origin, vec3 directionAndMagnitude, JPH::SpecifiedBroadPhaseLayerFilter layerFilter, JPH::SpecifiedObjectLayerFilter objectFilter, JPH::RayCastResult& outResult);
 #if 0
     bool lineSegmentCast(vec3& pt1, vec3& pt2, size_t collisionLayer, bool getAllGuids, std::vector<std::string>& outHitGuid);
 #endif
