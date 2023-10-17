@@ -1648,13 +1648,11 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                     constexpr size_t NUM_WEIGHTS = 16;
                     float_t weights[NUM_WEIGHTS];
 
-                    vec3 rayDirection = { 0.0f, 0.0f, 1.0f };
-                    float_t l = glm_vec3_norm(playerToMeDelta);
-                    float_t r = 3.0f;
-                    float_t cosA = std::sqrtf(l * l - r * r) / l;  // @NOTE: see `etc/dot_product_to_radius_algo.png`.
+                    float_t playerToMeDeltaMagnitude = glm_vec3_norm(playerToMeDelta);
                     vec3 playerToMeDeltaNormalized;
                     glm_vec3_normalize_to(playerToMeDelta, playerToMeDeltaNormalized);
 
+                    vec3 rayDirection = { 0.0f, 0.0f, 1.0f };
                     mat4 rotationStride;
                     glm_euler_zyx(vec3{ 0.0f, glm_rad(360.0f / NUM_WEIGHTS), 0.0f }, rotationStride);
 
@@ -1667,12 +1665,12 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                         if (i > 0)
                             glm_mat4_mulv3(rotationStride, rayDirection, 0.0f, rayDirection);
                         
-                        float_t weight = std::numeric_limits<float_t>::max();
-                        if (glm_vec3_dot(playerToMeDeltaNormalized, rayDirection) > cosA)
-                            weight = l;
+                        // Player weight.
+                        float_t playerAvoidanceWeight = glm_vec3_dot(playerToMeDeltaNormalized, rayDirection) * 0.5f + 0.5f;  // Set to [0-1]
                         
                         // Compute raycast.
-                        constexpr float_t RAY_MAGNITUDE = 100.0f;
+                        float_t physBoundsWeight = 0.0f;
+                        constexpr float_t RAY_MAGNITUDE = 20.0f;
                         vec3 dirAndMag;
                         glm_vec3_scale(rayDirection, RAY_MAGNITUDE, dirAndMag);
                         vec3 eyeLevelPosition;
@@ -1697,9 +1695,14 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                                 result) &&
                                 result.mFraction <= cast1MFraction) // @NOTE: For checking that it's a wall and not a ramp.
                             {
-                                weight = std::min(weight, RAY_MAGNITUDE * result.mFraction);
+                                physBoundsWeight = RAY_MAGNITUDE * result.mFraction;
                             }
                         }
+
+                        // float_t avoidancePriorityRadius = 5.0f;
+                        // float_t weightBlend = glm_clamp_zo(1.0f - (playerToMeDeltaMagnitude / avoidancePriorityRadius));
+                        // float_t weight = physBoundsWeight * weightBlend + playerAvoidanceWeight;
+                        float_t weight = physBoundsWeight * playerAvoidanceWeight;
 
                         if (weight > greatestWeight)
                         {
