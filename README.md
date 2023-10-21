@@ -31,15 +31,18 @@
 
     - [x] Fix camera mistakes in the larger map.
 
-- [ ] Quality of life improvements
+- [x] Quality of life improvements
     - [x] Change characters to be billboard sprite.
-    - [ ] Add camera collision. Use spherecast.
+    - [ ] ~~Add camera collision. Use spherecast.~~
+    - [ ] ~~Create exporter for voxelfield to obj or gltf model so can be created as template for the display model.~~
+    - [ ] ~~Use the trigger voxels to display/hide different parts of the display model.~~
 
 - [ ] Build 3 monsters to chase.
-    - [ ] Have monsters do a check every frame to see what is a "safe" direction to go in when getting chased.
+    - [x] Have monsters do a check every frame to see what is a "safe" direction to go in when getting chased.
         - [x] Figure out formula for seeing if raycast direction hits the player.
-        - [ ] Raycast in 16 directions, and if any walls are hit (not ramps), then that's a bad direction to go.
-        - [ ] Mix in the player's direction (if within 20 units and visible, then move).
+        - [x] Raycast in 16 directions, and if any walls are hit (not ramps), then that's a bad direction to go.
+        - [x] Mix in the player's direction (if within 20 units and visible, then move).
+        > NOTE: will need to do more work on this, but it's okay except monster doesn't want to go down forks bc of the bias of a right turn being "closer" to the player than going straight down the hallway. Need to figure out how to avoid this.
 - [ ] Create prompt to press 'spacebar' to 'catch' a monster.
 - [ ] Build 2 other 'competitors' that are also chasing the 3 monsters.
 
