@@ -43,8 +43,68 @@
         - [x] Raycast in 16 directions, and if any walls are hit (not ramps), then that's a bad direction to go.
         - [x] Mix in the player's direction (if within 20 units and visible, then move).
         > NOTE: will need to do more work on this, but it's okay except monster doesn't want to go down forks bc of the bias of a right turn being "closer" to the player than going straight down the hallway. Need to figure out how to avoid this.
-- [ ] Create prompt to press 'spacebar' to 'catch' a monster.
-- [ ] Build 2 other 'competitors' that are also chasing the 3 monsters.
+
+
+## Action Items for reworked game design (3-phase game)
+
+- [ ] Phase 1: "Find the nest egg"
+    > 3 girls you can date are hidden in the room somewhere, and you, along with 2 other competitors, are trying to find one of them first. If one of the contestants finds a girl, then the girl and the contestant gets whisked away to the phase 2 as the dating hotseat. The other competitors get whisked away as booby trap operators.
+    - [x] Object to uncover
+        > Will be one of 10 different kinds of objects, since all this will be storage objects in an old ballroom-kinda feel. They'll be read in as objects with the following params:
+            - Model path
+            - Still, covered animation (rustling or not)
+            - Shifting/rustling animation
+            - Uncovered animation (have cloth be scaled to pretty much 0 and hidden in one of the legs of the furniture or something)
+            - Collision data (# of collision cubes and the transforms and extents of the cubes)
+            - Interaction sphere (offset origin and radius)
+            - Interaction icon position (where the icon will pop up, showing that this is the one the person is choosing)
+            - How long to hold E to uncover the object (random within range).
+    - [x] Hold E to uncover an object.
+        - [x] Show prompt that can uncover.
+        - [x] Show cursor of the object is getting uncovered.
+        - [x] Progress dial.
+    - [ ] Timer for 2:30 minutes in corner.
+    - [ ] Show uncovered girl.
+        - [ ] Girl model should be invisible until pulling off the covers.
+        - [ ] Girl is shown and person who uncovered girl gets whisked away with girl.
+        - [ ] Remaining contestants are shown getting whisked away too.
+
+- [ ] Phase 2: "Hallway of Love"
+    - [ ] Contestant A logic
+        - [ ] Moving (just like previous phase)
+        - [ ] If get hit by booby trap, get stunned for 1 second (tune).
+        - [ ] If touch date, start Phase 3
+            - [ ] If fail Phase 3, then get stunned for 1.5 seconds (tune).
+        - [ ] Camera follows Contestant A
+    - [ ] Date logic
+        - [ ] Moves forward (tune by how much)
+        - [ ] If get hit by booby trap, get stunned for 0.75 seconds (tune).
+        - [ ] If reach end, go to Phase 1
+    - [ ] Contestant B(s) logic
+        - [ ] Stand at next open booby trap operator booth that is in front of contestant A.
+        - [ ] Press X to set off the trap.
+        - [ ] Move to next open booby trap operator booth.
+
+- [ ] Phase 3: "Grab hand speed date"
+    - [ ] 4 directions of input lead to different dialog options
+        - [ ] Bottom one is always "Will you go on a date with me?"
+            - NOTE: never ask this on the first one bc it's supposed to be a pick-up line (but you CAN)
+        - [ ] Pressing bad line will get contestant rejected, sending back to Phase 2
+        - [ ] Pressing good line will get a good response from Date, and another set of options.
+        - [ ] Pool of dialogue from Date and options for dialogue for player.
+    - [ ] "Will you go on a date with me?"
+        - [ ] Random amount of thinking (very very soon and it's immediate NO. Early and it's very long, later and it's short (yes, there can be a short "no thanks"))
+    > NOTE: Only the player enters phase 3. Other contestants just talk for a bit, then it results in either getting rejected after a random amt of time or hearing the contestant pop the question, Date thinks for random amt of time and then reject or accept.
+
+How do we handle if a contestant other than the player gets a date success?
+    GAME OVER, you LOSE, type deal.
+How do we handle if there are no more places to uncover or <# of dates?
+    This will not happen. When you reset to Phase 1, the whole entire room gets reset and everything is covered up again.
+
+- [ ] Phase 0: View Tarot cards
+    - [ ] 10 cards show up, and 3 are flipped over
+    - [ ] Move to the center of the screen and they show the bios of the 3 girls.
+    - [ ] Press any key to continue to Phase 1.
 
 
 ## Action Items for Otomege part of Game.

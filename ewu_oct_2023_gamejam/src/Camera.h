@@ -31,10 +31,10 @@ struct GPUCascadeViewProjsData
 struct SceneCamera
 {
 	vec3 facingDirection = { -0.570508420, -0.390730739, 0.722388268 };
-	float_t   fov             = glm_rad(70.0f);
+	float_t   fov             = glm_rad(35.0f); //glm_rad(70.0f);
 	float_t   aspect;
 	float_t   zNear           = 0.1f;  //1.0f;
-	float_t   zFar            = 100.0f;  //1000.0f;
+	float_t   zFar            = 300.0f;  //1000.0f;
 	float_t   zFarShadow      = 60.0f;
 	vec3 boxCastExtents;
 	GPUCameraData gpuCameraData;
@@ -91,13 +91,13 @@ struct MainCamMode
 
 		float_t depthOfFieldSmoothTime = 0.000001f;
 		vec3    DOFPropsVelocities;
-		vec3    DOFPropsRelaxedState = { 50.0f, 50.0f, 40.0f };
+		vec3    DOFPropsRelaxedState = { 27.4f, 6.0f, 15.0f };  //{ 50.0f, 50.0f, 40.0f };
 	} opponentTargetTransition;
 
 	struct CameraRailSettings
 	{
 		bool        active = true; //false;    // @NOTE: expectation is to use the camera rails all the time (ONLY FOR EWU GAME JAM)  -Timo 2023/10/11
-		vec2        targetOrbitAngles = { glm_rad(15.0f), 0.0f }; //GLM_VEC2_ZERO_INIT;  // @NOTE: for EWU Game Jam.
+		vec2        targetOrbitAngles = { glm_rad(30.0f), 0.0f }; //GLM_VEC2_ZERO_INIT;  // @NOTE: for EWU Game Jam.
 		vec2        orbitAnglesVelocities;
 		float_t     orbitAnglesSmoothTime = 0.25f;
 		CameraRail* cameraRail = nullptr;
@@ -106,7 +106,7 @@ struct MainCamMode
 	} cameraRailSettings;
 
 	// Tweak variables
-	float_t   lookDistance           = 5.0f;
+	float_t   lookDistance           = 26.0f;  //5.0f;
 	float_t   lookDistanceSmoothTime = 0.25f;  //0.075f;
 	float_t   focusSmoothTimeXZ      = 0.25f;  //0.075f;
 	float_t   focusSmoothTimeY       = 0.3f;

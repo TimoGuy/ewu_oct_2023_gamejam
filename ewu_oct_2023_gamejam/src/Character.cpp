@@ -1541,7 +1541,8 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
 
         _data->uiMaterializeItem = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::RIGHT, textmesh::BOTTOM, getUIMaterializeItemText(_data));
         _data->uiMaterializeItem->isPositionScreenspace = true;
-        glm_vec3_copy(vec3{ 925.0f, -510.0f, 0.0f }, _data->uiMaterializeItem->renderPosition);
+        // glm_vec3_copy(vec3{ 925.0f, -510.0f, 0.0f }, _data->uiMaterializeItem->renderPosition);  // @NOTE: for EWU Game Jam.
+        glm_vec3_copy(vec3{ 925.0f, -1000.0f, 0.0f }, _data->uiMaterializeItem->renderPosition);
         _data->uiMaterializeItem->scale = 25.0f;
 
         _data->uiStamina = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, getStaminaText(_data));
@@ -1621,6 +1622,9 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                 input[0] += input::keyRightPressed ?  1.0f : 0.0f;
                 input[1] += input::keyUpPressed    ?  1.0f : 0.0f;
                 input[1] += input::keyDownPressed  ? -1.0f : 0.0f;
+
+                if (input::keyEPressed)
+                    glm_vec2_zero(input);  // Remove input if (attempting) interacting with something.
 
                 // Transform key inputs to world space input.
                 vec3 flatCameraFacingDirection = {
@@ -2471,8 +2475,8 @@ void Character::update(const float_t& deltaTime)
         if (_data->knockbackMode == Character_XData::KnockbackStage::NONE)
         {
             // _data->inputFlagJump |= !_data->disableInput && input::onKeyJumpPress;  // @NOTE: disabled jump (for EWU Game Jam).  -Timo 2023/10/12
-            if (!_data->disableInput && input::onKeyJumpPress)  // @NOTE: instead, jump button is flip camera rail
-                _data->camera->mainCamMode.flipCameraRail();
+            // if (!_data->disableInput && input::onKeyJumpPress)  // @NOTE: instead, jump button is flip camera rail
+            //     _data->camera->mainCamMode.flipCameraRail();
             _data->inputFlagAttack |= !_data->disableInput && input::onLMBPress;
             _data->inputFlagRelease |= !_data->disableInput && input::onRMBPress;
         }
@@ -2532,13 +2536,21 @@ void Character::lateUpdate(const float_t& deltaTime)
     glm_vec3_add(_data->cpd->interpolCOMPosition, offset, position);
 
     // vec3 eulerAngles = { 0.0f, _data->facingDirection, 0.0f };  // @NOTE: for EWU Game Jam.
-    vec3 eulerAngles = { 0.0f, std::atan2f(_data->camera->sceneCamera.facingDirection[0], _data->camera->sceneCamera.facingDirection[2]) + glm_rad(90.0f), 0.0f };
     mat4 rotation;
-    glm_euler_zyx(eulerAngles, rotation);
+    {
+        vec3 eulerAngles = { glm_rad(30.0f), 0.0f, 0.0f };
+        glm_euler_zyx(eulerAngles, rotation);
+    }
+    mat4 rotation2;
+    {
+        vec3 eulerAngles = { 0.0f, std::atan2f(_data->camera->sceneCamera.facingDirection[0], _data->camera->sceneCamera.facingDirection[2]) + glm_rad(90.0f), 0.0f };
+        glm_euler_zyx(eulerAngles, rotation2);
+    }
 
     mat4 transform = GLM_MAT4_IDENTITY_INIT;
     glm_translate(transform, position);
-    glm_mat4_mul(transform, rotation, transform);
+    glm_mul_rot(transform, rotation, transform);
+    glm_mul_rot(transform, rotation2, transform);
     glm_scale(transform, vec3{ _data->modelSize, _data->modelSize, _data->modelSize });
     glm_mat4_copy(transform, _data->characterRenderObj->transformMatrix);
 
@@ -2590,12 +2602,14 @@ void updateInteractionUI()
         currentText = "";
         interactionUIText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, currentText);
         interactionUIText->isPositionScreenspace = true;
-        glm_vec3_copy(vec3{ 0.0f, -50.0f, 0.0f }, interactionUIText->renderPosition);
+        // glm_vec3_copy(vec3{ 0.0f, -50.0f, 0.0f }, interactionUIText->renderPosition);  // @NOTE: for EWU Game Jam.
+        glm_vec3_copy(vec3{ 0.0f, -245.0f, 0.0f }, interactionUIText->renderPosition);
         interactionUIText->scale = 25.0f;
     }
 
     // Update UI text and visibility.
-    std::string newText = interactionGUIDPriorityQueue.empty() ? "" : ("Press 'E' to " + interactionGUIDPriorityQueue.front().actionVerb);
+    // std::string newText = interactionGUIDPriorityQueue.empty() ? "" : ("Press 'E' to " + interactionGUIDPriorityQueue.front().actionVerb);  // @NOTE: for EWU Game Jam.
+    std::string newText = interactionGUIDPriorityQueue.empty() ? "" : ("Hold 'E' to " + interactionGUIDPriorityQueue.front().actionVerb);
     if (currentText != newText)
     {
         currentText = newText;
@@ -2603,6 +2617,17 @@ void updateInteractionUI()
     }
 
     interactionUIText->excludeFromBulkRender = currentText.empty();
+}
+
+void notifyFrontOfQueueGuid(EntityManager* em)
+{
+    if (!interactionGUIDPriorityQueue.empty())
+    {
+        DataSerializer msg;
+        msg.dumpString("msg_front_of_interaction_queue");
+        DataSerialized ds = msg.getSerializedData();
+        em->sendMessage(interactionGUIDPriorityQueue.front().guid, ds);
+    }
 }
 
 bool Character::processMessage(DataSerialized& message)
@@ -2634,6 +2659,7 @@ bool Character::processMessage(DataSerialized& message)
                 });
                 updateInteractionUI();
             }
+            notifyFrontOfQueueGuid(_em);
         }
 
         return true;
@@ -2653,6 +2679,7 @@ bool Character::processMessage(DataSerialized& message)
                 }
             );
             updateInteractionUI();
+            notifyFrontOfQueueGuid(_em);
         }
 
         return true;
@@ -2774,6 +2801,10 @@ void defaultRenderImGui(Character_XData* d)
         if (d->uiStamina)
         {
             ImGui::DragFloat3("uiStamina->renderPosition", d->uiStamina->renderPosition);
+        }
+        if (interactionUIText)
+        {
+            ImGui::DragFloat3("interactionUIText->renderPosition", interactionUIText->renderPosition);
         }
         ImGui::InputInt("currentWeaponDurability", &d->currentWeaponDurability);
         ImGui::DragFloat("inputMaxXZSpeed", &d->inputMaxXZSpeed);

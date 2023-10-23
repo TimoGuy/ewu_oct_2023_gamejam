@@ -5878,6 +5878,19 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 
 		if (ImGui::CollapsingHeader("Camera Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			bool recalcSceneCam = false;
+			recalcSceneCam |= ImGui::DragFloat("ZNear", &_camera->sceneCamera.zNear, 0.1f);
+			recalcSceneCam |= ImGui::DragFloat("ZFar", &_camera->sceneCamera.zFar, 1.0f);
+			recalcSceneCam |= ImGui::DragFloat("ZFarShadow", &_camera->sceneCamera.zFarShadow, 1.0f);
+			{
+				float_t fovDegrees = glm_deg(_camera->sceneCamera.fov);
+				if (recalcSceneCam |= ImGui::DragFloat("FOV", &fovDegrees, 0.1f))
+					_camera->sceneCamera.fov = glm_rad(fovDegrees);
+			}
+			if (recalcSceneCam)
+				_camera->sceneCamera.recalculateSceneCamera(_pbrRendering.gpuSceneShadingProps);
+
+			ImGui::Separator();
 			ImGui::Text("NOTE: press F10 to change camera types");
 
 			ImGui::SliderFloat("lookDistance", &_camera->mainCamMode.lookDistance, 1.0f, 100.0f);

@@ -1,0 +1,12 @@
+:StateFillUp
+  animation FillUp
+  loop      0
+  trans     goto_fillup       StateFillUp
+  on_finish StateDisappear
+
+
+:StateDisappear
+  animation Disappear
+  loop      0
+  event     0.249999    GoInvisible
+  trans     goto_fillup       StateFillUp
