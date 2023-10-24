@@ -63,7 +63,8 @@
         - [x] Show prompt that can uncover.
         - [x] Show cursor of the object is getting uncovered.
         - [x] Progress dial.
-    - [ ] Timer for 2:30 minutes in corner.
+    - [x] Timer for 2:30 minutes in corner.
+    - [ ] UNRELATED: get simple main menu framework set up (open first.ssdat)
     - [ ] Show uncovered girl.
         - [ ] Girl model should be invisible until pulling off the covers.
         - [ ] Girl is shown and person who uncovered girl gets whisked away with girl.

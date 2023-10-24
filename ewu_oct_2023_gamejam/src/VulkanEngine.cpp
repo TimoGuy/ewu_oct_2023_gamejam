@@ -230,6 +230,7 @@ void VulkanEngine::run()
 			saveGlobalStateTimeElapsed = 0.0f;
 			globalState::launchAsyncWriteTask();
 		}
+		globalState::update(deltaTime);
 		perfs[9] = SDL_GetPerformanceCounter() - perfs[9];
 
 

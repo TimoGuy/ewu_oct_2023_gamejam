@@ -10,7 +10,7 @@
 namespace globalState
 {
     // Default values
-    std::string savedActiveScene                = "sample_scene_simplified.ssdat";
+    std::string savedActiveScene       = "first.ssdat";
 
     vec3    savedPlayerPosition        = GLM_VEC3_ZERO_INIT;    // Currently unused. @TODO
     float_t savedPlayerFacingDirection = 0.0f;                  // Currently unused. @TODO
@@ -26,6 +26,10 @@ namespace globalState
     float_t DOFFocusDepth  = 1000.0f;  // 7.5f;  // @NOTE: I think these values are a cool tilt-shift... but probably doesn't have a place for this game.
     float_t DOFFocusExtent = 1000.0f;  // 4.0f;
     float_t DOFBlurExtent  = 0.0f;  // 2.0f;
+
+    GamePhases currentPhase = GamePhases::P0_UNCOVER;
+    bool       isGameActive = false;
+    float_t    playTimeRemaining = 150.0f;  // 2 min 30 sec
 
     SceneCamera* sceneCameraRef = nullptr;
 
@@ -174,6 +178,14 @@ namespace globalState
         tfExecutor.run(tfTaskAsyncWriting);
     }
 
+    void update(float_t deltaTime)
+    {
+        if (!showCountdown())
+            return;
+
+        playTimeRemaining -= deltaTime;
+    }
+
     void cleanupGlobalState()
     {
         launchAsyncWriteTask();  // Run the task one last time before cleanup
@@ -293,5 +305,15 @@ namespace globalState
         if (closestIdx == (size_t)-1)
             return nullptr;
         return cameraRails[closestIdx];
+    }
+
+    bool showCountdown()
+    {
+        return isGameActive && currentPhase == GamePhases::P0_UNCOVER;
+    }
+
+    bool gameIsOver()
+    {
+        return playTimeRemaining <= 0.0f;
     }
 }

@@ -1375,6 +1375,9 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
     if (ds)
         load(*ds);
 
+    if (isPlayer())
+        globalState::isGameActive = true;  // Set game to active when player is spawned.
+
     _data->staminaData.currentStamina = (float_t)_data->staminaData.maxStamina;
 
     _data->weaponAttachmentJointName = "Back Attachment";
@@ -1835,7 +1838,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
     //
     if (d->inputFlagAttack)
     {
-        processAttack(d);
+        // processAttack(d);  // @NOTE: for EWU Game Jam.
         d->inputFlagAttack = false;
     }
 
@@ -2388,8 +2391,75 @@ void attackWazaEditorPhysicsUpdate(const float_t& physicsDeltaTime, Character_XD
     physengine::drawDebugVisLine(bladeStart, bladeEnd, physengine::DebugVisLineType::YUUJUUFUDAN);
 }
 
+std::string secondsToMinSec(float_t seconds)
+{
+    seconds = std::max(0.0f, seconds);
+    std::string p1;
+    std::string p2;
+
+    if (seconds < 60.0f)
+    {
+        // Seconds and milliseconds mode.
+        float_t whole, remainder;
+        remainder = std::modf(seconds, &whole);
+        p1 = std::to_string((int32_t)whole);
+        p2 = std::to_string((int32_t)(remainder * 100.0f));
+    }
+    else
+    {
+        // Minutes and seconds mode.
+        int32_t minutes = seconds / 60;
+        seconds = std::fmodf(seconds, 60.0f);
+        p1 = std::to_string(minutes);
+        p2 = std::to_string((int32_t)seconds);
+    }
+
+    if (p1.size() == 1)
+        p1 = "0" + p1;
+    if (p2.size() == 1)
+        p2 = "0" + p2;
+
+    return p1 + ":" + p2;
+}
+
+// @HACK
+textmesh::TextMesh* playTimeRemainingUIText = nullptr;
+std::string playTimeRemainingUICurrentText;
+
 void Character::physicsUpdate(const float_t& physicsDeltaTime)
 {
+    // Display global play time/game over.
+    if (isPlayer())
+    {
+        if (globalState::showCountdown())
+        {
+            if (playTimeRemainingUIText == nullptr)
+            {
+                playTimeRemainingUICurrentText = "";
+                playTimeRemainingUIText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, playTimeRemainingUICurrentText);
+                playTimeRemainingUIText->isPositionScreenspace = true;
+                glm_vec3_copy(vec3{ 250.0f, -100.0f, 0.0f }, playTimeRemainingUIText->renderPosition);
+                playTimeRemainingUIText->scale = 25.0f;
+            }
+            
+            std::string newText = "Time :  " + secondsToMinSec(globalState::playTimeRemaining);
+            if (playTimeRemainingUICurrentText != newText)
+            {
+                playTimeRemainingUICurrentText = newText;
+                textmesh::regenerateTextMeshMesh(playTimeRemainingUIText, playTimeRemainingUICurrentText);
+            }
+
+            playTimeRemainingUIText->excludeFromBulkRender = false;
+        }
+        else
+            playTimeRemainingUIText->excludeFromBulkRender = true;
+
+        if (globalState::gameIsOver())
+        {
+            std::cout << "GAME OVER!!!!!!! tODOO" << std::endl;
+        }
+    }
+
     // @DEBUG: for level editor
     _data->disableInput = (_data->camera->freeCamMode.enabled || ImGui::GetIO().WantTextInput);
     
@@ -2426,7 +2496,7 @@ struct GUIDWithVerb
     std::string guid, actionVerb;
 };
 std::vector<GUIDWithVerb> interactionGUIDPriorityQueue;
-textmesh::TextMesh* interactionUIText;
+textmesh::TextMesh* interactionUIText = nullptr;
 std::string currentText;
 
 void Character::update(const float_t& deltaTime)

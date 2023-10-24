@@ -27,6 +27,16 @@ namespace globalState
     extern float_t DOFFocusExtent;
     extern float_t DOFBlurExtent;
 
+    enum class GamePhases
+    {
+        P0_UNCOVER,
+        P1_HALLWAY,
+        P2_OTOMEGE,
+    };
+    extern GamePhases currentPhase;
+    extern bool       isGameActive;  // @NOTE: for EWU Game Jam.
+    extern float_t    playTimeRemaining;  // @NOTE: for EWU Game Jam (2:30 timer (tune)).
+
     enum AncientWeaponItemType
     {
         WEAPON,
@@ -65,6 +75,7 @@ namespace globalState
 
     void initGlobalState(SceneCamera& sc);
     void launchAsyncWriteTask();  // @NOTE: this is simply for things that are marked saved
+    void update(float_t deltaTime);
     void cleanupGlobalState();
 
     HarvestableItemOption* getHarvestableItemByIndex(size_t index);
@@ -85,4 +96,7 @@ namespace globalState
     void removeCameraRail(CameraRail* cameraRail);
     
     CameraRail* getNearestCameraRailToDesiredRailDirection(vec3 queryPos, vec3 queryDir);
+
+    bool showCountdown();
+    bool gameIsOver();
 }
