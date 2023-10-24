@@ -467,4 +467,5 @@ private:
 
     friend class Entity;
 	friend Entity* scene::spinupNewObject(const std::string& objectName, DataSerialized* ds);
+	friend void scene::tick();
 };

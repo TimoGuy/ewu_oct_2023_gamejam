@@ -4,6 +4,7 @@
 #include <vector>
 #include <queue>
 #include <mutex>
+#include "SceneManagement.h"
 
 class Entity;
 class DataSerialized;
@@ -41,4 +42,5 @@ private:
 
 	friend class VulkanEngine;
 	friend class Entity;
+	friend void scene::tick();
 };

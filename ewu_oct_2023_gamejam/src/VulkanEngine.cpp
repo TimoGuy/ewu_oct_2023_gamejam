@@ -104,7 +104,7 @@ void VulkanEngine::init()
 
 	_isInitialized = true;
 
-	scene::loadScene(globalState::savedActiveScene);
+	scene::loadScene(globalState::savedActiveScene, false);
 }
 
 constexpr size_t numPerfs = 15;
@@ -215,6 +215,9 @@ void VulkanEngine::run()
 
 
 		perfs[8] = SDL_GetPerformanceCounter();
+		// Tick scenemanagement for loading a new scene
+		scene::tick();
+
 		// Add/Remove requested entities
 		_entityManager->INTERNALaddRemoveRequestedEntities();
 
@@ -5619,10 +5622,10 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	//
 	// Scene Properties window
 	//
-	static std::string _flagNextStepLoadThisPathAsAScene = "";
+	static std::string _flagNextStepLoadThisPathAsAScene = "";  // @NOCHECKIN!!!!! THE NEW CHANGES SHOULD PREVENT THE NEED FOR THIS!!!!
 	if (!_flagNextStepLoadThisPathAsAScene.empty())
 	{
-		scene::loadScene(_flagNextStepLoadThisPathAsAScene);
+		scene::loadScene(_flagNextStepLoadThisPathAsAScene, true);
 		_flagNextStepLoadThisPathAsAScene = "";
 	}
 

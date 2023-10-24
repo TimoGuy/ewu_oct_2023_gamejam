@@ -41,10 +41,38 @@ const std::string MainMenu::TYPE_NAME         = ENTITY_TYPE_NAMES[6];
 namespace scene
 {
     VulkanEngine* engine;
+    bool performingDeleteAllLoadSceneProcedure;
+    bool performingLoadSceneImmediateLoadSceneProcedure;
+    std::string performingLoadSceneImmediateLoadSceneProcedureSavedSceneName;
 
     void init(VulkanEngine* inEnginePtr)
     {
         engine = inEnginePtr;
+        performingDeleteAllLoadSceneProcedure = false;
+        performingLoadSceneImmediateLoadSceneProcedure = false;
+        performingLoadSceneImmediateLoadSceneProcedureSavedSceneName = "";
+    }
+
+    bool loadSceneImmediate(const std::string& name);
+    void tick()
+    {
+        if (performingDeleteAllLoadSceneProcedure)
+        {
+            // Delete all entities.
+            for (auto& ent : engine->_entityManager->_entities)
+                engine->_entityManager->destroyEntity(ent);
+
+            performingDeleteAllLoadSceneProcedure = false;
+            performingLoadSceneImmediateLoadSceneProcedure = true;
+        }
+        else if (performingLoadSceneImmediateLoadSceneProcedure)
+        {
+            loadSceneImmediate(performingLoadSceneImmediateLoadSceneProcedureSavedSceneName);
+
+            performingDeleteAllLoadSceneProcedure = false;
+            performingLoadSceneImmediateLoadSceneProcedure = false;
+            performingLoadSceneImmediateLoadSceneProcedureSavedSceneName = "";
+        }
     }
 
     std::vector<std::string> getListOfEntityTypes()
@@ -201,7 +229,19 @@ namespace scene
         return loadSerializationFull(PREFAB_DIRECTORY_PATH + name, false, _);
     }
     
-    bool loadScene(const std::string& name)
+    bool loadScene(const std::string& name, bool deleteExistingEntitiesFirst)
+    {
+        if (deleteExistingEntitiesFirst)
+        {
+            performingDeleteAllLoadSceneProcedure = true;
+            performingLoadSceneImmediateLoadSceneProcedureSavedSceneName = name;
+            return true;
+        }
+        else
+            return loadSceneImmediate(name);
+    }
+
+    bool loadSceneImmediate(const std::string& name)
     {
         std::vector<Entity*> _;
         bool ret = loadSerializationFull(SCENE_DIRECTORY_PATH + name, false, _);
@@ -221,7 +261,7 @@ namespace scene
         // @DEBUG: save snapshot of physics frame.
         physengine::savePhysicsWorldSnapshot();
 
-        return ret;
+        return true;
     }
 
     bool saveScene(const std::string& name, const std::vector<Entity*>& entities)
