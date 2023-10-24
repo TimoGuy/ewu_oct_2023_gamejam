@@ -7,6 +7,7 @@
 #include "AudioEngine.h"
 #include "DataSerialization.h"
 #include "InputManager.h"
+#include "SceneManagement.h"
 #include "GlobalState.h"
 #include "Textbox.h"
 #include "Debug.h"

@@ -466,5 +466,5 @@ private:
 #endif
 
     friend class Entity;
-	friend Entity* scene::spinupNewObject(const std::string& objectName, VulkanEngine* engine, DataSerialized* ds);
+	friend Entity* scene::spinupNewObject(const std::string& objectName, DataSerialized* ds);
 };

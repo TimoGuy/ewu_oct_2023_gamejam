@@ -40,12 +40,19 @@ const std::string MainMenu::TYPE_NAME         = ENTITY_TYPE_NAMES[6];
 
 namespace scene
 {
+    VulkanEngine* engine;
+
+    void init(VulkanEngine* inEnginePtr)
+    {
+        engine = inEnginePtr;
+    }
+
     std::vector<std::string> getListOfEntityTypes()
     {
         return ENTITY_TYPE_NAMES;
     }
 
-    Entity* spinupNewObject(const std::string& objectName, VulkanEngine* engine, DataSerialized* ds)
+    Entity* spinupNewObject(const std::string& objectName, DataSerialized* ds)
     {
         Entity* ent = nullptr;
         if (objectName == Character::TYPE_NAME)
@@ -104,7 +111,7 @@ namespace scene
         return prefabs;
     }
 
-    bool loadSerializationFull(const std::string& fullFname, VulkanEngine* engine, bool ownEntities, std::vector<Entity*>& outEntityPtrs)
+    bool loadSerializationFull(const std::string& fullFname, bool ownEntities, std::vector<Entity*>& outEntityPtrs)
     {
         bool success = true;
 
@@ -139,7 +146,7 @@ namespace scene
                 if (!newObjectType.empty())
                 {
                     auto dsCooked = ds.getSerializedData();
-                    Entity* newEntity = spinupNewObject(newObjectType, engine, &dsCooked);
+                    Entity* newEntity = spinupNewObject(newObjectType, &dsCooked);
                     newEntity->_isOwned = ownEntities;
                     outEntityPtrs.push_back(newEntity);
                     success &= (newEntity != nullptr);
@@ -175,7 +182,7 @@ namespace scene
         if (!newObjectType.empty())
         {
             auto dsCooked = ds.getSerializedData();
-            Entity* newEntity = spinupNewObject(newObjectType, engine, &dsCooked);
+            Entity* newEntity = spinupNewObject(newObjectType, &dsCooked);
             outEntityPtrs.push_back(newEntity);
             success &= (newEntity != nullptr);
         }
@@ -183,21 +190,21 @@ namespace scene
         return success;
     }
 
-    bool loadPrefab(const std::string& name, VulkanEngine* engine, std::vector<Entity*>& outEntityPtrs)
+    bool loadPrefab(const std::string& name, std::vector<Entity*>& outEntityPtrs)
     {
-        return loadSerializationFull(PREFAB_DIRECTORY_PATH + name, engine, true, outEntityPtrs);
+        return loadSerializationFull(PREFAB_DIRECTORY_PATH + name, true, outEntityPtrs);
     }
 
-    bool loadPrefabNonOwned(const std::string& name, VulkanEngine* engine)
+    bool loadPrefabNonOwned(const std::string& name)
     {
         std::vector<Entity*> _;
-        return loadSerializationFull(PREFAB_DIRECTORY_PATH + name, engine, false, _);
+        return loadSerializationFull(PREFAB_DIRECTORY_PATH + name, false, _);
     }
     
-    bool loadScene(const std::string& name, VulkanEngine* engine)
+    bool loadScene(const std::string& name)
     {
         std::vector<Entity*> _;
-        bool ret = loadSerializationFull(SCENE_DIRECTORY_PATH + name, engine, false, _);
+        bool ret = loadSerializationFull(SCENE_DIRECTORY_PATH + name, false, _);
 
         globalState::savedActiveScene = name;
 
@@ -217,7 +224,7 @@ namespace scene
         return ret;
     }
 
-    bool saveScene(const std::string& name, const std::vector<Entity*>& entities, VulkanEngine* engine)
+    bool saveScene(const std::string& name, const std::vector<Entity*>& entities)
     {
         std::ofstream outfile(SCENE_DIRECTORY_PATH + name);
         if (!outfile.is_open())

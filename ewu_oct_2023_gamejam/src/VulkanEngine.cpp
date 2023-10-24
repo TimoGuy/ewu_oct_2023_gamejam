@@ -96,6 +96,7 @@ void VulkanEngine::init()
 	AudioEngine::getInstance().initialize();
 	physengine::start(_entityManager);
 	globalState::initGlobalState(_camera->sceneCamera);
+	scene::init(this);
 
 	while (!physengine::isInitialized);  // Spin lock so that new scene doesn't get loaded before physics are finished initializing.
 
@@ -103,7 +104,7 @@ void VulkanEngine::init()
 
 	_isInitialized = true;
 
-	scene::loadScene(globalState::savedActiveScene, this);
+	scene::loadScene(globalState::savedActiveScene);
 }
 
 constexpr size_t numPerfs = 15;
@@ -5621,7 +5622,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	static std::string _flagNextStepLoadThisPathAsAScene = "";
 	if (!_flagNextStepLoadThisPathAsAScene.empty())
 	{
-		scene::loadScene(_flagNextStepLoadThisPathAsAScene, this);
+		scene::loadScene(_flagNextStepLoadThisPathAsAScene);
 		_flagNextStepLoadThisPathAsAScene = "";
 	}
 
@@ -5653,7 +5654,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 
 		ImGui::SameLine();
 		if (ImGui::Button("Save Scene"))
-			scene::saveScene(globalState::savedActiveScene, _entityManager->_entities, this);
+			scene::saveScene(globalState::savedActiveScene, _entityManager->_entities);
 
 		ImGui::SameLine();
 		if (ImGui::Button("Save Scene As.."))
@@ -5664,7 +5665,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 			ImGui::InputText(".ssdat", &saveSceneAsFname);
 			if (ImGui::Button(("Save As \"" + saveSceneAsFname + ".ssdat\"").c_str()))
 			{
-				scene::saveScene(saveSceneAsFname + ".ssdat", _entityManager->_entities, this);
+				scene::saveScene(saveSceneAsFname + ".ssdat", _entityManager->_entities);
 				globalState::savedActiveScene = saveSceneAsFname + ".ssdat";
 				ImGui::CloseCurrentPopup();
 			}
@@ -5682,7 +5683,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 			for (auto& path : listOfPrefabs)
 				if (ImGui::Button(("Open \"" + path + "\"").c_str()))
 				{
-					scene::loadPrefabNonOwned(path, this);
+					scene::loadPrefabNonOwned(path);
 					ImGui::CloseCurrentPopup();
 				}
 			ImGui::EndPopup();
@@ -5960,7 +5961,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 
 		if (ImGui::Button("Create!"))
 		{
-			auto newEnt = scene::spinupNewObject(listEntityTypes[(size_t)entityToCreateIndex], this, nullptr);
+			auto newEnt = scene::spinupNewObject(listEntityTypes[(size_t)entityToCreateIndex], nullptr);
 			_flagAttachToThisEntity = newEnt;  // @HACK: ... but if it works?
 		}
 
@@ -5990,7 +5991,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 					DataSerializer ds;
 					selectedEntity->dump(ds);
 					auto dsd = ds.getSerializedData();
-					auto newEnt = scene::spinupNewObject(selectedEntity->getTypeName(), this, &dsd);
+					auto newEnt = scene::spinupNewObject(selectedEntity->getTypeName(), &dsd);
 					_flagAttachToThisEntity = newEnt;
 				}
 
