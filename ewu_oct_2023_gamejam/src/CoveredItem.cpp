@@ -36,8 +36,9 @@ struct CoveredItem_XData
     static ItemType* itemTypes;
 
     size_t itemTypeId = 0;
-    JPH::BodyID collisionBoxBodyId;
+    JPH::BodyID collisionBoxBodyId = JPH::BodyID();
     bool prevIsInteractible = false;  // Whether the player position is within the interaction field.
+    static bool showCollisionBoxBounds;
 
     float_t uncoverTimer;
     float_t chosenUncoverTime;
@@ -60,13 +61,14 @@ size_t CoveredItem_XData::numItemTypes = 1;
 CoveredItem_XData::ItemType* CoveredItem_XData::itemTypes = new CoveredItem_XData::ItemType[] {  // @NOTE: this is not a std::vector bc for some reason this causes a compiler error on MSVC 14.35.32215 even with /Od optimization flags.  -Timo 2023/10/22
     {
         .modelPath = "CIClock",
-        .collisionBoxExtent = { 1.0f, 1.0f, 1.0f },
+        .collisionBoxExtent = { 0.7f, 2.0f, 1.1f },
         .interactionOrigin = { 0.0f, 0.0f, 0.0f },
         .interactionRadius = 4.0f,
         .interactionIconYoff = 4.0f,
         .uncoverTimeMinMax = { 0.5f, 0.75f },
     }
 };
+bool CoveredItem_XData::showCollisionBoxBounds = false;
 
 inline CoveredItem_XData::ItemType& myItemType(CoveredItem_XData* d)
 {
@@ -200,6 +202,67 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
         _data->prevIsInteractible = isInteractible;
     }
 
+    // @DEBUG: display collision bounds.
+    // @TODO: add box collisions to collision view automatically in physics engine.
+    if (CoveredItem_XData::showCollisionBoxBounds)
+    {
+        vec3 up{ 0.0f, 1.0f, 0.0f };
+        vec3 forward{ 0.0f, 0.0f, 1.0f };
+        vec3 right{ 1.0f, 0.0f, 0.0f };
+
+        mat4 rotation;
+        glm_euler_zyx(vec3{ 0.0f, _data->yRotation, 0.0f }, rotation);
+        glm_mat4_mulv3(rotation, up, 0.0f, up);
+        glm_mat4_mulv3(rotation, forward, 0.0f, forward);
+        glm_mat4_mulv3(rotation, right, 0.0f, right);
+        glm_vec3_scale(up, myItemType(_data).collisionBoxExtent[1], up);
+        glm_vec3_scale(forward, myItemType(_data).collisionBoxExtent[2], forward);
+        glm_vec3_scale(right, myItemType(_data).collisionBoxExtent[0], right);
+
+        vec3 down, backward, left;
+        glm_vec3_negate_to(up, down);
+        glm_vec3_negate_to(forward, backward);
+        glm_vec3_negate_to(right, left);
+
+        vec3 pt0, pt1, pt2, pt3, pt4, pt5, pt6, pt7;
+        glm_vec3_add(forward, left, pt0);
+        glm_vec3_add(forward, right, pt1);
+        glm_vec3_add(backward, right, pt2);
+        glm_vec3_add(backward, left, pt3);
+        glm_vec3_add(forward, left, pt4);
+        glm_vec3_add(forward, right, pt5);
+        glm_vec3_add(backward, right, pt6);
+        glm_vec3_add(backward, left, pt7);
+        glm_vec3_add(pt0, up, pt0);
+        glm_vec3_add(pt1, up, pt1);
+        glm_vec3_add(pt2, up, pt2);
+        glm_vec3_add(pt3, up, pt3);
+        glm_vec3_add(pt4, down, pt4);
+        glm_vec3_add(pt5, down, pt5);
+        glm_vec3_add(pt6, down, pt6);
+        glm_vec3_add(pt7, down, pt7);
+        glm_vec3_add(pt0, _data->position, pt0);
+        glm_vec3_add(pt1, _data->position, pt1);
+        glm_vec3_add(pt2, _data->position, pt2);
+        glm_vec3_add(pt3, _data->position, pt3);
+        glm_vec3_add(pt4, _data->position, pt4);
+        glm_vec3_add(pt5, _data->position, pt5);
+        glm_vec3_add(pt6, _data->position, pt6);
+        glm_vec3_add(pt7, _data->position, pt7);
+        physengine::drawDebugVisLine(pt0, pt1, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt1, pt2, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt2, pt3, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt3, pt0, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt4, pt5, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt5, pt6, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt6, pt7, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt7, pt4, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt0, pt4, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt1, pt5, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt2, pt6, physengine::DebugVisLineType::KIKKOARMY);
+        physengine::drawDebugVisLine(pt3, pt7, physengine::DebugVisLineType::KIKKOARMY);
+    }
+
     // Update interaction cursor render obj.
     if (_data->showInteractionCursor)
     {
@@ -248,7 +311,13 @@ void CoveredItem::update(const float_t& deltaTime)
         );
 
         // Create collision box.
-        // @NOCHECKIN.
+        if (!_data->collisionBoxBodyId.IsInvalid())
+            physengine::destroyBody(_data->collisionBoxBodyId);
+        mat4 rotation;
+        glm_euler_zyx(vec3{ 0.0f, _data->yRotation, 0.0f }, rotation);
+        versor rotationV;
+        glm_mat4_quat(rotation, rotationV);
+        _data->collisionBoxBodyId = physengine::createBoxColliderBody(getGUID(), _data->position, rotationV, myItemType(_data).collisionBoxExtent);
 
         // Choose uncover time.
         std::default_random_engine generator;
@@ -361,6 +430,13 @@ void CoveredItem::reportMoved(mat4* matrixMoved)
     vec3 rotEuler;
     glm_euler_angles(rot, rotEuler);
     _data->yRotation = rotEuler[1];
+
+    // Update box collider body.
+    mat4 rotation;
+    glm_euler_zyx(vec3{ 0.0f, _data->yRotation, 0.0f }, rotation);
+    versor rotationV;
+    glm_mat4_quat(rotation, rotationV);
+    physengine::setBodyTransform(_data->collisionBoxBodyId, _data->position, rotationV);
 }
 
 void CoveredItem::renderImGui()
@@ -373,9 +449,12 @@ void CoveredItem::renderImGui()
     }
 
     ImGui::Text("Edit covered item ID props");
-    ImGui::DragFloat3("collisionBoxExtent", myItemType(_data).collisionBoxExtent);
+    if (ImGui::DragFloat3("collisionBoxExtent", myItemType(_data).collisionBoxExtent, 0.1f, 0.001f, 10.0f))
+        _data->requestChangeItemModel = true;  // To trigger shape getting recreated.
     ImGui::DragFloat3("interactionOrigin", myItemType(_data).interactionOrigin);
     ImGui::DragFloat("interactionRadius", &myItemType(_data).interactionRadius);
     ImGui::DragFloat("interactionIconYoff", &myItemType(_data).interactionIconYoff);
     ImGui::DragFloat2("uncoverTimeMinMax", myItemType(_data).uncoverTimeMinMax);
+
+    ImGui::Checkbox("showCollisionBoxBounds", &CoveredItem_XData::showCollisionBoxBounds);
 }

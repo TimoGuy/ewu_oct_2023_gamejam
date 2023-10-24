@@ -148,10 +148,13 @@ namespace physengine
     void getLinearVelocity(const CapsulePhysicsData& cpd, vec3& outVelocity);
     bool isGrounded(const CapsulePhysicsData& cpd);
     bool isSlopeTooSteepForCharacter(const CapsulePhysicsData& cpd, JPH::Vec3Arg normal);
-
 #if 0
     void moveCapsuleAccountingForCollision(CapsulePhysicsData& cpd, vec3 deltaPosition, bool stickToGround, vec3& outNormal, float_t ccdDistance = 0.25f);  // @NOTE: `ccdDistance` is fine as long as it's below the capsule radius (or the radius of the voxels, whichever is smaller)
 #endif
+
+    JPH::BodyID createBoxColliderBody(const std::string& entityGuid, vec3 origin, versor rotation, vec3 extent);
+    void destroyBody(JPH::BodyID bodyId);
+    void setBodyTransform(JPH::BodyID bodyId, vec3 origin, versor rotation);
 
     void setPhysicsObjectInterpolation(const float_t& physicsAlpha);
 

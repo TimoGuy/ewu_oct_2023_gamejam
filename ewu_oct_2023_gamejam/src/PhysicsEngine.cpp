@@ -1121,14 +1121,7 @@ namespace physengine
 
     void setVoxelFieldBodyTransform(VoxelFieldPhysicsData& vfpd, vec3 newPosition, versor newRotation)
     {
-        RVec3 newPositionReal(newPosition[0], newPosition[1], newPosition[2]);
-        Quat newRotationJolt(newRotation[0], newRotation[1], newRotation[2], newRotation[3]);
-
-        BodyInterface& bodyInterface = physicsSystem->GetBodyInterface();
-        EActivation activation = EActivation::DontActivate;
-        if (bodyInterface.GetMotionType(vfpd.bodyId) == EMotionType::Dynamic)
-            activation = EActivation::Activate;
-        bodyInterface.SetPositionAndRotation(vfpd.bodyId, newPositionReal, newRotationJolt, activation);
+        setBodyTransform(vfpd.bodyId, newPosition, newRotation);
     }
 
     void moveVoxelFieldBodyKinematic(VoxelFieldPhysicsData& vfpd, vec3 newPosition, versor newRotation, const float_t& physicsDeltaTime)
@@ -1643,6 +1636,36 @@ namespace physengine
         } while (glm_vec3_norm2(deltaPosition) > 0.000001f);
     }
 #endif
+
+    JPH::BodyID createBoxColliderBody(const std::string& entityGuid, vec3 origin, versor rotation, vec3 extent)
+    {
+        BodyInterface& bodyInterface = physicsSystem->GetBodyInterface();
+        Vec3 extentJ(extent[0], extent[1], extent[2]);
+        Vec3 originJ(origin[0], origin[1], origin[2]);
+        Quat rotationJ(rotation[0], rotation[1], rotation[2], rotation[3]);
+        JPH::BodyID bodyId = bodyInterface.CreateBody(BodyCreationSettings(new BoxShape(extentJ), originJ, rotationJ, EMotionType::Static, Layers::NON_MOVING))->GetID();
+        bodyInterface.AddBody(bodyId, EActivation::DontActivate);
+        return bodyId;
+    }
+
+    void destroyBody(JPH::BodyID bodyId)
+    {
+        BodyInterface& bodyInterface = physicsSystem->GetBodyInterface();
+        bodyInterface.RemoveBody(bodyId);
+        bodyInterface.DestroyBody(bodyId);
+    }
+
+    void setBodyTransform(JPH::BodyID bodyId, vec3 origin, versor rotation)
+    {
+        RVec3 newPositionReal(origin[0], origin[1], origin[2]);
+        Quat newRotationJolt(rotation[0], rotation[1], rotation[2], rotation[3]);
+
+        BodyInterface& bodyInterface = physicsSystem->GetBodyInterface();
+        EActivation activation = EActivation::DontActivate;
+        if (bodyInterface.GetMotionType(bodyId) == EMotionType::Dynamic)
+            activation = EActivation::Activate;
+        bodyInterface.SetPositionAndRotation(bodyId, newPositionReal, newRotationJolt, activation);
+    }
 
     void setPhysicsObjectInterpolation(const float_t& physicsAlpha)
     {
