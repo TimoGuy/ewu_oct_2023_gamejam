@@ -105,7 +105,14 @@ void VulkanEngine::init()
 
 	_isInitialized = true;
 
-	scene::loadScene(globalState::savedActiveScene, false);
+	scene::loadScene(
+#ifdef _DEVELOP
+		globalState::savedActiveScene,
+#else
+		"first.ssdat",
+#endif
+		false
+	);
 }
 
 constexpr size_t numPerfs = 15;
