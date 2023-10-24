@@ -20,6 +20,7 @@
 #include "Camera.h"
 #include "SceneManagement.h"
 #include "DataSerialization.h"
+#include "RandomNumberGenerator.h"
 #include "Debug.h"
 #include "HotswapResources.h"
 #include "GlobalState.h"
@@ -1452,9 +1453,6 @@ void VulkanEngine::loadImages()
 		size_t pixelSize = 4 * SHADOWMAP_JITTERMAP_DIMENSION_X * SHADOWMAP_JITTERMAP_DIMENSION_Y * SHADOWMAP_JITTERMAP_DIMENSION_Z;
 		float_t* pixels = new float_t[pixelSize];
 
-		std::default_random_engine generator;
-		std::uniform_real_distribution<float_t> distribution(0.0f, 1.0f);
-
 		constexpr uint32_t SHADOWMAP_JITTERMAP_DIMENSION_Z_2 = SHADOWMAP_JITTERMAP_DIMENSION_Z * 2;
 		uint32_t offsetDimension = (uint32_t)std::sqrt(SHADOWMAP_JITTERMAP_DIMENSION_Z_2);
 
@@ -1466,8 +1464,8 @@ void VulkanEngine::loadImages()
 			{
 				uint32_t reversedZ = SHADOWMAP_JITTERMAP_DIMENSION_Z_2 - z - 1;  // Reverse so that first samples are the outermost ring.
 				vec2 uv = {
-					reversedZ % offsetDimension + distribution(generator),
-					reversedZ / offsetDimension + distribution(generator),
+					reversedZ % offsetDimension + rng::randomReal(),
+					reversedZ / offsetDimension + rng::randomReal(),
 				};
 				vec2 uvWarped = {
 					std::sqrt(uv[1]) * std::cos(2.0f * M_PI * uv[0]),
@@ -5622,13 +5620,6 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	//
 	// Scene Properties window
 	//
-	static std::string _flagNextStepLoadThisPathAsAScene = "";  // @NOCHECKIN!!!!! THE NEW CHANGES SHOULD PREVENT THE NEED FOR THIS!!!!
-	if (!_flagNextStepLoadThisPathAsAScene.empty())
-	{
-		scene::loadScene(_flagNextStepLoadThisPathAsAScene, true);
-		_flagNextStepLoadThisPathAsAScene = "";
-	}
-
 	static float_t scenePropertiesWindowWidth = 0.0f;
 	ImGui::SetNextWindowPos(ImVec2(_windowExtent.width - scenePropertiesWindowWidth, 0.0f), ImGuiCond_Always);
 	ImGui::Begin((globalState::savedActiveScene + " Properties").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
@@ -5647,9 +5638,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 				if (ImGui::Button(("Open \"" + path + "\"").c_str()))
 				{
 					_movingMatrix.matrixToMove = nullptr;  // @HACK: just a safeguard in case if the matrixtomove happened to be on an entity that will get deleted in the next line  -Timo 2022/11/05
-					for (auto& ent : _entityManager->_entities)
-						_entityManager->destroyEntity(ent);
-					_flagNextStepLoadThisPathAsAScene = path;  // @HACK: mireba wakaru... but it's needed bc it works when delaying the load by a step...  -Timo 2022/10/30
+					scene::loadScene(path, true);
 					ImGui::CloseCurrentPopup();
 				}
 			ImGui::EndPopup();

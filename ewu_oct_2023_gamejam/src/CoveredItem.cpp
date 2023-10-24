@@ -11,6 +11,7 @@
 #include "PhysicsEngine.h"
 #include "EntityManager.h"
 #include "DataSerialization.h"
+#include "RandomNumberGenerator.h"
 #include "GlobalState.h"
 #include "imgui/imgui.h"
 
@@ -320,9 +321,7 @@ void CoveredItem::update(const float_t& deltaTime)
         _data->collisionBoxBodyId = physengine::createBoxColliderBody(getGUID(), _data->position, rotationV, myItemType(_data).collisionBoxExtent);
 
         // Choose uncover time.
-        std::default_random_engine generator;
-		std::uniform_real_distribution<float_t> distribution(myItemType(_data).uncoverTimeMinMax[0], myItemType(_data).uncoverTimeMinMax[1]);
-        _data->chosenUncoverTime = distribution(generator);
+        _data->chosenUncoverTime = rng::randomRealRange(myItemType(_data).uncoverTimeMinMax[0], myItemType(_data).uncoverTimeMinMax[1]);
 
         _data->requestChangeItemModel = false;
     }
@@ -331,9 +330,7 @@ void CoveredItem::update(const float_t& deltaTime)
     _data->rustleTimer -= deltaTime;
     if (_data->rustleTimer <= 0.0f)
     {
-        std::default_random_engine generator;
-		std::uniform_real_distribution<float_t> distribution(1.0f, 8.0f);
-        _data->rustleTimer = distribution(generator);
+        _data->rustleTimer = rng::randomRealRange(1.0f, 8.0f);
         _data->renderObj->animator->setTrigger("goto_rustle");
     }
 }
