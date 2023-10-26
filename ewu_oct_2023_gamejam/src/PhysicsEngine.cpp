@@ -618,6 +618,7 @@ namespace physengine
             //         proportionate to the timescale.  -Timo 2023/06/10
             tick();
             entityManager->INTERNALphysicsUpdate(physicsDeltaTime);  // @NOTE: if timescale changes, then the system just waits longer/shorter.
+            globalState::drawDebugVisualization();
             physicsSystem->Update(physicsDeltaTime, 1, 1, &tempAllocator, &jobSystem);
             tock();
 

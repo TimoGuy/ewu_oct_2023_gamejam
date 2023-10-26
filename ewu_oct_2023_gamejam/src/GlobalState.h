@@ -42,6 +42,7 @@ namespace globalState
     extern bool       isGameActive;  // @NOTE: for EWU Game Jam.
     extern GamePhases currentPhase;  // @NOTE: for EWU Game Jam.
     extern float_t    playTimeRemaining;  // @NOTE: for EWU Game Jam.
+    extern bool       showDebugVisuals;
 
     void resetGameState();
     void startNewGame();
@@ -66,6 +67,7 @@ namespace globalState
         {
             dateDummyCharacter[nextDateDummyIdx++] = c;
         }
+        void uncoverDateDummy(size_t dateIdx);
     };
     extern Phase0 phase0;
 
@@ -192,6 +194,7 @@ namespace globalState
     void initGlobalState(SceneCamera& sc, EntityManager* em);
     void launchAsyncWriteTask();  // @NOTE: this is simply for things that are marked saved
     void update(float_t deltaTime);
+    void drawDebugVisualization();
     void cleanupGlobalState();
 
     HarvestableItemOption* getHarvestableItemByIndex(size_t index);

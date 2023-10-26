@@ -5913,6 +5913,13 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 			ImGui::DragFloat("DOF Gather Sample Radius", &_DOFSampleRadiusMultiplier, 0.1f);
 		}
 
+		if (ImGui::CollapsingHeader("Game State Properties", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::Text("Phase 0");
+			ImGui::DragFloat3("spawnBoundsOrigin", globalState::phase0.spawnBoundsOrigin, 0.1f);
+			ImGui::DragFloat2("spawnBoundsExtent", globalState::phase0.spawnBoundsExtent, 0.1f);
+		}
+
 		if (ImGui::CollapsingHeader("Textbox Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::DragFloat3("mainRenderPosition", textbox::mainRenderPosition);

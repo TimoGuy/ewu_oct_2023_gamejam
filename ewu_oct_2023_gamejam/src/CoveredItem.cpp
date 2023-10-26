@@ -40,6 +40,7 @@ struct CoveredItem_XData
     JPH::BodyID collisionBoxBodyId = JPH::BodyID();
     bool prevIsInteractible = false;  // Whether the player position is within the interaction field.
     static bool showCollisionBoxBounds;
+    static bool showInteractionRadii;
 
     float_t uncoverTimer;
     float_t chosenUncoverTime;
@@ -70,6 +71,7 @@ CoveredItem_XData::ItemType* CoveredItem_XData::itemTypes = new CoveredItem_XDat
     }
 };
 bool CoveredItem_XData::showCollisionBoxBounds = false;
+bool CoveredItem_XData::showInteractionRadii = false;
 
 inline CoveredItem_XData::ItemType& myItemType(CoveredItem_XData* d)
 {
@@ -160,7 +162,11 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
                 _data->isCovered = false;
                 if (_data->dateId >= 0)
                 {
+                    _data->renderObj->renderLayer = RenderLayer::INVISIBLE;
+                    globalState::phase0.uncoverDateDummy(_data->dateId);
+
                     // @TODO: implement if there's a date and goto the next phase.
+                    // globalState::transitionToPhase1(_data->dateId, _data->contestantId);  // @NOCHECKIN
                 }
             }
         }
@@ -171,6 +177,7 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
         globalState::playerPositionRef != nullptr)
     {
         // @DEBUG: draw line showing distance to player.
+        if (CoveredItem_XData::showInteractionRadii)
         {
             vec3 origin;
             glm_vec3_add(_data->position, myItemType(_data).interactionOrigin, origin);
@@ -454,6 +461,7 @@ void CoveredItem::renderImGui()
     ImGui::DragFloat2("uncoverTimeMinMax", myItemType(_data).uncoverTimeMinMax);
 
     ImGui::Checkbox("showCollisionBoxBounds", &CoveredItem_XData::showCollisionBoxBounds);
+    ImGui::Checkbox("showInteractionRadii", &CoveredItem_XData::showInteractionRadii);
 }
 
 size_t CoveredItem::numItemTypes()

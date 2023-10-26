@@ -8,6 +8,7 @@
 #include "CameraRail.h"
 #include "EntityManager.h"
 #include "RenderObject.h"
+#include "PhysicsEngine.h"
 #include "CoveredItem.h"
 #include "Character.h"
 #include "Hazard.h"
@@ -37,6 +38,7 @@ namespace globalState
     bool       isGameActive = false;
     GamePhases currentPhase;
     float_t    playTimeRemaining;
+    bool       showDebugVisuals = true;
 
     void resetGameState()
     {
@@ -50,9 +52,9 @@ namespace globalState
 
         // @HARDCODE values.
         // @NOCHECKIN: @TODO: fill in the correct values when creating.
-        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase0.spawnBoundsOrigin);
-        glm_vec2_copy(vec2{ 10.0f, 10.0f }, phase0.spawnBoundsExtent);
-        phase0.numCoveredItemsToSpawn = 50;
+        glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
+        glm_vec2_copy(vec2{ 15.5f, 18.0f }, phase0.spawnBoundsExtent);
+        phase0.numCoveredItemsToSpawn = 10;
         glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.contASpawnPosition);
         glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.dateSpawnPosition);
         glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.contBSpawnPosition);
@@ -86,6 +88,11 @@ namespace globalState
         phase0.loadTriggerFlag = true;
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
+    }
+
+    void Phase0::uncoverDateDummy(size_t dateIdx)
+    {
+        dateDummyCharacter[dateIdx]->setRenderLayer(RenderLayer::VISIBLE);
     }
 
     Phase0 phase0 = Phase0();
@@ -292,7 +299,7 @@ namespace globalState
                 DataSerialized dsd = ds.getSerializedData();
 
                 phase0.spawnedCoveredItems.push_back(
-                    static_cast<CoveredItem*>(scene::spinupNewObject("covereditem", &dsd))
+                    static_cast<CoveredItem*>(scene::spinupNewObject(":covereditem", &dsd))
                 );
             }
 
@@ -322,7 +329,7 @@ namespace globalState
             for (size_t i = 0; i < NUM_CONTESTANTS; i++)
             {
                 vec3 position;
-                phase0.spawnedCoveredItems[i]->getPosition(position);
+                phase0.spawnedCoveredItems[reservedIndices[i]]->getPosition(position);
                 phase0.dateDummyCharacter[i]->moreOrLessSpawnAtPosition(position);
                 phase0.dateDummyCharacter[i]->setRenderLayer(RenderLayer::INVISIBLE);
             }
@@ -385,6 +392,33 @@ namespace globalState
 
             // Finished.
             phase2.unloadTriggerFlag = false;
+        }
+    }
+
+    void drawDebugVisualization()
+    {
+        if (!showDebugVisuals)
+            return;
+        
+        // Draw spawn bounds.
+        {
+            vec3 pt0, pt1, pt2, pt3;
+            glm_vec3_copy(phase0.spawnBoundsOrigin, pt0);
+            glm_vec3_copy(phase0.spawnBoundsOrigin, pt1);
+            glm_vec3_copy(phase0.spawnBoundsOrigin, pt2);
+            glm_vec3_copy(phase0.spawnBoundsOrigin, pt3);
+            pt0[0] += phase0.spawnBoundsExtent[0];
+            pt1[0] -= phase0.spawnBoundsExtent[0];
+            pt2[0] -= phase0.spawnBoundsExtent[0];
+            pt3[0] += phase0.spawnBoundsExtent[0];
+            pt0[2] += phase0.spawnBoundsExtent[1];
+            pt1[2] += phase0.spawnBoundsExtent[1];
+            pt2[2] -= phase0.spawnBoundsExtent[1];
+            pt3[2] -= phase0.spawnBoundsExtent[1];
+            physengine::drawDebugVisLine(pt0, pt1);
+            physengine::drawDebugVisLine(pt1, pt2);
+            physengine::drawDebugVisLine(pt2, pt3);
+            physengine::drawDebugVisLine(pt3, pt0);
         }
     }
 

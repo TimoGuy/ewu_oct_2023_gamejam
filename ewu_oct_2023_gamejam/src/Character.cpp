@@ -1528,7 +1528,8 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
     vkglTF::Model* characterModel = nullptr;
     if (_data->characterType == CHARACTER_TYPE_PLAYER)
         characterModel = _data->rom->getModel("CharSlimeMC", this, [](){});
-    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    if (_data->characterType == CHARACTER_TYPE_MONSTER ||
+        _data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
         characterModel = _data->rom->getModel("CharGhost", this, [](){});
     if (_data->characterType == CHARACTER_TYPE_CHASER)
         characterModel = _data->rom->getModel("CharOpponent", this, [](){});
@@ -1550,7 +1551,8 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
 
     bool useCCD = (_data->characterType == CHARACTER_TYPE_PLAYER);
     // _data->cpd = physengine::createCharacter(getGUID(), _data->position, 0.375f, 1.25f, useCCD);  // @NOTE: For EWU Game Jam.
-    _data->cpd = physengine::createCharacter(getGUID(), _data->position, 0.75f, 0.5f, useCCD);  // Total height is 2, but r*2 is subtracted to get the capsule height (i.e. the line segment length that the capsule rides along)
+    if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
+        _data->cpd = physengine::createCharacter(getGUID(), _data->position, 0.75f, 0.5f, useCCD);  // Total height is 2, but r*2 is subtracted to get the capsule height (i.e. the line segment length that the capsule rides along)
 
     if (_data->characterType == CHARACTER_TYPE_PLAYER)
     {
@@ -1590,7 +1592,8 @@ Character::~Character()
     textmesh::destroyAndUnregisterTextMesh(_data->uiMaterializeItem);
 
     if (globalState::playerGUID == getGUID() ||
-        globalState::playerPositionRef == &_data->cpd->currentCOMPosition)
+        (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY &&
+            globalState::playerPositionRef == &_data->cpd->currentCOMPosition))
     {
         globalState::playerGUID = "";
         globalState::playerPositionRef = nullptr;
@@ -1600,7 +1603,8 @@ Character::~Character()
     _data->rom->unregisterRenderObjects({ _data->characterRenderObj });
     _data->rom->removeModelCallbacks(this);
 
-    physengine::destroyCapsule(_data->cpd);
+    if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
+        physengine::destroyCapsule(_data->cpd);
 
     delete _data;
 }
@@ -2444,6 +2448,10 @@ std::string playTimeRemainingUICurrentText;
 
 void Character::physicsUpdate(const float_t& physicsDeltaTime)
 {
+    // No physics logic for dummy character type.
+    if (_data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
+        return;
+
     // Display global play time/game over.
     if (isPlayer())
     {
@@ -2618,9 +2626,16 @@ void Character::lateUpdate(const float_t& deltaTime)
     if (_data->movingPlatformAttachment.attachmentStage >= Character_XData::MovingPlatformAttachment::AttachmentStage::FIRST_DELTA_ATTACHMENT)
         _data->facingDirection += _data->movingPlatformAttachment.attachmentYAxisAngularVelocity * deltaTime;
 
-    vec3 offset(0.0f, -physengine::getLengthOffsetToBase(*_data->cpd), 0.0f);
     vec3 position;
-    glm_vec3_add(_data->cpd->interpolCOMPosition, offset, position);
+    if (_data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
+    {
+        glm_vec3_copy(_data->position, position);
+    }
+    else
+    {
+        vec3 offset(0.0f, -physengine::getLengthOffsetToBase(*_data->cpd), 0.0f);
+        glm_vec3_add(_data->cpd->interpolCOMPosition, offset, position);
+    }
 
     // vec3 eulerAngles = { 0.0f, _data->facingDirection, 0.0f };  // @NOTE: for EWU Game Jam.
     mat4 rotation;
@@ -3217,10 +3232,13 @@ void Character::moreOrLessSpawnAtPosition(vec3 position)
     // @COPYPASTA with `reportMoved`
     glm_vec3_copy(position, _data->position);
 
-    vec3 charPos;
-    glm_vec3_add(position, vec3{ 0.0f, physengine::getLengthOffsetToBase(*_data->cpd), 0.0f }, charPos);
-    glm_vec3_copy(charPos, _data->cpd->currentCOMPosition);
-    physengine::setCharacterPosition(*_data->cpd, charPos);
+    if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
+    {
+        vec3 charPos;
+        glm_vec3_add(position, vec3{ 0.0f, physengine::getLengthOffsetToBase(*_data->cpd), 0.0f }, charPos);
+        glm_vec3_copy(charPos, _data->cpd->currentCOMPosition);
+        physengine::setCharacterPosition(*_data->cpd, charPos);
+    }
 }
 
 void Character::setRenderLayer(const RenderLayer& renderLayer)
