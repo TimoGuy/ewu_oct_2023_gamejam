@@ -338,7 +338,7 @@ namespace globalState
             // phase1.registerContestantA(phase0.contestants[0]);
             // phase1.registerContestantB(phase0.contestants[1]);
             // phase1.registerContestantB(phase0.contestants[2]);
-            // phase1.registerDate(0);
+            // phase1.setDateIndex(0);
 
             // Load phase 1.
             // Move contestant A and Date to hallway.

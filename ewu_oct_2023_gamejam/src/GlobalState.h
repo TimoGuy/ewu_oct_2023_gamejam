@@ -89,7 +89,6 @@ namespace globalState
             for (size_t i = 0; i < NUM_CONTESTANTS - 1; i++)
                 contBCharacters[i] = nullptr;
             nextContBIdx = 0;
-            dateCharacter = nullptr;
         }
         void registerContestantA(Character* c)
         {
@@ -99,7 +98,11 @@ namespace globalState
         {
             contBCharacters[nextContBIdx++] = c;
         }
-        void registerDate(size_t dateIdx)
+        void registerDateChar(Character* c)
+        {
+            dateCharacter = c;
+        }
+        void setDateIndex(size_t dateIdx)
         {
             Phase1::dateIdx = dateIdx;
         }

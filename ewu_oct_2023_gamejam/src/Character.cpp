@@ -30,6 +30,7 @@
 
 std::string CHARACTER_TYPE_PLAYER = "PLAYER";
 std::string CHARACTER_TYPE_MONSTER = "MONSTER";
+std::string CHARACTER_TYPE_MONSTER_DUMMY = "MONSTER_DUMMY";
 std::string CHARACTER_TYPE_CHASER = "CHASER";
 
 struct Character_XData
@@ -1376,7 +1377,22 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         load(*ds);
 
     if (isPlayer())
+    {
+        globalState::phase0.registerContestant(this);
         globalState::startNewGame();  // Start a new game when player is spawned.
+    }
+    else if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        globalState::phase1.registerDateChar(this);
+    }
+    else if (_data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
+    {
+        globalState::phase0.registerDateDummy(this);
+    }
+    else if (_data->characterType == CHARACTER_TYPE_CHASER)
+    {
+        globalState::phase0.registerContestant(this);
+    }
 
     _data->staminaData.currentStamina = (float_t)_data->staminaData.maxStamina;
 
