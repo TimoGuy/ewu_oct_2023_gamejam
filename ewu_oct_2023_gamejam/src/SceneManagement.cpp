@@ -16,6 +16,8 @@
 #include "HarvestableItem.h"
 #include "CameraRail.h"
 #include "CoveredItem.h"
+#include "Hazard.h"
+#include "DatingInterface.h"
 #include "MainMenu.h"
 
 
@@ -27,6 +29,8 @@ const std::vector<std::string> ENTITY_TYPE_NAMES = {
     ":harvestableitem",
     ":camerarail",
     ":covereditem",
+    ":hazard",
+    ":datinginterface",
     ":mainmenu",
 };
 const std::string Character::TYPE_NAME        = ENTITY_TYPE_NAMES[0];
@@ -35,7 +39,9 @@ const std::string VoxelField::TYPE_NAME       = ENTITY_TYPE_NAMES[2];
 const std::string HarvestableItem::TYPE_NAME  = ENTITY_TYPE_NAMES[3];
 const std::string CameraRail::TYPE_NAME       = ENTITY_TYPE_NAMES[4];
 const std::string CoveredItem::TYPE_NAME      = ENTITY_TYPE_NAMES[5];
-const std::string MainMenu::TYPE_NAME         = ENTITY_TYPE_NAMES[6];
+const std::string Hazard::TYPE_NAME           = ENTITY_TYPE_NAMES[6];
+const std::string DatingInterface::TYPE_NAME  = ENTITY_TYPE_NAMES[7];
+const std::string MainMenu::TYPE_NAME         = ENTITY_TYPE_NAMES[8];
 
 
 namespace scene
@@ -95,6 +101,10 @@ namespace scene
             ent = new CameraRail(engine->_entityManager, engine->_roManager, ds);
         if (objectName == CoveredItem::TYPE_NAME)
             ent = new CoveredItem(engine->_entityManager, engine->_roManager, engine->_camera, ds);
+        if (objectName == Hazard::TYPE_NAME)
+            ent = new Hazard(engine->_entityManager, engine->_roManager, ds);
+        if (objectName == DatingInterface::TYPE_NAME)
+            ent = new DatingInterface(engine->_entityManager, engine->_roManager, engine->_camera, ds);
         if (objectName == MainMenu::TYPE_NAME)
             ent = new MainMenu(engine->_entityManager, engine->_roManager, ds);
 

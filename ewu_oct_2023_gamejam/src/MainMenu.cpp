@@ -60,7 +60,10 @@ void MainMenu::physicsUpdate(const float_t& physicsDeltaTime)
 void MainMenu::update(const float_t& deltaTime)
 {
     if (input::onKeyJumpPress)
+    {
+        globalState::resetGameState();
         scene::loadScene("hello_hello_world.ssdat", true);
+    }
 }
 
 void MainMenu::lateUpdate(const float_t& deltaTime)

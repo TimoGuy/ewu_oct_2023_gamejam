@@ -96,7 +96,7 @@ void VulkanEngine::init()
 
 	AudioEngine::getInstance().initialize();
 	physengine::start(_entityManager);
-	globalState::initGlobalState(_camera->sceneCamera);
+	globalState::initGlobalState(_camera->sceneCamera, _entityManager);
 	scene::init(this);
 
 	while (!physengine::isInitialized);  // Spin lock so that new scene doesn't get loaded before physics are finished initializing.
@@ -105,14 +105,7 @@ void VulkanEngine::init()
 
 	_isInitialized = true;
 
-	scene::loadScene(
-#ifdef _DEVELOP
-		globalState::savedActiveScene,
-#else
-		"first.ssdat",
-#endif
-		false
-	);
+	scene::loadScene("first.ssdat", false);
 }
 
 constexpr size_t numPerfs = 15;

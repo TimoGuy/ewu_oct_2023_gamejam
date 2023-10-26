@@ -3,18 +3,17 @@
 #include "Entity.h"
 class EntityManager;
 class RenderObjectManager;
-struct Camera;
-struct CoveredItem_XData;
+struct Hazard_XData;
 
 
-class CoveredItem : public Entity
+class Hazard : public Entity
 {
 public:
     static const std::string TYPE_NAME;
     std::string getTypeName() { return TYPE_NAME; };
 
-    CoveredItem(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds);
-    ~CoveredItem();
+    Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds);
+    ~Hazard();
 
     void physicsUpdate(const float_t& physicsDeltaTime);
     void update(const float_t& deltaTime);
@@ -27,10 +26,9 @@ public:
     void reportMoved(mat4* matrixMoved);
     void renderImGui();
 
-    static size_t numItemTypes();
-    void setDateId(size_t dateId);
-    void getPosition(vec3& outPosition);
+    void reset();
+    void setOff();
 
 private:
-    CoveredItem_XData* _data;
+    Hazard_XData* _data;
 };

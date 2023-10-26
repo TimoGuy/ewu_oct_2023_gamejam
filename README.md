@@ -87,6 +87,7 @@
         - [ ] Move to next open booby trap operator booth.
 
 - [ ] Phase 3: "Grab hand speed date"
+    - [ ] Create render texture that is the screenspace size. This is "Freeze Frame Render Texture".
     - [ ] 4 directions of input lead to different dialog options
         - [ ] Bottom one is always "Will you go on a date with me?"
             - NOTE: never ask this on the first one bc it's supposed to be a pick-up line (but you CAN)

@@ -1376,7 +1376,7 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         load(*ds);
 
     if (isPlayer())
-        globalState::isGameActive = true;  // Set game to active when player is spawned.
+        globalState::startNewGame();  // Start a new game when player is spawned.
 
     _data->staminaData.currentStamina = (float_t)_data->staminaData.maxStamina;
 
@@ -3186,4 +3186,28 @@ bool Character::isPlayer()
 float_t Character::getFacingDirection()
 {
     return _data->facingDirection;
+}
+
+void Character::activateDate(size_t dateId)
+{
+    if (_data->characterType != CHARACTER_TYPE_MONSTER)
+        return;
+
+    // @TODO: STUB
+}
+
+void Character::moreOrLessSpawnAtPosition(vec3 position)
+{
+    // @COPYPASTA with `reportMoved`
+    glm_vec3_copy(position, _data->position);
+
+    vec3 charPos;
+    glm_vec3_add(position, vec3{ 0.0f, physengine::getLengthOffsetToBase(*_data->cpd), 0.0f }, charPos);
+    glm_vec3_copy(charPos, _data->cpd->currentCOMPosition);
+    physengine::setCharacterPosition(*_data->cpd, charPos);
+}
+
+void Character::setRenderLayer(const RenderLayer& renderLayer)
+{
+    _data->characterRenderObj->renderLayer = renderLayer;
 }

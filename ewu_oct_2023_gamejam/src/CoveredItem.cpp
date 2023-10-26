@@ -455,3 +455,18 @@ void CoveredItem::renderImGui()
 
     ImGui::Checkbox("showCollisionBoxBounds", &CoveredItem_XData::showCollisionBoxBounds);
 }
+
+size_t CoveredItem::numItemTypes()
+{
+    return CoveredItem_XData::numItemTypes;
+}
+
+void CoveredItem::setDateId(size_t dateId)
+{
+    _data->dateId = dateId;
+}
+
+void CoveredItem::getPosition(vec3& outPosition)
+{
+    glm_vec3_copy(_data->position, outPosition);
+}

@@ -1,10 +1,17 @@
 #include "GlobalState.h"
 
 #include "DataSerialization.h"
+#include "RandomNumberGenerator.h"
 #include "Debug.h"
 #include "StringHelper.h"
 #include "Camera.h"
 #include "CameraRail.h"
+#include "EntityManager.h"
+#include "RenderObject.h"
+#include "CoveredItem.h"
+#include "Character.h"
+#include "Hazard.h"
+#include "DatingInterface.h"
 
 
 namespace globalState
@@ -27,11 +34,67 @@ namespace globalState
     float_t DOFFocusExtent = 1000.0f;  // 4.0f;
     float_t DOFBlurExtent  = 0.0f;  // 2.0f;
 
-    GamePhases currentPhase = GamePhases::P0_UNCOVER;
     bool       isGameActive = false;
-    float_t    playTimeRemaining = 150.0f;  // 2 min 30 sec
+    GamePhases currentPhase;
+    float_t    playTimeRemaining;
+
+    void resetGameState()
+    {
+        // Reset state.
+        currentPhase = GamePhases::P0_UNCOVER;
+        isGameActive = true;
+        playTimeRemaining = 150.0f;  // 2 min 30 sec
+        phase0 = Phase0();
+        phase1 = Phase1();
+        phase2 = Phase2();
+
+        // @HARDCODE values.
+        // @NOCHECKIN: @TODO: fill in the correct values when creating.
+        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase0.spawnBoundsOrigin);
+        glm_vec2_copy(vec2{ 10.0f, 10.0f }, phase0.spawnBoundsExtent);
+        phase0.numCoveredItemsToSpawn = 50;
+        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.contASpawnPosition);
+        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.dateSpawnPosition);
+        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.contBSpawnPosition);
+        glm_vec3_copy(vec3{ 0.0f, 0.0f, 2.0f }, phase1.contBSpawnStride);
+        dates[0] = {
+            .trustLevelIncrement = 1.0f,
+            .trustLevelDecrement = 1.0f,
+            .harshRejectThreshold = 20.0f,
+            .maybeAcceptDateInviteThreshold = 80.0f,
+            .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
+        };
+        dates[1] = {
+            .trustLevelIncrement = 1.0f,
+            .trustLevelDecrement = 1.0f,
+            .harshRejectThreshold = 20.0f,
+            .maybeAcceptDateInviteThreshold = 80.0f,
+            .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
+        };
+        dates[2] = {
+            .trustLevelIncrement = 1.0f,
+            .trustLevelDecrement = 1.0f,
+            .harshRejectThreshold = 20.0f,
+            .maybeAcceptDateInviteThreshold = 80.0f,
+            .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
+        };
+    }
+
+    void startNewGame()
+    {
+        // Trigger loading phase 0.
+        phase0.loadTriggerFlag = true;
+        // phase1.loadTriggerFlag = true;  // @DEBUG
+        // phase2.loadTriggerFlag = true;  // @DEBUG
+    }
+
+    Phase0 phase0 = Phase0();
+    Phase1 phase1 = Phase1();
+    Phase2 phase2 = Phase2();
+    DateProps dates[NUM_CONTESTANTS];
 
     SceneCamera* sceneCameraRef = nullptr;
+    EntityManager* entityManagerRef = nullptr;
 
     // Harvestable items (e.g. materials, raw ores, etc.)
     std::vector<HarvestableItemOption> allHarvestableItems = {
@@ -157,9 +220,10 @@ namespace globalState
         });
     }
 
-    void initGlobalState(SceneCamera& sc)
+    void initGlobalState(SceneCamera& sc, EntityManager* em)
     {
         sceneCameraRef = &sc;
+        entityManagerRef = em;
 
         // Initial values for inventory and list of materializable items.
         harvestableItemQuantities.resize(allHarvestableItems.size(), 0);
@@ -178,12 +242,150 @@ namespace globalState
         tfExecutor.run(tfTaskAsyncWriting);
     }
 
+    inline void generateSpawnLocation(vec3& outSpawnLocation)
+    {
+        vec3 spawnLocation = {
+            rng::randomRealRange(-phase0.spawnBoundsExtent[0], phase0.spawnBoundsExtent[0]),
+            0.0f,
+            rng::randomRealRange(-phase0.spawnBoundsExtent[1], phase0.spawnBoundsExtent[1])
+        };
+        glm_vec3_add(spawnLocation, phase0.spawnBoundsOrigin, spawnLocation);
+        glm_vec3_copy(spawnLocation, outSpawnLocation);
+    }
+
     void update(float_t deltaTime)
     {
-        if (!showCountdown())
-            return;
+        if (showCountdown())
+        {
+            playTimeRemaining -= deltaTime;
+        }
 
-        playTimeRemaining -= deltaTime;
+        if (phase0.loadTriggerFlag)
+        {
+            // Load phase 0.
+            // Move contestants to somewhere within play bounds.
+            for (size_t i = 0; i < NUM_CONTESTANTS; i++)
+            {
+                vec3 spawnLocation;
+                generateSpawnLocation(spawnLocation);
+                phase0.contestants[i]->moreOrLessSpawnAtPosition(spawnLocation);
+            }
+
+            // Delete all covered items.
+            for (auto& coveredItem : phase0.spawnedCoveredItems)
+                entityManagerRef->destroyEntity(coveredItem);
+            phase0.spawnedCoveredItems.clear();
+
+            // Spawn `numCoveredItemsToSpawn` # of covered items.
+            for (size_t i = 0; i < phase0.numCoveredItemsToSpawn; i++)
+            {
+                vec3 spawnLocation;
+                generateSpawnLocation(spawnLocation);
+                float_t yRotation = rng::randomRealRange(0.0f, M_PI * 2.0f);
+                size_t itemType = rng::randomIntegerRange(0, CoveredItem::numItemTypes() - 1);
+
+                DataSerializer ds;
+                ds.dumpString("0");  // GUID
+                ds.dumpVec3(spawnLocation);
+                ds.dumpFloat(yRotation);
+                ds.dumpFloat((float_t)itemType);
+                DataSerialized dsd = ds.getSerializedData();
+
+                phase0.spawnedCoveredItems.push_back(
+                    static_cast<CoveredItem*>(scene::spinupNewObject("covereditem", &dsd))
+                );
+            }
+
+            // Assign `NUM_CONTESTANTS` # of covered items to have a date id.
+            std::vector<size_t> reservedIndices;
+            for (size_t i = 0; i < NUM_CONTESTANTS; i++)
+            {
+                size_t selectedIdx;
+                bool collided = false;
+                do
+                {
+                    selectedIdx = rng::randomIntegerRange(0, phase0.spawnedCoveredItems.size() - 1);  // @NOCHECKIN: see if integer range is inclusive or exclusive.
+                    for (size_t ri : reservedIndices)
+                        if (ri == selectedIdx)
+                        {
+                            collided = true;
+                            break;
+                        }
+                } while (collided);
+                reservedIndices.push_back(selectedIdx);
+            }
+            size_t dateId = 0;
+            for (size_t ri : reservedIndices)
+                phase0.spawnedCoveredItems[ri]->setDateId(dateId++);
+
+            // Hide Date dummy render objects into INVISIBLE layer.
+            for (size_t i = 0; i < NUM_CONTESTANTS; i++)
+            {
+                vec3 position;
+                phase0.spawnedCoveredItems[i]->getPosition(position);
+                phase0.dateDummyCharacter[i]->moreOrLessSpawnAtPosition(position);
+                phase0.dateDummyCharacter[i]->setRenderLayer(RenderLayer::INVISIBLE);
+            }
+
+            // Finished.
+            phase0.loadTriggerFlag = false;
+        }
+
+        if (phase1.loadTriggerFlag)
+        {
+            // @DEBUG inject certain characters as the ones for phase 1.
+            // phase1.clearContestants();
+            // phase1.registerContestantA(phase0.contestants[0]);
+            // phase1.registerContestantB(phase0.contestants[1]);
+            // phase1.registerContestantB(phase0.contestants[2]);
+            // phase1.registerDate(0);
+
+            // Load phase 1.
+            // Move contestant A and Date to hallway.
+            phase1.contACharacter->moreOrLessSpawnAtPosition(phase1.contASpawnPosition);
+            phase1.dateCharacter->moreOrLessSpawnAtPosition(phase1.dateSpawnPosition);
+
+            // Move contestant Bs to trap controls.
+            vec3 spawnPositionB;
+            glm_vec3_copy(phase1.contBSpawnPosition, spawnPositionB);
+            for (size_t i = 0; i < NUM_CONTESTANTS - 1; i++)
+            {
+                if (i > 0)
+                    glm_vec3_add(spawnPositionB, phase1.contBSpawnStride, spawnPositionB);
+                phase1.contBCharacters[i]->moreOrLessSpawnAtPosition(spawnPositionB);
+            }
+
+            // Reset hazards.
+            for (auto& hazard : phase1.hazards)
+                hazard->reset();
+
+            // Activate Date.
+            phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?
+                                                   // @REPLY: I guess what this would do is (CONTEXT: when the date moves to the end of the hallway, it deactivates itself) tell the date to activate and start moving down the hall. There should really only be a `moveDownHallway = true` that's needed.
+
+            // Finished.
+            phase0.loadTriggerFlag = false;
+        }
+
+        if (phase2.loadTriggerFlag)
+        {
+            // Load phase 2.
+            // Activate dating interface.
+            phase2.datingInterface->activate(phase2.dateIdx);
+
+            // Finished.
+            phase2.loadTriggerFlag = false;
+        }
+
+        if (phase2.unloadTriggerFlag)
+        {
+            // Unload phase 2.
+            // Deactivate dating interface.
+            phase2.datingInterface->deactivate();
+
+            // Finished.
+            phase2.unloadTriggerFlag = false;
+        }
     }
 
     void cleanupGlobalState()

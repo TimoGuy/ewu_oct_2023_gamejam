@@ -17,4 +17,10 @@ namespace rng
 		std::uniform_real_distribution<float_t> distribution(min, max);
         return distribution(generator);
     }
+
+    int32_t randomIntegerRange(int32_t min, int32_t max)
+    {
+		std::uniform_int_distribution<int32_t> distribution(min, max);
+        return distribution(generator);
+    }
 }
