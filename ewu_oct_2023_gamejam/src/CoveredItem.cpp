@@ -337,7 +337,7 @@ void CoveredItem::update(const float_t& deltaTime)
 
     // Process rustle timer.
     _data->rustleTimer -= deltaTime;
-    if (_data->rustleTimer <= 0.0f)
+    if (_data->rustleTimer <= 0.0f && (!globalState::gameIsOver() || _data->dateId >= 0))
     {
         _data->rustleTimer = rng::randomRealRange(1.0f, 8.0f);
         _data->renderObj->animator->setTrigger("goto_rustle");
