@@ -138,6 +138,9 @@ CoveredItem::~CoveredItem()
     });
     _data->rom->removeModelCallbacks(this);
 
+    if (!_data->collisionBoxBodyId.IsInvalid())
+        physengine::destroyBody(_data->collisionBoxBodyId);
+
     delete _data;
 }
 

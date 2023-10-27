@@ -2755,12 +2755,23 @@ void updateInteractionUI()
 
 void notifyFrontOfQueueGuid(EntityManager* em)
 {
-    if (!interactionGUIDPriorityQueue.empty())
+    bool passed = false;
+    while (!interactionGUIDPriorityQueue.empty() && !passed)
     {
         DataSerializer msg;
         msg.dumpString("msg_front_of_interaction_queue");
         DataSerialized ds = msg.getSerializedData();
-        em->sendMessage(interactionGUIDPriorityQueue.front().guid, ds);
+        if (em->sendMessage(interactionGUIDPriorityQueue.front().guid, ds))
+        {
+            // Message successfully transmitted.
+            passed = true;
+        }
+        else
+        {
+            // Entity not found. Delete first GUID.
+            std::cout << "MITIGATION/BUG: Deleting first interactionGUID from interactionGUIDPriorityQueue." << std::endl;
+            interactionGUIDPriorityQueue.erase(interactionGUIDPriorityQueue.begin() + 0);
+        }
     }
 }
 
@@ -3263,27 +3274,10 @@ void Character::setContestantIndex(size_t contestantId)
     _data->contestantId = contestantId;
 }
 
-void Character::activateDate(size_t dateId)
+void loadNewDateModel(Character_XData* d, Character* _this)
 {
-    if (_data->characterType != CHARACTER_TYPE_MONSTER)
-        return;
-
-    _data->isDateRunningDownHallway = true;
-}
-
-void Character::setDateDummyIndex(size_t dateId)
-{
-    if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
-    {
-        std::cerr << "ERROR: setting `setDateDummyIndex()` on non-MONSTER_DUMMY type character." << std::endl;
-        return;
-    }
-
-    _data->dateId = dateId;
-
-    // Set new model with the date id.
     std::string modelPath = "";
-    switch(_data->dateId)
+    switch(d->dateId)
     {
         case 0:
             modelPath = "CharGhost";
@@ -3297,10 +3291,32 @@ void Character::setDateDummyIndex(size_t dateId)
             modelPath = "CharBat";
             break;
     }
-    _data->characterRenderObj->model = _data->rom->getModel(modelPath, this, [](){});
-    RenderObject newRO = *_data->characterRenderObj;
-    _data->rom->unregisterRenderObjects({ _data->characterRenderObj });
-    _data->rom->registerRenderObjects({ newRO }, { &_data->characterRenderObj });
+    d->characterRenderObj->model = d->rom->getModel(modelPath, _this, [](){});
+    RenderObject newRO = *d->characterRenderObj;
+    d->rom->unregisterRenderObjects({ d->characterRenderObj });
+    d->rom->registerRenderObjects({ newRO }, { &d->characterRenderObj });
+}
+
+void Character::activateDate(size_t dateId)
+{
+    if (_data->characterType != CHARACTER_TYPE_MONSTER)
+        return;
+
+    _data->dateId = dateId;
+    loadNewDateModel(_data, this);
+    _data->isDateRunningDownHallway = true;
+}
+
+void Character::setDateDummyIndex(size_t dateId)
+{
+    if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
+    {
+        std::cerr << "ERROR: setting `setDateDummyIndex()` on non-MONSTER_DUMMY type character." << std::endl;
+        return;
+    }
+
+    _data->dateId = dateId;
+    loadNewDateModel(_data, this);
 }
 
 void Character::moreOrLessSpawnAtPosition(vec3 position)

@@ -54,7 +54,7 @@ namespace globalState
         // @NOCHECKIN: @TODO: fill in the correct values when creating.
         glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
         glm_vec2_copy(vec2{ 15.5f, 18.0f }, phase0.spawnBoundsExtent);
-        phase0.numCoveredItemsToSpawn = 10;
+        phase0.numCoveredItemsToSpawn = 40;  // About 10 per contestant... ish.
         glm_vec3_copy(vec3{ 100.0f, 0.5f, -74.0f }, phase1.contASpawnPosition);
         glm_vec3_copy(vec3{ 100.0f, 0.5f, -64.0f }, phase1.dateSpawnPosition);
         glm_vec3_copy(vec3{ 93.0f, -3.5f, -74.0f }, phase1.contBSpawnPosition);
