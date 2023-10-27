@@ -5918,6 +5918,15 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 			ImGui::Text("Phase 0");
 			ImGui::DragFloat3("spawnBoundsOrigin", globalState::phase0.spawnBoundsOrigin, 0.1f);
 			ImGui::DragFloat2("spawnBoundsExtent", globalState::phase0.spawnBoundsExtent, 0.1f);
+
+			ImGui::Separator();
+			ImGui::Text("Phase 1");
+			ImGui::DragFloat3("contASpawnPosition", globalState::phase1.contASpawnPosition, 0.1f);
+			ImGui::DragFloat3("dateSpawnPosition", globalState::phase1.dateSpawnPosition, 0.1f);
+			ImGui::DragFloat3("contBSpawnPosition", globalState::phase1.contBSpawnPosition, 0.1f);
+			ImGui::DragFloat3("contBSpawnStride", globalState::phase1.contBSpawnStride, 0.1f);
+			ImGui::DragFloat("hazardStartDistance", &globalState::phase1.hazardStartDistance, 0.1f);
+			ImGui::DragFloat("finishLineDistance", &globalState::phase1.finishLineDistance, 0.1f);
 		}
 
 		if (ImGui::CollapsingHeader("Textbox Properties", ImGuiTreeNodeFlags_DefaultOpen))

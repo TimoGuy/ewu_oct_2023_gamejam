@@ -1,11 +1,12 @@
 #include "RandomNumberGenerator.h"
 
 #include <random>
+#include <chrono>
 
 
 namespace rng
 {
-    std::default_random_engine generator;
+    std::default_random_engine generator(std::chrono::system_clock::now().time_since_epoch().count());
 
     float_t randomReal()
     {

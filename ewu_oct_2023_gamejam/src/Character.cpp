@@ -36,6 +36,8 @@ std::string CHARACTER_TYPE_CHASER = "CHASER";
 struct Character_XData
 {
     std::string characterType = CHARACTER_TYPE_PLAYER;
+    size_t contestantId       = (size_t)-1;
+    size_t dateId             = (size_t)-1;  // @NOTE: only applicable if is MONSTER_DUMMY or MONSTER type of character.
 
     RenderObjectManager*     rom;
     Camera*                  camera;
@@ -2546,6 +2548,7 @@ void Character::update(const float_t& deltaTime)
                 {
                     DataSerializer ds;
                     ds.dumpString("msg_commit_interaction");
+                    ds.dumpFloat((float_t)_data->contestantId);  // @NOTE: For EWU GAme Jam.
                     DataSerialized dsd = ds.getSerializedData();
                     _em->sendMessage(interactionGUIDPriorityQueue.front().guid, dsd);
                 }
@@ -2626,6 +2629,7 @@ void Character::lateUpdate(const float_t& deltaTime)
     if (_data->movingPlatformAttachment.attachmentStage >= Character_XData::MovingPlatformAttachment::AttachmentStage::FIRST_DELTA_ATTACHMENT)
         _data->facingDirection += _data->movingPlatformAttachment.attachmentYAxisAngularVelocity * deltaTime;
 
+    constexpr float_t tiltDegrees = 30.0f;
     vec3 position;
     if (_data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
     {
@@ -2633,14 +2637,18 @@ void Character::lateUpdate(const float_t& deltaTime)
     }
     else
     {
-        vec3 offset(0.0f, -physengine::getLengthOffsetToBase(*_data->cpd), 0.0f);
+        vec3 offset = {
+            0.0f,
+            -physengine::getLengthOffsetToBase(*_data->cpd),
+            -std::cosf(glm_rad(90.0f - tiltDegrees)) * 0.5f
+        };
         glm_vec3_add(_data->cpd->interpolCOMPosition, offset, position);
     }
 
     // vec3 eulerAngles = { 0.0f, _data->facingDirection, 0.0f };  // @NOTE: for EWU Game Jam.
     mat4 rotation;
     {
-        vec3 eulerAngles = { glm_rad(30.0f), 0.0f, 0.0f };
+        vec3 eulerAngles = { glm_rad(tiltDegrees), 0.0f, 0.0f };
         glm_euler_zyx(eulerAngles, rotation);
     }
     mat4 rotation2;
@@ -3219,12 +3227,56 @@ float_t Character::getFacingDirection()
     return _data->facingDirection;
 }
 
+void Character::setContestantIndex(size_t contestantId)
+{
+    if (_data->characterType != CHARACTER_TYPE_PLAYER &&
+        _data->characterType != CHARACTER_TYPE_CHASER)
+    {
+        std::cerr << "ERROR: setting `setContestantIndex()` on non-contestant type character." << std::endl;
+        return;
+    }
+
+    _data->contestantId = contestantId;
+}
+
 void Character::activateDate(size_t dateId)
 {
     if (_data->characterType != CHARACTER_TYPE_MONSTER)
         return;
 
     // @TODO: STUB
+}
+
+void Character::setDateDummyIndex(size_t dateId)
+{
+    if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
+    {
+        std::cerr << "ERROR: setting `setDateDummyIndex()` on non-MONSTER_DUMMY type character." << std::endl;
+        return;
+    }
+
+    _data->dateId = dateId;
+
+    // Set new model with the date id.
+    std::string modelPath = "";
+    switch(_data->dateId)
+    {
+        case 0:
+            modelPath = "CharGhost";
+            break;
+
+        case 1:
+            modelPath = "CharMummy";
+            break;
+
+        case 2:
+            modelPath = "CharBat";
+            break;
+    }
+    _data->characterRenderObj->model = _data->rom->getModel(modelPath, this, [](){});
+    RenderObject newRO = *_data->characterRenderObj;
+    _data->rom->unregisterRenderObjects({ _data->characterRenderObj });
+    _data->rom->registerRenderObjects({ newRO }, { &_data->characterRenderObj });
 }
 
 void Character::moreOrLessSpawnAtPosition(vec3 position)

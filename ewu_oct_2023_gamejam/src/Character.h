@@ -37,7 +37,9 @@ public:
     void reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact);
     bool isPlayer();
     float_t getFacingDirection();
+    void setContestantIndex(size_t contestantId);
     void activateDate(size_t dateId);
+    void setDateDummyIndex(size_t dateId);
     void moreOrLessSpawnAtPosition(vec3 position);
     void setRenderLayer(const RenderLayer& renderLayer);
 

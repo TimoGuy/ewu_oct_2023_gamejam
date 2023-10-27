@@ -65,18 +65,19 @@
         - [x] Progress dial.
     - [x] Timer for 2:30 minutes in corner.
     - [x] UNRELATED: get simple main menu framework set up (open first.ssdat)
-    - [ ] Show uncovered girl.
-        - [ ] Girl model should be invisible until pulling off the covers.
+    - [x] Show uncovered girl.
+        - [x] Girl model should be invisible until pulling off the covers.
         - [ ] Girl is shown and person who uncovered girl gets whisked away with girl.
         - [ ] Remaining contestants are shown getting whisked away too.
+        - [x] Transitions from phase0 to phase1
 
 - [ ] Phase 2: "Hallway of Love"
     - [ ] Contestant A logic
-        - [ ] Moving (just like previous phase)
+        - [x] Moving (just like previous phase)
         - [ ] If get hit by booby trap, get stunned for 1 second (tune).
         - [ ] If touch date, start Phase 3
             - [ ] If fail Phase 3, then get stunned for 1.5 seconds (tune).
-        - [ ] Camera follows Contestant A
+        - [x] Camera follows Contestant A
     - [ ] Date logic
         - [ ] Moves forward (tune by how much)
         - [ ] If get hit by booby trap, get stunned for 0.75 seconds (tune).

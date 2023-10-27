@@ -48,6 +48,7 @@ struct CoveredItem_XData
     bool isCovered = true;
 
     int8_t dateId = -1;  // -1 is no date, then 0,1,2,3... is the date id.
+    size_t interactingContestantId = (size_t)-1;
 
     float_t rustleTimer = 0.0f;
     bool showInteractionCursor = false;
@@ -150,7 +151,7 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
             _data->uncoverProgressRenderObj->renderLayer = RenderLayer::INVISIBLE;
             _data->isUncovering = false;  // Exit if not holding uncover button.
         }
-        else
+        else if (input::keyEPressed && _data->isCovered)
         {
             // Count up timer.
             _data->uncoverTimer += physicsDeltaTime;
@@ -164,9 +165,7 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
                 {
                     _data->renderObj->renderLayer = RenderLayer::INVISIBLE;
                     globalState::phase0.uncoverDateDummy(_data->dateId);
-
-                    // @TODO: implement if there's a date and goto the next phase.
-                    // globalState::transitionToPhase1(_data->dateId, _data->contestantId);  // @NOCHECKIN
+                    globalState::phase1.transitionToPhase1(_data->dateId, _data->interactingContestantId);
                 }
             }
         }
@@ -412,6 +411,11 @@ bool CoveredItem::processMessage(DataSerialized& message)
         _data->uncoverProgressRenderObj->animator->setUpdateSpeedMultiplier(1.0f / _data->chosenUncoverTime);
         _data->uncoverProgressRenderObj->animator->setTrigger("goto_fillup");
         _data->uncoverProgressRenderObj->renderLayer = RenderLayer::VISIBLE;
+
+        float_t contestantIdF;
+        message.loadFloat(contestantIdF);
+        _data->interactingContestantId = (size_t)contestantIdF;
+
         _data->isUncovering = true;
         return true;
     }

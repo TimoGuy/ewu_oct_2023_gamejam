@@ -73,6 +73,7 @@ namespace globalState
 
     struct Phase1
     {
+        float_t              transitionTimer;
         bool                 loadTriggerFlag = false;
         vec3                 contASpawnPosition;
         vec3                 dateSpawnPosition;
@@ -82,8 +83,12 @@ namespace globalState
         Character*           contBCharacters[NUM_CONTESTANTS - 1];
         size_t               nextContBIdx = 0;
         Character*           dateCharacter = nullptr;
-        size_t               dateIdx;
+        size_t               dateIdx = 0;
+        bool                 dateIdxChanged = false;
         std::vector<Hazard*> hazards;
+        size_t               numHazardsToSpawn;
+        float_t              hazardStartDistance;
+        float_t              finishLineDistance;
 
         void clearContestants()
         {
@@ -107,11 +112,13 @@ namespace globalState
         void setDateIndex(size_t dateIdx)
         {
             Phase1::dateIdx = dateIdx;
+            dateIdxChanged = true;
         }
         void registerHazard(Hazard* h)
         {
             hazards.push_back(h);
         }
+        void transitionToPhase1(size_t dateId, size_t contestantId);
     };
     extern Phase1 phase1;
 

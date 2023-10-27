@@ -55,10 +55,13 @@ namespace globalState
         glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
         glm_vec2_copy(vec2{ 15.5f, 18.0f }, phase0.spawnBoundsExtent);
         phase0.numCoveredItemsToSpawn = 10;
-        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.contASpawnPosition);
-        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.dateSpawnPosition);
-        glm_vec3_copy(vec3{ 10.0f, 10.0f, 10.0f }, phase1.contBSpawnPosition);
-        glm_vec3_copy(vec3{ 0.0f, 0.0f, 2.0f }, phase1.contBSpawnStride);
+        glm_vec3_copy(vec3{ 100.0f, 0.5f, -74.0f }, phase1.contASpawnPosition);
+        glm_vec3_copy(vec3{ 100.0f, 0.5f, -64.0f }, phase1.dateSpawnPosition);
+        glm_vec3_copy(vec3{ 93.0f, -3.5f, -74.0f }, phase1.contBSpawnPosition);
+        glm_vec3_copy(vec3{ 0.0f, 0.0f, 3.0f }, phase1.contBSpawnStride);
+        phase1.numHazardsToSpawn = 10;
+        phase1.hazardStartDistance = 10.0f;
+        phase1.finishLineDistance = 182.0f;
         dates[0] = {
             .trustLevelIncrement = 1.0f,
             .trustLevelDecrement = 1.0f,
@@ -96,6 +99,22 @@ namespace globalState
     }
 
     Phase0 phase0 = Phase0();
+
+    void Phase1::transitionToPhase1(size_t dateId, size_t contestantId)
+    {
+        clearContestants();
+        setDateIndex(dateId);
+        registerContestantA(phase0.contestants[contestantId]);
+        for (size_t i = 0; i < NUM_CONTESTANTS; i++)
+        {
+            if (i == contestantId)
+                continue;
+            registerContestantB(phase0.contestants[i]);
+        }
+        phase1.transitionTimer = 1.0f;
+        phase1.loadTriggerFlag = true;
+    }
+
     Phase1 phase1 = Phase1();
     Phase2 phase2 = Phase2();
     DateProps dates[NUM_CONTESTANTS];
@@ -262,7 +281,7 @@ namespace globalState
 
     void update(float_t deltaTime)
     {
-        if (showCountdown())
+        if (showCountdown() && !phase1.loadTriggerFlag)
         {
             playTimeRemaining -= deltaTime;
         }
@@ -275,6 +294,7 @@ namespace globalState
             {
                 vec3 spawnLocation;
                 generateSpawnLocation(spawnLocation);
+                phase0.contestants[i]->setContestantIndex(i);
                 phase0.contestants[i]->moreOrLessSpawnAtPosition(spawnLocation);
             }
 
@@ -308,9 +328,10 @@ namespace globalState
             for (size_t i = 0; i < NUM_CONTESTANTS; i++)
             {
                 size_t selectedIdx;
-                bool collided = false;
+                bool collided;
                 do
                 {
+                    collided = false;
                     selectedIdx = rng::randomIntegerRange(0, phase0.spawnedCoveredItems.size() - 1);  // @NOCHECKIN: see if integer range is inclusive or exclusive.
                     for (size_t ri : reservedIndices)
                         if (ri == selectedIdx)
@@ -331,14 +352,16 @@ namespace globalState
                 vec3 position;
                 phase0.spawnedCoveredItems[reservedIndices[i]]->getPosition(position);
                 phase0.dateDummyCharacter[i]->moreOrLessSpawnAtPosition(position);
+                phase0.dateDummyCharacter[i]->setDateDummyIndex(i);
                 phase0.dateDummyCharacter[i]->setRenderLayer(RenderLayer::INVISIBLE);
             }
 
             // Finished.
+            currentPhase = GamePhases::P0_UNCOVER;
             phase0.loadTriggerFlag = false;
         }
 
-        if (phase1.loadTriggerFlag)
+        if (phase1.loadTriggerFlag && (phase1.transitionTimer -= deltaTime) < 0.0f)
         {
             // @DEBUG inject certain characters as the ones for phase 1.
             // phase1.clearContestants();
@@ -371,7 +394,8 @@ namespace globalState
                                                    // @REPLY: I guess what this would do is (CONTEXT: when the date moves to the end of the hallway, it deactivates itself) tell the date to activate and start moving down the hall. There should really only be a `moveDownHallway = true` that's needed.
 
             // Finished.
-            phase0.loadTriggerFlag = false;
+            currentPhase = GamePhases::P1_HALLWAY;
+            phase1.loadTriggerFlag = false;
         }
 
         if (phase2.loadTriggerFlag)
@@ -381,6 +405,7 @@ namespace globalState
             phase2.datingInterface->activate(phase2.dateIdx);
 
             // Finished.
+            currentPhase = GamePhases::P2_OTOMEGE;
             phase2.loadTriggerFlag = false;
         }
 
@@ -395,12 +420,26 @@ namespace globalState
         }
     }
 
+    void draw3dCrosshair(vec3 position, physengine::DebugVisLineType lineType, float_t extent = 0.5f)
+    {
+        vec3 p0, p1, p2, p3, p4, p5;
+        glm_vec3_add(position, vec3{ -extent, 0.0f, 0.0f }, p0);
+        glm_vec3_add(position, vec3{  extent, 0.0f, 0.0f }, p1);
+        glm_vec3_add(position, vec3{ 0.0f, -extent, 0.0f }, p2);
+        glm_vec3_add(position, vec3{ 0.0f,  extent, 0.0f }, p3);
+        glm_vec3_add(position, vec3{ 0.0f, 0.0f, -extent }, p4);
+        glm_vec3_add(position, vec3{ 0.0f, 0.0f,  extent }, p5);
+        physengine::drawDebugVisLine(p0, p1, lineType);
+        physengine::drawDebugVisLine(p2, p3, lineType);
+        physengine::drawDebugVisLine(p4, p5, lineType);
+    }
+
     void drawDebugVisualization()
     {
         if (!showDebugVisuals)
             return;
         
-        // Draw spawn bounds.
+        // Draw phase0 spawn bounds.
         {
             vec3 pt0, pt1, pt2, pt3;
             glm_vec3_copy(phase0.spawnBoundsOrigin, pt0);
@@ -419,6 +458,32 @@ namespace globalState
             physengine::drawDebugVisLine(pt1, pt2);
             physengine::drawDebugVisLine(pt2, pt3);
             physengine::drawDebugVisLine(pt3, pt0);
+        }
+
+        // Draw phase1 spawn positions and start and finish lines.
+        {
+            draw3dCrosshair(phase1.contASpawnPosition, physengine::DebugVisLineType::PURPTEAL);
+            draw3dCrosshair(phase1.dateSpawnPosition, physengine::DebugVisLineType::VELOCITY);
+            vec3 contBPos;
+            for (size_t i = 0; i < NUM_CONTESTANTS - 1; i++)
+            {
+                if (i == 0)
+                    glm_vec3_copy(phase1.contBSpawnPosition, contBPos);
+                else
+                    glm_vec3_add(contBPos, phase1.contBSpawnStride, contBPos);
+                draw3dCrosshair(contBPos, physengine::DebugVisLineType::KIKKOARMY);
+            }
+
+            constexpr float_t lineExtent = 5.0f;
+            vec3 hazardStartLineP1, hazardStartLineP2;
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ -lineExtent, 0.0f, phase1.hazardStartDistance }, hazardStartLineP1);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{  lineExtent, 0.0f, phase1.hazardStartDistance }, hazardStartLineP2);
+            physengine::drawDebugVisLine(hazardStartLineP1, hazardStartLineP2, physengine::DebugVisLineType::PURPTEAL);
+
+            vec3 finishLineP1, finishLineP2;
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ -lineExtent, 0.0f, phase1.finishLineDistance }, finishLineP1);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{  lineExtent, 0.0f, phase1.finishLineDistance }, finishLineP2);
+            physengine::drawDebugVisLine(finishLineP1, finishLineP2, physengine::DebugVisLineType::YUUJUUFUDAN);
         }
     }
 
