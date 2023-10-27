@@ -111,6 +111,7 @@ struct MainCamMode
 	float_t   focusSmoothTimeXZ      = 0.25f;  //0.075f;
 	float_t   focusSmoothTimeY       = 0.3f;
 	vec3      focusPositionOffset    = { 0, 2.333333f, 0 };
+	bool      immediateMoveNextTick  = false;
 
 	void setMainCamTargetObject(RenderObject* targetObject);
 	void setOpponentCamTargetObject(physengine::CapsulePhysicsData* targetObject);

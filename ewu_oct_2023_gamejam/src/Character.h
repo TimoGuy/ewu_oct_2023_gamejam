@@ -34,9 +34,13 @@ public:
     void reportMoved(mat4* matrixMoved);
     void renderImGui();
 
+    void setAsCameraTargetObject();
     void reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact);
     bool isPlayer();
+    void stun(float_t time);
+    bool isStunned();
     float_t getFacingDirection();
+    void getPosition(vec3& outPosition);
     void setContestantIndex(size_t contestantId);
     void activateDate(size_t dateId);
     void setDateDummyIndex(size_t dateId);

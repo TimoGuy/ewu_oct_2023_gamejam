@@ -40,6 +40,8 @@ struct Character_XData
     size_t dateId             = (size_t)-1;  // @NOTE: only applicable if is MONSTER_DUMMY or MONSTER type of character.
     bool   isDateRunningDownHallway = false;
 
+    float_t stunTimer = 0.0f;
+
     RenderObjectManager*     rom;
     Camera*                  camera;
     RenderObject*            characterRenderObj;
@@ -1381,7 +1383,7 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
 
     if (isPlayer())
     {
-        globalState::phase0.registerContestant(this);
+        globalState::phase0.registerContestant(this, true);
         globalState::startNewGame();  // Start a new game when player is spawned.
     }
     else if (_data->characterType == CHARACTER_TYPE_MONSTER)
@@ -1394,7 +1396,7 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
     }
     else if (_data->characterType == CHARACTER_TYPE_CHASER)
     {
-        globalState::phase0.registerContestant(this);
+        globalState::phase0.registerContestant(this, false);
     }
 
     _data->staminaData.currentStamina = (float_t)_data->staminaData.maxStamina;
@@ -1559,8 +1561,6 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
 
     if (_data->characterType == CHARACTER_TYPE_PLAYER)
     {
-        _data->camera->mainCamMode.setMainCamTargetObject(_data->characterRenderObj);  // @NOTE: I believe that there should be some kind of main camera system that targets the player by default but when entering different volumes etc. the target changes depending.... essentially the system needs to be more built out imo
-
         globalState::playerGUID = getGUID();
         globalState::playerPositionRef = &_data->cpd->currentCOMPosition;
 
@@ -1631,7 +1631,7 @@ inline float_t deltaAngle(float_t fromRad, float_t toRad)  // @NOCHECKIN: @COPYP
 	return normalizedDeltaAngle;
 }
 
-void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, EntityManager* em, const std::string& myGuid)
+void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Character_XData* d, EntityManager* em, const std::string& myGuid)
 {
     if (d->currentWaza == nullptr)
     {
@@ -1640,7 +1640,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
         //
         glm_vec3_zero(d->worldSpaceInput);
 
-        if (!d->disableInput && d->knockbackMode == Character_XData::KnockbackStage::NONE)
+        if (!d->disableInput && !_this->isStunned() && globalState::charactersHaveInput() && d->knockbackMode == Character_XData::KnockbackStage::NONE)
         {
             if (d->characterType == CHARACTER_TYPE_PLAYER)
             {
@@ -2510,6 +2510,10 @@ void Character::physicsUpdate(const float_t& physicsDeltaTime)
         }
     }
 
+    // Update stun timer.
+    if (isStunned())
+        _data->stunTimer -= physicsDeltaTime;
+
     // @DEBUG: for level editor
     _data->disableInput = (_data->camera->freeCamMode.enabled || ImGui::GetIO().WantTextInput);
     
@@ -2536,7 +2540,7 @@ void Character::physicsUpdate(const float_t& physicsDeltaTime)
     if (_data->attackWazaEditor.isEditingMode)
         attackWazaEditorPhysicsUpdate(physicsDeltaTime, _data);
     else
-        defaultPhysicsUpdate(physicsDeltaTime, _data, _em, getGUID());
+        defaultPhysicsUpdate(physicsDeltaTime, this, _data, _em, getGUID());
 }
 
 // @TODO: @INCOMPLETE: will need to move the interaction logic into its own type of object, where you can update the interactor position and add/register interaction fields.
@@ -3199,6 +3203,11 @@ void Character::renderImGui()
         defaultRenderImGui(_data);
 }
 
+void Character::setAsCameraTargetObject()
+{
+    _data->camera->mainCamMode.setMainCamTargetObject(_data->characterRenderObj);  // @NOTE: I believe that there should be some kind of main camera system that targets the player by default but when entering different volumes etc. the target changes depending.... essentially the system needs to be more built out imo
+}
+
 void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact)
 {
     if (!otherBody.IsSensor())
@@ -3257,9 +3266,24 @@ bool Character::isPlayer()
     return (_data->characterType == CHARACTER_TYPE_PLAYER);
 }
 
+void Character::stun(float_t time)
+{
+    _data->stunTimer = time;
+}
+
+bool Character::isStunned()
+{
+    return (_data->stunTimer > 0.0f);
+}
+
 float_t Character::getFacingDirection()
 {
     return _data->facingDirection;
+}
+
+void Character::getPosition(vec3& outPosition)
+{
+    glm_vec3_copy(_data->position, outPosition);
 }
 
 void Character::setContestantIndex(size_t contestantId)

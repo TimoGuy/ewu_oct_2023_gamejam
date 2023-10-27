@@ -56,12 +56,15 @@ namespace globalState
         size_t                    numCoveredItemsToSpawn;
         std::vector<CoveredItem*> spawnedCoveredItems;
         Character*                contestants[NUM_CONTESTANTS];
+        size_t                    playerContestantIdx;
         size_t                    nextContestantIdx = 0;
         Character*                dateDummyCharacter[NUM_CONTESTANTS];  // @NOTE: the dummy character has no collision and just shakes when revealed.
         size_t                    nextDateDummyIdx = 0;
 
-        void registerContestant(Character* c)
+        void registerContestant(Character* c, bool isPlayer)
         {
+            if (isPlayer)
+                playerContestantIdx = nextContestantIdx;
             contestants[nextContestantIdx++] = c;
         }
         void registerDateDummy(Character* c)
@@ -77,6 +80,7 @@ namespace globalState
     {
         float_t              transitionTimer = 0.0f;
         bool                 loadTriggerFlag = false;
+        bool                 returnFromPhase2TriggerFlag = false;
         vec3                 contASpawnPosition;
         vec3                 dateSpawnPosition;
         vec3                 contBSpawnPosition;
@@ -86,11 +90,11 @@ namespace globalState
         size_t               nextContBIdx = 0;
         Character*           dateCharacter = nullptr;
         size_t               dateIdx = 0;
-        bool                 dateIdxChanged = false;
         std::vector<Hazard*> hazards;
         size_t               numHazardsToSpawn;
         float_t              hazardStartDistance;
         float_t              finishLineDistance;
+        float_t              contADatePhase2ActivationDistance;
 
         void clearContestants()
         {
@@ -114,7 +118,6 @@ namespace globalState
         void setDateIndex(size_t dateIdx)
         {
             Phase1::dateIdx = dateIdx;
-            dateIdxChanged = true;
         }
         void registerHazard(Hazard* h)
         {
@@ -125,13 +128,14 @@ namespace globalState
             return contASpawnPosition[2] + finishLineDistance;
         }
         void transitionToPhase1(size_t dateId, size_t contestantId);
+        void transitionToPhase1FromPhase2();
     };
     extern Phase1 phase1;
 
     struct Phase2
     {
+        float_t          transitionTimer = 0.0f;
         bool             loadTriggerFlag = false;
-        bool             unloadTriggerFlag = false;
         size_t           dateIdx;
         DatingInterface* datingInterface = nullptr;
 
@@ -139,6 +143,7 @@ namespace globalState
         {
             datingInterface = di;
         }
+        void transitionToPhase2(size_t dateId);
     };
     extern Phase2 phase2;
     struct DateProps
@@ -230,5 +235,6 @@ namespace globalState
     CameraRail* getNearestCameraRailToDesiredRailDirection(vec3 queryPos, vec3 queryDir);
 
     bool showCountdown();
+    bool charactersHaveInput();
     bool gameIsOver();
 }

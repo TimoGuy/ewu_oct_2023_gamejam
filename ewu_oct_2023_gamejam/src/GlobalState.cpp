@@ -62,6 +62,7 @@ namespace globalState
         phase1.numHazardsToSpawn = 10;
         phase1.hazardStartDistance = 10.0f;
         phase1.finishLineDistance = 182.0f;
+        phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
         dates[0] = {
             .trustLevelIncrement = 1.0f,
             .trustLevelDecrement = 1.0f,
@@ -122,7 +123,21 @@ namespace globalState
         phase1.loadTriggerFlag = true;
     }
 
+    void Phase1::transitionToPhase1FromPhase2()
+    {
+        phase1.transitionTimer = 1.0f;
+        phase1.returnFromPhase2TriggerFlag = true;
+    }
+
     Phase1 phase1 = Phase1();
+
+    void Phase2::transitionToPhase2(size_t dateId)
+    {
+        Phase2::dateIdx = dateId;
+        transitionTimer = 1.0f;
+        loadTriggerFlag = true;
+    }
+
     Phase2 phase2 = Phase2();
     DateProps dates[NUM_CONTESTANTS];
 
@@ -293,6 +308,18 @@ namespace globalState
             playTimeRemaining -= deltaTime;
         }
 
+        if (currentPhase == GamePhases::P1_HALLWAY && !phase2.loadTriggerFlag)
+        {
+            vec3 a, b;
+            phase1.contACharacter->getPosition(a);
+            phase1.dateCharacter->getPosition(b);
+            a[1] = b[1] = 0.0f;  // Use flat pos.
+            if (!phase1.contACharacter->isStunned() &&
+                !phase1.dateCharacter->isStunned() &&
+                glm_vec3_distance2(a, b) < phase1.contADatePhase2ActivationDistance * phase1.contADatePhase2ActivationDistance)
+                phase2.transitionToPhase2(phase1.dateIdx);
+        }
+
         if (phase0.loadTriggerFlag && (phase0.transitionTimer -= deltaTime) < 0.0f)
         {
             // Load phase 0.
@@ -303,6 +330,8 @@ namespace globalState
                 generateSpawnLocation(spawnLocation);
                 phase0.contestants[i]->setContestantIndex(i);
                 phase0.contestants[i]->moreOrLessSpawnAtPosition(spawnLocation);
+                if (i == phase0.playerContestantIdx)
+                    phase0.contestants[i]->setAsCameraTargetObject();
             }
 
             // Delete all covered items.
@@ -392,6 +421,9 @@ namespace globalState
                 phase1.contBCharacters[i]->moreOrLessSpawnAtPosition(spawnPositionB);
             }
 
+            // Activate player camera (for snapping camera to player view in hallway).
+            phase0.contestants[phase0.playerContestantIdx]->setAsCameraTargetObject();
+
             // Reset hazards.
             for (auto& hazard : phase1.hazards)
                 hazard->reset();
@@ -405,7 +437,17 @@ namespace globalState
             phase1.loadTriggerFlag = false;
         }
 
-        if (phase2.loadTriggerFlag)
+        if (phase1.returnFromPhase2TriggerFlag && (phase1.transitionTimer -= deltaTime) < 0.0f)
+        {
+            // Simple return to phase 1.
+            phase2.datingInterface->deactivate();
+            phase0.contestants[phase0.playerContestantIdx]->setAsCameraTargetObject();
+            phase1.contACharacter->stun(1.5f);  // @HARDCODE.
+            currentPhase = GamePhases::P1_HALLWAY;
+            phase1.returnFromPhase2TriggerFlag = false;
+        }
+
+        if (phase2.loadTriggerFlag && (phase2.transitionTimer -= deltaTime) < 0.0f)
         {
             // Load phase 2.
             // Activate dating interface.
@@ -414,16 +456,6 @@ namespace globalState
             // Finished.
             currentPhase = GamePhases::P2_OTOMEGE;
             phase2.loadTriggerFlag = false;
-        }
-
-        if (phase2.unloadTriggerFlag)
-        {
-            // Unload phase 2.
-            // Deactivate dating interface.
-            phase2.datingInterface->deactivate();
-
-            // Finished.
-            phase2.unloadTriggerFlag = false;
         }
     }
 
@@ -618,6 +650,18 @@ namespace globalState
     bool showCountdown()
     {
         return isGameActive && currentPhase == GamePhases::P0_UNCOVER;
+    }
+
+    bool charactersHaveInput()
+    {
+        return
+            isGameActive &&
+            (currentPhase == GamePhases::P0_UNCOVER ||
+                currentPhase == GamePhases::P1_HALLWAY) &&
+            !phase0.loadTriggerFlag &&
+            !phase1.loadTriggerFlag &&
+            !phase2.loadTriggerFlag &&
+            !gameIsOver();
     }
 
     bool gameIsOver()

@@ -75,13 +75,13 @@
     - [ ] Contestant A logic
         - [x] Moving (just like previous phase)
         - [ ] If get hit by booby trap, get stunned for 1 second (tune).
-        - [ ] If touch date, start Phase 3
-            - [ ] If fail Phase 3, then get stunned for 1.5 seconds (tune).
+        - [x] If touch date, start Phase 3
+            - [x] If fail Phase 3, then get stunned for 1.5 seconds (tune).
         - [x] Camera follows Contestant A
     - [ ] Date logic
-        - [ ] Moves forward (tune by how much)
+        - [x] Moves forward (tune by how much)
         - [ ] If get hit by booby trap, get stunned for 0.75 seconds (tune).
-        - [ ] If reach end, go to Phase 1
+        - [x] If reach end, go to Phase 1
     - [ ] Contestant B(s) logic
         - [ ] Stand at next open booby trap operator booth that is in front of contestant A.
         - [ ] Press X to set off the trap.

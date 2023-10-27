@@ -35,7 +35,7 @@ void SceneCamera::recalculateSceneCamera(GPUPBRShadingProps& pbrShadingProps)
 
 void SceneCamera::recalculateCascadeViewProjs(GPUPBRShadingProps& pbrShadingProps)
 {
-	// Copied from Sascha Willem's `shadowmappingcascade` vulkan example
+	// Derived from Sascha Willem's `shadowmappingcascade` vulkan example
 	constexpr float_t cascadeSplitLambda = 0.95f;  // @TEMP: don't know if this needs tuning
 
 	float_t cascadeSplits[SHADOWMAP_CASCADES];
@@ -179,6 +179,7 @@ void MainCamMode::CameraRailSettings::refreshTargetOrbits(float_t facingDirectio
 void MainCamMode::setMainCamTargetObject(RenderObject* targetObject)
 {
 	MainCamMode::targetObject = targetObject;
+	MainCamMode::immediateMoveNextTick = true;
 }
 
 void MainCamMode::setOpponentCamTargetObject(physengine::CapsulePhysicsData* targetObject)
@@ -511,7 +512,7 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 					mainCamMode.orbitAngles[1],
 					crs.targetOrbitAngles[1],
 					crs.orbitAnglesVelocities[1],
-					crs.orbitAnglesSmoothTime,
+					mainCamMode.immediateMoveNextTick ? 0.0f : crs.orbitAnglesSmoothTime,
 					std::numeric_limits<float_t>::max(),
 					deltaTime
 				);
@@ -521,7 +522,7 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 					mainCamMode.orbitAngles[0],
 					crs.targetOrbitAngles[0],
 					crs.orbitAnglesVelocities[0],
-					crs.orbitAnglesSmoothTime,
+					mainCamMode.immediateMoveNextTick ? 0.0f : crs.orbitAnglesSmoothTime,
 					std::numeric_limits<float_t>::max(),
 					deltaTime
 				);
@@ -537,7 +538,7 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 		}
 
 		// Update camera focus position based off the targetPosition.
-		if (mainCamMode.focusSmoothTimeXZ > 0.0f)
+		if (mainCamMode.focusSmoothTimeXZ > 0.0f && !mainCamMode.immediateMoveNextTick)
 		{
 			vec2 inoutFocusPositionXZ = {
 				mainCamMode.focusPosition[0],
@@ -564,7 +565,7 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 			mainCamMode.focusPosition[2] = targetPosition[2];
 		}
 
-		if (mainCamMode.focusSmoothTimeY > 0.0f)
+		if (mainCamMode.focusSmoothTimeY > 0.0f && !mainCamMode.immediateMoveNextTick)
 		{
 			mainCamMode.focusPosition[1] =
 				smoothDamp(
@@ -602,7 +603,7 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 			mainCamMode.actualLookDistance,
 			targetLookDistance,
 			mainCamMode.actualLookDistanceVelocity,
-			mainCamMode.lookDistanceSmoothTime,
+			mainCamMode.immediateMoveNextTick ? 0.0f : mainCamMode.lookDistanceSmoothTime,
 			std::numeric_limits<float_t>::max(),
 			deltaTime
 		);
@@ -666,6 +667,9 @@ void Camera::updateMainCam(const float_t& deltaTime, CameraModeChangeEvent chang
 			std::numeric_limits<float_t>::max(),
 			deltaTime
 		);
+
+	// Clear.
+	mainCamMode.immediateMoveNextTick = false;
 }
 
 void Camera::updateFreeCam(const float_t& deltaTime, CameraModeChangeEvent changeEvent)
