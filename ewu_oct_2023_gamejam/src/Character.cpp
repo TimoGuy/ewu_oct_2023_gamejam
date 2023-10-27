@@ -38,6 +38,7 @@ struct Character_XData
     std::string characterType = CHARACTER_TYPE_PLAYER;
     size_t contestantId       = (size_t)-1;
     size_t dateId             = (size_t)-1;  // @NOTE: only applicable if is MONSTER_DUMMY or MONSTER type of character.
+    bool   isDateRunningDownHallway = false;
 
     RenderObjectManager*     rom;
     Camera*                  camera;
@@ -1669,6 +1670,14 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
             }
             else if (d->characterType == CHARACTER_TYPE_MONSTER)
             {
+                if (d->isDateRunningDownHallway)
+                {
+                    d->worldSpaceInput[0] = 0.0f;
+                    d->worldSpaceInput[2] = 1.0f;
+                }
+
+#define IS_USING_AWESOME_SYSTEM_TOOK_AWHILE_TO_DESIGN_BUT_AFTER_PROTOTYPING_FOUND_OUT_WE_NEED_TO_DO_SOMETHING_DIFFERENT 0
+#if IS_USING_AWESOME_SYSTEM_TOOK_AWHILE_TO_DESIGN_BUT_AFTER_PROTOTYPING_FOUND_OUT_WE_NEED_TO_DO_SOMETHING_DIFFERENT
                 vec3 playerToMeDelta;
                 glm_vec3_sub(d->position, *globalState::playerPositionRef, playerToMeDelta);
                 constexpr float_t UNITS_DETECTION = 20.0f;
@@ -1749,6 +1758,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
                     d->worldSpaceInput[0] = greatestWeightDirection[0];
                     d->worldSpaceInput[2] = greatestWeightDirection[2];
                 }
+#endif
             }
         }
 
@@ -1783,6 +1793,20 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character_XData* d, E
     {
         glm_vec3_zero(d->worldSpaceInput);  // Filter movement until the waza is finished.
         d->inputFlagRelease = false;  // @NOTE: @TODO: Idk if this is appropriate or wanted behavior.
+    }
+
+    //
+    // Check whether date ran down hallway completely.
+    //
+    if (d->characterType == CHARACTER_TYPE_MONSTER && d->isDateRunningDownHallway)
+    {
+        if (d->position[2] > globalState::phase1.getWorldSpaceFinishLine())
+        {
+            d->isDateRunningDownHallway = false;
+
+            // Go back to phase 0.
+            globalState::phase0.transitionToPhase0(true);
+        }
     }
 
     //
@@ -3244,7 +3268,7 @@ void Character::activateDate(size_t dateId)
     if (_data->characterType != CHARACTER_TYPE_MONSTER)
         return;
 
-    // @TODO: STUB
+    _data->isDateRunningDownHallway = true;
 }
 
 void Character::setDateDummyIndex(size_t dateId)

@@ -88,7 +88,7 @@ namespace globalState
     void startNewGame()
     {
         // Trigger loading phase 0.
-        phase0.loadTriggerFlag = true;
+        phase0.transitionToPhase0(false);
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
     }
@@ -96,6 +96,13 @@ namespace globalState
     void Phase0::uncoverDateDummy(size_t dateIdx)
     {
         dateDummyCharacter[dateIdx]->setRenderLayer(RenderLayer::VISIBLE);
+    }
+
+    void Phase0::transitionToPhase0(bool useTransitionTimer)
+    {
+        if (useTransitionTimer)
+            phase0.transitionTimer = 1.0f;
+        phase0.loadTriggerFlag = true;
     }
 
     Phase0 phase0 = Phase0();
@@ -286,7 +293,7 @@ namespace globalState
             playTimeRemaining -= deltaTime;
         }
 
-        if (phase0.loadTriggerFlag)
+        if (phase0.loadTriggerFlag && (phase0.transitionTimer -= deltaTime) < 0.0f)
         {
             // Load phase 0.
             // Move contestants to somewhere within play bounds.

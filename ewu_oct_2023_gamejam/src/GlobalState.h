@@ -49,6 +49,7 @@ namespace globalState
 
     struct Phase0
     {
+        float_t                   transitionTimer = 0.0f;
         bool                      loadTriggerFlag = false;
         vec3                      spawnBoundsOrigin;
         vec2                      spawnBoundsExtent;
@@ -68,12 +69,13 @@ namespace globalState
             dateDummyCharacter[nextDateDummyIdx++] = c;
         }
         void uncoverDateDummy(size_t dateIdx);
+        void transitionToPhase0(bool useTransitionTimer);
     };
     extern Phase0 phase0;
 
     struct Phase1
     {
-        float_t              transitionTimer;
+        float_t              transitionTimer = 0.0f;
         bool                 loadTriggerFlag = false;
         vec3                 contASpawnPosition;
         vec3                 dateSpawnPosition;
@@ -117,6 +119,10 @@ namespace globalState
         void registerHazard(Hazard* h)
         {
             hazards.push_back(h);
+        }
+        float_t getWorldSpaceFinishLine()
+        {
+            return contASpawnPosition[2] + finishLineDistance;
         }
         void transitionToPhase1(size_t dateId, size_t contestantId);
     };
