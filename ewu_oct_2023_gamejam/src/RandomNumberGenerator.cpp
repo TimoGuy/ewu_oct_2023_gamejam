@@ -15,6 +15,9 @@ namespace rng
 
     float_t randomRealRange(float_t min, float_t max)
     {
+        float_t temp = std::min(min, max);
+        max = std::max(min, max);
+        min = temp;
 		std::uniform_real_distribution<float_t> distribution(min, max);
         return distribution(generator);
     }

@@ -1672,8 +1672,8 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
             {
                 if (d->isDateRunningDownHallway)
                 {
-                    d->worldSpaceInput[0] = 0.0f;
-                    d->worldSpaceInput[2] = 1.0f;
+                    d->worldSpaceInput[0] = -1.0f;
+                    d->worldSpaceInput[2] = 0.0f;
                 }
 
 #define IS_USING_AWESOME_SYSTEM_TOOK_AWHILE_TO_DESIGN_BUT_AFTER_PROTOTYPING_FOUND_OUT_WE_NEED_TO_DO_SOMETHING_DIFFERENT 0
@@ -1800,7 +1800,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
     //
     if (d->characterType == CHARACTER_TYPE_MONSTER && d->isDateRunningDownHallway)
     {
-        if (d->position[2] > globalState::phase1.getWorldSpaceFinishLine())
+        if (d->position[0] < globalState::phase1.getWorldSpaceFinishLine())
         {
             d->isDateRunningDownHallway = false;
 

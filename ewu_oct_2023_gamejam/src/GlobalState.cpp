@@ -56,13 +56,13 @@ namespace globalState
         glm_vec2_copy(vec2{ 15.5f, 18.0f }, phase0.spawnBoundsExtent);
         // phase0.numCoveredItemsToSpawn = 40;  // About 10 per contestant... ish.
         phase0.numCoveredItemsToSpawn = 3;  // About 10 per contestant... ish.
-        glm_vec3_copy(vec3{ 100.0f, 0.5f, -74.0f }, phase1.contASpawnPosition);
-        glm_vec3_copy(vec3{ 100.0f, 0.5f, -64.0f }, phase1.dateSpawnPosition);
-        glm_vec3_copy(vec3{ 93.0f, 3.5f, -74.0f }, phase1.contBSpawnPosition);
-        glm_vec3_copy(vec3{ 0.0f, 0.0f, 3.0f }, phase1.contBSpawnStride);
+        glm_vec3_copy(vec3{ 243.0f, 0.5f, 20.0f }, phase1.contASpawnPosition);
+        glm_vec3_copy(vec3{ 233.0f, 0.5f, 20.0f }, phase1.dateSpawnPosition);
+        glm_vec3_copy(vec3{ 243.0f, -1.5f, 12.5f }, phase1.contBSpawnPosition);
+        glm_vec3_copy(vec3{ -3.0f, 0.0f, 0.0f }, phase1.contBSpawnStride);
         phase1.numHazardsToSpawn = 10;
-        phase1.hazardStartDistance = 10.0f;
-        phase1.finishLineDistance = 182.0f;
+        phase1.hazardStartDistance = -10.0f;
+        phase1.finishLineDistance = -182.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
         dates[0] = {
             .trustLevelIncrement = 1.0f,
@@ -300,7 +300,7 @@ namespace globalState
     {
         vec3 spawnLocation = {
             rng::randomRealRange(-phase0.spawnBoundsExtent[0], phase0.spawnBoundsExtent[0]),
-            0.0f,
+            5.0f,  // @HACK: to prevent spawned objects from falling beneath the floor.
             rng::randomRealRange(-phase0.spawnBoundsExtent[1], phase0.spawnBoundsExtent[1])
         };
         glm_vec3_add(spawnLocation, phase0.spawnBoundsOrigin, spawnLocation);
@@ -439,7 +439,7 @@ namespace globalState
             {
                 vec3 spawnLocation;
                 glm_vec3_copy(phase1.contASpawnPosition, spawnLocation);
-                spawnLocation[2] += rng::randomRealRange(phase1.hazardStartDistance, phase1.finishLineDistance);
+                spawnLocation[0] += rng::randomRealRange(phase1.hazardStartDistance, phase1.finishLineDistance);
                 int8_t hazardType = rng::randomIntegerRange(0, 0);
 
                 DataSerializer ds;
@@ -448,10 +448,10 @@ namespace globalState
                 ds.dumpFloat(hazardType);
                 DataSerialized dsd = ds.getSerializedData();
 
-                spawnedHazardsMap[spawnLocation[2]] =
+                spawnedHazardsMap[spawnLocation[0]] =
                     static_cast<Hazard*>(scene::spinupNewObject(":hazard", &dsd));
             }
-            for (auto it = spawnedHazardsMap.begin(); it != spawnedHazardsMap.end(); it++)
+            for (auto it = spawnedHazardsMap.rbegin(); it != spawnedHazardsMap.rend(); it++)  // Left to right is -X, hence using reverse iterator.
                 phase1.hazards.push_back(it->second);
 
             // Activate Date.
@@ -541,13 +541,13 @@ namespace globalState
 
             constexpr float_t lineExtent = 5.0f;
             vec3 hazardStartLineP1, hazardStartLineP2;
-            glm_vec3_add(phase1.contASpawnPosition, vec3{ -lineExtent, 0.0f, phase1.hazardStartDistance }, hazardStartLineP1);
-            glm_vec3_add(phase1.contASpawnPosition, vec3{  lineExtent, 0.0f, phase1.hazardStartDistance }, hazardStartLineP2);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.hazardStartDistance, 0.0f, -lineExtent }, hazardStartLineP1);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.hazardStartDistance, 0.0f,  lineExtent }, hazardStartLineP2);
             physengine::drawDebugVisLine(hazardStartLineP1, hazardStartLineP2, physengine::DebugVisLineType::PURPTEAL);
 
             vec3 finishLineP1, finishLineP2;
-            glm_vec3_add(phase1.contASpawnPosition, vec3{ -lineExtent, 0.0f, phase1.finishLineDistance }, finishLineP1);
-            glm_vec3_add(phase1.contASpawnPosition, vec3{  lineExtent, 0.0f, phase1.finishLineDistance }, finishLineP2);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.finishLineDistance, 0.0f, -lineExtent }, finishLineP1);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.finishLineDistance, 0.0f,  lineExtent }, finishLineP2);
             physengine::drawDebugVisLine(finishLineP1, finishLineP2, physengine::DebugVisLineType::YUUJUUFUDAN);
         }
     }

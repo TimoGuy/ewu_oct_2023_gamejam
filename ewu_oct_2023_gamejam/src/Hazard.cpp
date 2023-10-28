@@ -70,7 +70,7 @@ void loadRenderObjForHazard(Hazard_XData* d, Hazard* _this, const std::string& m
     glm_translate(d->renderObj->transformMatrix, d->position);
 
     versor quatIdentity = GLM_QUAT_IDENTITY_INIT;
-    d->dangerTriggerBodyId = physengine::createBoxColliderBody(myGuid, d->position, quatIdentity, vec3{ 10.0f, 5.0f, 0.5f }, true);
+    d->dangerTriggerBodyId = physengine::createBoxColliderBody(myGuid, d->position, quatIdentity, vec3{ 0.5f, 5.0f, 10.0f }, true);
 }
 
 Hazard::Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) : Entity(em, ds), _data(new Hazard_XData())

@@ -126,7 +126,7 @@ namespace globalState
         }
         float_t getWorldSpaceFinishLine()
         {
-            return contASpawnPosition[2] + finishLineDistance;
+            return contASpawnPosition[0] + finishLineDistance;
         }
         void transitionToPhase1(size_t dateId, size_t contestantId);
         void transitionToPhase1FromPhase2();
