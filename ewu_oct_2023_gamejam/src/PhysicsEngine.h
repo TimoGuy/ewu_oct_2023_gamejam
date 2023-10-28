@@ -35,6 +35,7 @@ namespace physengine
     void cleanup();
 
     float_t getPhysicsAlpha();
+    void getWorldTransform(JPH::BodyID bodyId, mat4& outWorldTransform);
 
     enum class UserDataMeaning
     {
@@ -42,6 +43,7 @@ namespace physengine
         IS_CHARACTER = 1,
         IS_NS_CAMERA_RAIL_TRIGGER = 2,
         IS_EW_CAMERA_RAIL_TRIGGER = 3,
+        IS_TRIGGER = 4,
     };
 
     // Each broadphase layer results in a separate bounding volume tree in the broad phase. You at least want to have
@@ -152,7 +154,7 @@ namespace physengine
     void moveCapsuleAccountingForCollision(CapsulePhysicsData& cpd, vec3 deltaPosition, bool stickToGround, vec3& outNormal, float_t ccdDistance = 0.25f);  // @NOTE: `ccdDistance` is fine as long as it's below the capsule radius (or the radius of the voxels, whichever is smaller)
 #endif
 
-    JPH::BodyID createBoxColliderBody(const std::string& entityGuid, vec3 origin, versor rotation, vec3 extent);
+    JPH::BodyID createBoxColliderBody(const std::string& entityGuid, vec3 origin, versor rotation, vec3 extent, bool isTrigger);
     void destroyBody(JPH::BodyID bodyId);
     void setBodyTransform(JPH::BodyID bodyId, vec3 origin, versor rotation);
 

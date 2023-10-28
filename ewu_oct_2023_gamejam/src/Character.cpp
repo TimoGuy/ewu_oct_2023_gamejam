@@ -2892,6 +2892,15 @@ bool Character::processMessage(DataSerialized& message)
         _data->triggerApplyForceZone = true;
         return true;
     }
+    else if (messageType == "msg_stunned_by_hazard")
+    {
+        stun(  // @HARDCODE
+            (_data->characterType == CHARACTER_TYPE_MONSTER) ?
+            0.75f :
+            1.0f
+        );
+        return true;
+    }
 
     return false;
 }

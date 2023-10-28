@@ -54,10 +54,11 @@ namespace globalState
         // @NOCHECKIN: @TODO: fill in the correct values when creating.
         glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
         glm_vec2_copy(vec2{ 15.5f, 18.0f }, phase0.spawnBoundsExtent);
-        phase0.numCoveredItemsToSpawn = 40;  // About 10 per contestant... ish.
+        // phase0.numCoveredItemsToSpawn = 40;  // About 10 per contestant... ish.
+        phase0.numCoveredItemsToSpawn = 3;  // About 10 per contestant... ish.
         glm_vec3_copy(vec3{ 100.0f, 0.5f, -74.0f }, phase1.contASpawnPosition);
         glm_vec3_copy(vec3{ 100.0f, 0.5f, -64.0f }, phase1.dateSpawnPosition);
-        glm_vec3_copy(vec3{ 93.0f, -3.5f, -74.0f }, phase1.contBSpawnPosition);
+        glm_vec3_copy(vec3{ 93.0f, 3.5f, -74.0f }, phase1.contBSpawnPosition);
         glm_vec3_copy(vec3{ 0.0f, 0.0f, 3.0f }, phase1.contBSpawnStride);
         phase1.numHazardsToSpawn = 10;
         phase1.hazardStartDistance = 10.0f;
@@ -92,6 +93,11 @@ namespace globalState
         phase0.transitionToPhase0(false);
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
+    }
+
+    void Phase0::setDateDummyPosition(size_t dateIdx, vec3 position)
+    {
+        dateDummyCharacter[dateIdx]->moreOrLessSpawnAtPosition(position);
     }
 
     void Phase0::uncoverDateDummy(size_t dateIdx)
@@ -426,7 +432,27 @@ namespace globalState
 
             // Reset hazards.
             for (auto& hazard : phase1.hazards)
-                hazard->reset();
+                entityManagerRef->destroyEntity(hazard);
+            phase1.hazards.clear();
+            std::map<float_t, Hazard*> spawnedHazardsMap;
+            for (size_t i = 0; i < phase1.numHazardsToSpawn; i++)
+            {
+                vec3 spawnLocation;
+                glm_vec3_copy(phase1.contASpawnPosition, spawnLocation);
+                spawnLocation[2] += rng::randomRealRange(phase1.hazardStartDistance, phase1.finishLineDistance);
+                int8_t hazardType = rng::randomIntegerRange(0, 0);
+
+                DataSerializer ds;
+                ds.dumpString("0");  // GUID
+                ds.dumpVec3(spawnLocation);
+                ds.dumpFloat(hazardType);
+                DataSerialized dsd = ds.getSerializedData();
+
+                spawnedHazardsMap[spawnLocation[2]] =
+                    static_cast<Hazard*>(scene::spinupNewObject(":hazard", &dsd));
+            }
+            for (auto it = spawnedHazardsMap.begin(); it != spawnedHazardsMap.end(); it++)
+                phase1.hazards.push_back(it->second);
 
             // Activate Date.
             phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?

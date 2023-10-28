@@ -71,6 +71,7 @@ namespace globalState
         {
             dateDummyCharacter[nextDateDummyIdx++] = c;
         }
+        void setDateDummyPosition(size_t dateIdx, vec3 position);
         void uncoverDateDummy(size_t dateIdx);
         void transitionToPhase0(bool useTransitionTimer);
     };

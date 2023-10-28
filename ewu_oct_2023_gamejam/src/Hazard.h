@@ -26,7 +26,7 @@ public:
     void reportMoved(mat4* matrixMoved);
     void renderImGui();
 
-    void reset();
+    void reportTriggerActivation(const std::string& entityGUID);
     void setOff();
 
 private:

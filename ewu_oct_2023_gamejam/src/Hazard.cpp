@@ -2,13 +2,76 @@
 
 #include <iostream>
 #include "GlobalState.h"
+#include "RenderObject.h"
+#include "EntityManager.h"
+#include "DataSerialization.h"
+#include "PhysicsEngine.h"
+#include "VkglTFModel.h"
 #include "imgui/imgui.h"
+
+#include "InputManager.h"
 
 
 struct Hazard_XData
 {
     RenderObjectManager* rom;
+
+    RenderObject* renderObj;
+    JPH::BodyID dangerTriggerBodyId;
+
+    vec3 position;
+    int8_t hazardType = -1;
+
+    bool setOffTrigger = false;
+    int32_t hazardTimer = -1;
+    bool isHazardAttacking = false;
 };
+
+struct HazardHitscanData
+{
+    std::vector<int32_t> triggerActiveTimes;
+};
+HazardHitscanData hazardDatas[] = {
+    {
+        .triggerActiveTimes = { 10, 11, 12, }
+    },
+};
+
+void loadRenderObjForHazard(Hazard_XData* d, Hazard* _this, const std::string& myGuid)
+{
+    if (d->hazardType < 0)
+        return;
+
+    std::string modelName;
+    switch (d->hazardType)
+    {
+        case 0:
+            modelName = "HazardType1";
+            break;
+    }
+    vkglTF::Model* model = d->rom->getModel(modelName, _this, [](){});
+    std::vector<vkglTF::Animator::AnimatorCallback> callbacks = {
+        {
+            "SetOffSfx", [&]() {
+                // AudioEngine::getInstance().playSound()
+            }
+        },
+    };
+    d->rom->registerRenderObjects({
+            {
+                .model = model,
+                .animator = new vkglTF::Animator(model, callbacks),
+                .renderLayer = RenderLayer::VISIBLE,
+                .attachedEntityGuid = myGuid,
+            }
+        },
+        { &d->renderObj }
+    );
+    glm_translate(d->renderObj->transformMatrix, d->position);
+
+    versor quatIdentity = GLM_QUAT_IDENTITY_INIT;
+    d->dangerTriggerBodyId = physengine::createBoxColliderBody(myGuid, d->position, quatIdentity, vec3{ 10.0f, 5.0f, 0.5f }, true);
+}
 
 Hazard::Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) : Entity(em, ds), _data(new Hazard_XData())
 {
@@ -21,20 +84,47 @@ Hazard::Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) 
     if (ds)
         load(*ds);
 
+    loadRenderObjForHazard(_data, this, getGUID());
+
     globalState::phase1.registerHazard(this);
 }
 
 Hazard::~Hazard()
 {
+    _data->rom->unregisterRenderObjects({ _data->renderObj });
+    physengine::destroyBody(_data->dangerTriggerBodyId);
+
     delete _data;
 }
 
 void Hazard::physicsUpdate(const float_t& physicsDeltaTime)
 {
+    if (_data->setOffTrigger)
+    {
+        _data->hazardTimer = 0;
+        _data->renderObj->animator->setTrigger("goto_set_off");
+        _data->setOffTrigger = false;
+    }
+
+    // Update whether hazard is actively attacking this frame.
+    if (_data->hazardTimer >= 0)
+    {
+        _data->hazardTimer++;
+
+        _data->isHazardAttacking = false;
+        for (auto& t : hazardDatas[(size_t)_data->hazardType].triggerActiveTimes)
+            if (t == _data->hazardTimer)
+            {
+                _data->isHazardAttacking = true;
+                break;
+            }
+    }
 }
 
 void Hazard::update(const float_t& deltaTime)
 {
+    if (input::onKeyJumpPress)
+        setOff();  // @DEBUG.
 }
 
 void Hazard::lateUpdate(const float_t& deltaTime)
@@ -49,6 +139,10 @@ void Hazard::dump(DataSerializer& ds)
 void Hazard::load(DataSerialized& ds)
 {
     Entity::load(ds);
+    ds.loadVec3(_data->position);
+    float_t hazardTypeF;
+    ds.loadFloat(hazardTypeF);
+    _data->hazardType = (int8_t)hazardTypeF;
 }
 
 bool Hazard::processMessage(DataSerialized& message)
@@ -64,10 +158,20 @@ void Hazard::renderImGui()
 {
 }
 
-void Hazard::reset()
+void Hazard::reportTriggerActivation(const std::string& entityGUID)
 {
+    if (!_data->isHazardAttacking)
+        return;
+
+    // Notify successful attack to entity.
+    DataSerializer ds;
+    ds.dumpString("msg_stunned_by_hazard");
+    DataSerialized dsd = ds.getSerializedData();
+    _em->sendMessage(entityGUID, dsd);
 }
 
 void Hazard::setOff()
 {
+    if (_data->hazardTimer < 0)
+        _data->setOffTrigger = true;
 }

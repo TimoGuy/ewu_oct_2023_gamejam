@@ -47,7 +47,7 @@
 
 ## Action Items for reworked game design (3-phase game)
 
-- [ ] Phase 1: "Find the nest egg"
+- [x] Phase 1: "Find the nest egg"
     > 3 girls you can date are hidden in the room somewhere, and you, along with 2 other competitors, are trying to find one of them first. If one of the contestants finds a girl, then the girl and the contestant gets whisked away to the phase 2 as the dating hotseat. The other competitors get whisked away as booby trap operators.
     - [x] Object to uncover
         > Will be one of 10 different kinds of objects, since all this will be storage objects in an old ballroom-kinda feel. They'll be read in as objects with the following params:
@@ -67,20 +67,20 @@
     - [x] UNRELATED: get simple main menu framework set up (open first.ssdat)
     - [x] Show uncovered girl.
         - [x] Girl model should be invisible until pulling off the covers.
-        - [ ] Girl is shown and person who uncovered girl gets whisked away with girl.
-        - [ ] Remaining contestants are shown getting whisked away too.
+        - [ ] ~~Girl is shown and person who uncovered girl gets whisked away with girl.~~
+        - [ ] ~~Remaining contestants are shown getting whisked away too.~~
         - [x] Transitions from phase0 to phase1
 
 - [ ] Phase 2: "Hallway of Love"
-    - [ ] Contestant A logic
+    - [x] Contestant A logic
         - [x] Moving (just like previous phase)
-        - [ ] If get hit by booby trap, get stunned for 1 second (tune).
+        - [x] If get hit by booby trap, get stunned for 1 second (tune).
         - [x] If touch date, start Phase 3
             - [x] If fail Phase 3, then get stunned for 1.5 seconds (tune).
         - [x] Camera follows Contestant A
-    - [ ] Date logic
+    - [x] Date logic
         - [x] Moves forward (tune by how much)
-        - [ ] If get hit by booby trap, get stunned for 0.75 seconds (tune).
+        - [x] If get hit by booby trap, get stunned for 0.75 seconds (tune).
         - [x] If reach end, go to Phase 1
     - [ ] Contestant B(s) logic
         - [ ] Stand at next open booby trap operator booth that is in front of contestant A.

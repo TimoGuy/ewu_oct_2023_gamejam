@@ -146,6 +146,21 @@ CoveredItem::~CoveredItem()
 
 void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
 {
+    // Update position.
+    {
+        mat4 transform;
+        physengine::getWorldTransform(_data->collisionBoxBodyId, transform);
+        vec4 pos;
+        mat4 rot;
+        vec3 sca;
+        glm_decompose(transform, pos, rot, sca);
+        glm_vec3_copy(pos, _data->position);
+        _data->position[1] -= myItemType(_data).collisionBoxExtent[1];
+        vec3 rotEuler;
+        glm_euler_angles(rot, rotEuler);
+        _data->yRotation = rotEuler[1];
+    }
+
     // Process uncovering item.
     if (_data->isUncovering)
     {
@@ -167,6 +182,7 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
                 if (_data->dateId >= 0)
                 {
                     _data->renderObj->renderLayer = RenderLayer::INVISIBLE;
+                    globalState::phase0.setDateDummyPosition(_data->dateId, _data->position);
                     globalState::phase0.uncoverDateDummy(_data->dateId);
                     globalState::phase1.transitionToPhase1(_data->dateId, _data->interactingContestantId);
                 }
@@ -327,7 +343,7 @@ void CoveredItem::update(const float_t& deltaTime)
         glm_euler_zyx(vec3{ 0.0f, _data->yRotation, 0.0f }, rotation);
         versor rotationV;
         glm_mat4_quat(rotation, rotationV);
-        _data->collisionBoxBodyId = physengine::createBoxColliderBody(getGUID(), _data->position, rotationV, myItemType(_data).collisionBoxExtent);
+        _data->collisionBoxBodyId = physengine::createBoxColliderBody(getGUID(), _data->position, rotationV, myItemType(_data).collisionBoxExtent, false);
 
         // Choose uncover time.
         _data->chosenUncoverTime = rng::randomRealRange(myItemType(_data).uncoverTimeMinMax[0], myItemType(_data).uncoverTimeMinMax[1]);
@@ -438,6 +454,7 @@ void CoveredItem::reportMoved(mat4* matrixMoved)
     vec3 sca;
     glm_decompose(*matrixMoved, pos, rot, sca);
     glm_vec3_copy(pos, _data->position);
+    _data->position[1] -= myItemType(_data).collisionBoxExtent[1];
     vec3 rotEuler;
     glm_euler_angles(rot, rotEuler);
     _data->yRotation = rotEuler[1];

@@ -14,6 +14,7 @@ struct DatingInterface_XData
     Camera* camera;
 
     RenderObject* renderObj;
+
 };
 
 DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds) : Entity(em, ds), _data(new DatingInterface_XData())

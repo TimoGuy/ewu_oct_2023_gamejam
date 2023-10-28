@@ -1,0 +1,10 @@
+:StateIdle
+  animation Idle
+  loop      1
+  trans     goto_set_off      StateSetOff
+
+
+:StateSetOff
+  animation SetOff
+  loop      0
+  event     0.0    SetOffSfx

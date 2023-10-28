@@ -37,6 +37,7 @@
 #include "PhysUtil.h"
 #include "EntityManager.h"
 #include "Character.h"
+#include "Hazard.h"
 #include "VoxelField.h"
 #include "GlobalState.h"
 #include "imgui/imgui.h"
@@ -368,6 +369,32 @@ namespace physengine
         return (SDL_GetTicks64() - lastTick) * oneOverPhysicsDeltaTimeInMS * globalState::timescale;
     }
 
+    void getWorldTransform(BodyID bodyId, mat4& outWorldTransform)
+    {
+        JPH::RMat44 trans = physicsSystem->GetBodyInterface().GetWorldTransform(bodyId);
+        // Copy to cglm style.
+        JPH::Vec4 c0 = trans.GetColumn4(0);
+        JPH::Vec4 c1 = trans.GetColumn4(1);
+        JPH::Vec4 c2 = trans.GetColumn4(2);
+        JPH::Vec4 c3 = trans.GetColumn4(3);
+        outWorldTransform[0][0] = c0.GetX();
+        outWorldTransform[0][1] = c0.GetY();
+        outWorldTransform[0][2] = c0.GetZ();
+        outWorldTransform[0][3] = c0.GetW();
+        outWorldTransform[1][0] = c1.GetX();
+        outWorldTransform[1][1] = c1.GetY();
+        outWorldTransform[1][2] = c1.GetZ();
+        outWorldTransform[1][3] = c1.GetW();
+        outWorldTransform[2][0] = c2.GetX();
+        outWorldTransform[2][1] = c2.GetY();
+        outWorldTransform[2][2] = c2.GetZ();
+        outWorldTransform[2][3] = c2.GetW();
+        outWorldTransform[3][0] = c3.GetX();
+        outWorldTransform[3][1] = c3.GetY();
+        outWorldTransform[3][2] = c3.GetZ();
+        outWorldTransform[3][3] = c3.GetW();
+    }
+
     void tick();
     void tock();
 
@@ -517,6 +544,15 @@ namespace physengine
                                 entityAsVF->reportPlayerInCameraRailTrigger(otherBody, entityAsChar->getFacingDirection());
                         }
                     }
+                } return;
+
+                case UserDataMeaning::IS_TRIGGER:
+                {
+                    uint32_t id = thisBody.GetID().GetIndex();
+                    uint32_t otherId = otherBody.GetID().GetIndex();
+                    Hazard* entityAsHazard;
+                    if (entityAsHazard = dynamic_cast<Hazard*>(entityManager->getEntityViaGUID(bodyIdToEntityGuidMap[id])))
+                        entityAsHazard->reportTriggerActivation(bodyIdToEntityGuidMap[otherId]);
                 } return;
             }
         }
@@ -1101,7 +1137,7 @@ namespace physengine
             bcs.mUserData = (uint64_t)physengine::UserDataMeaning::IS_NS_CAMERA_RAIL_TRIGGER;
             vfpd.nsTriggerBodyId = bodyInterface.CreateBody(bcs)->GetID();
             bodyInterface.AddBody(vfpd.nsTriggerBodyId, EActivation::DontActivate);
-            
+
             // Add guid into references.
             bodyIdToEntityGuidMap[vfpd.nsTriggerBodyId.GetIndex()] = entityGuid;
         }
@@ -1302,29 +1338,7 @@ namespace physengine
             if (vfpd.bodyId.IsInvalid() || !bodyInterface.IsActive(vfpd.bodyId))
                 continue;
 
-            RMat44 trans = bodyInterface.GetWorldTransform(vfpd.bodyId);
-            // Copy to cglm style.
-            Vec4 c0 = trans.GetColumn4(0);
-            Vec4 c1 = trans.GetColumn4(1);
-            Vec4 c2 = trans.GetColumn4(2);
-            Vec4 c3 = trans.GetColumn4(3);
-            vfpd.transform[0][0] = c0.GetX();
-            vfpd.transform[0][1] = c0.GetY();
-            vfpd.transform[0][2] = c0.GetZ();
-            vfpd.transform[0][3] = c0.GetW();
-            vfpd.transform[1][0] = c1.GetX();
-            vfpd.transform[1][1] = c1.GetY();
-            vfpd.transform[1][2] = c1.GetZ();
-            vfpd.transform[1][3] = c1.GetW();
-            vfpd.transform[2][0] = c2.GetX();
-            vfpd.transform[2][1] = c2.GetY();
-            vfpd.transform[2][2] = c2.GetZ();
-            vfpd.transform[2][3] = c2.GetW();
-            vfpd.transform[3][0] = c3.GetX();
-            vfpd.transform[3][1] = c3.GetY();
-            vfpd.transform[3][2] = c3.GetZ();
-            vfpd.transform[3][3] = c3.GetW();
-            //////////////////////
+            getWorldTransform(vfpd.bodyId, vfpd.transform);
         }
         for (size_t i = 0; i < numCapsCreated; i++)
         {
@@ -1638,14 +1652,28 @@ namespace physengine
     }
 #endif
 
-    JPH::BodyID createBoxColliderBody(const std::string& entityGuid, vec3 origin, versor rotation, vec3 extent)
+    JPH::BodyID createBoxColliderBody(const std::string& entityGuid, vec3 origin, versor rotation, vec3 extent, bool isTrigger)
     {
         BodyInterface& bodyInterface = physicsSystem->GetBodyInterface();
         Vec3 extentJ(extent[0], extent[1], extent[2]);
         Vec3 originJ(origin[0], origin[1], origin[2]);
         Quat rotationJ(rotation[0], rotation[1], rotation[2], rotation[3]);
-        JPH::BodyID bodyId = bodyInterface.CreateBody(BodyCreationSettings(new BoxShape(extentJ), originJ, rotationJ, EMotionType::Static, Layers::NON_MOVING))->GetID();
-        bodyInterface.AddBody(bodyId, EActivation::DontActivate);
+
+        // @NOTE: if you set a trigger to Kinematic/dynamic and then activate it, it will detect sleeping physics objects. Albeit at a higher cost.
+        BoxShape* bs = new BoxShape(extentJ);
+        bs->SetDensity(200.0f);
+        BodyCreationSettings bcs(bs, originJ, rotationJ, isTrigger ? EMotionType::Kinematic : EMotionType::Dynamic, isTrigger ? Layers::NON_MOVING : Layers::MOVING);
+        bcs.mIsSensor = isTrigger;
+        if (isTrigger)
+        {
+            bcs.mAllowSleeping = false;
+            bcs.mUserData = (uint64_t)UserDataMeaning::IS_TRIGGER;
+        }
+        JPH::BodyID bodyId = bodyInterface.CreateBody(bcs)->GetID();
+        bodyInterface.AddBody(bodyId, EActivation::Activate);
+
+        // Add guid into references.
+        bodyIdToEntityGuidMap[bodyId.GetIndex()] = entityGuid;
         return bodyId;
     }
 
