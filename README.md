@@ -70,6 +70,7 @@
         - [ ] ~~Girl is shown and person who uncovered girl gets whisked away with girl.~~
         - [ ] ~~Remaining contestants are shown getting whisked away too.~~
         - [x] Transitions from phase0 to phase1
+    - [ ] BUG: no covered items spawn sometimes.
 
 - [ ] Phase 2: "Hallway of Love"
     - [x] Contestant A logic
