@@ -74,6 +74,14 @@ struct GPUGatherDOFParams
 	float_t oneOverArbitraryResExtentY;
 };
 
+struct GPUPostProcessParams
+{
+	bool applyTonemap;
+	bool pad0;
+	bool pad1;
+	bool pad2;  // Vulkan spec requires multiple of 4 bytes for push constants.
+};
+
 struct FrameData
 {
 	VkSemaphore presentSemaphore, renderSemaphore;
@@ -170,6 +178,12 @@ public:
 	Texture        _depthImage;
 	VkFormat       _depthFormat;
 
+	//
+	// Texture for taking a snapshot of the rendered game screen
+	// (to warp for screen transitions, pause menus, etc.)
+	//
+	Texture       _snapshotImage;
+	bool          _blitToSnapshotImageFlag = true;
 
 	//
 	// UI Renderpass
