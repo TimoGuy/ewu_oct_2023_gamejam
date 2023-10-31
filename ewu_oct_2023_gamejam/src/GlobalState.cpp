@@ -307,7 +307,7 @@ namespace globalState
         glm_vec3_copy(spawnLocation, outSpawnLocation);
     }
 
-    void update(float_t deltaTime)
+    void update(float_t deltaTime, bool& requestSnapshotBlit, bool& skyboxIsSnapshotImage)
     {
         if (showCountdown() && !phase1.loadTriggerFlag)
         {
@@ -473,15 +473,21 @@ namespace globalState
             phase1.returnFromPhase2TriggerFlag = false;
         }
 
-        if (phase2.loadTriggerFlag && (phase2.transitionTimer -= deltaTime) < 0.0f)
+        if (phase2.loadTriggerFlag)
         {
-            // Load phase 2.
-            // Activate dating interface.
-            phase2.datingInterface->activate(phase2.dateIdx);
+            bool transitionFinished = ((phase2.transitionTimer -= deltaTime) < 0.0f);
+            requestSnapshotBlit = !transitionFinished;  // Take snapshots while transition is happening, but not when scene switches.
+            if (transitionFinished)
+            {
+                // Load phase 2.
+                // Activate dating interface.
+                skyboxIsSnapshotImage = true;
+                phase2.datingInterface->activate(phase2.dateIdx);
 
-            // Finished.
-            currentPhase = GamePhases::P2_OTOMEGE;
-            phase2.loadTriggerFlag = false;
+                // Finished.
+                currentPhase = GamePhases::P2_OTOMEGE;
+                phase2.loadTriggerFlag = false;
+            }
         }
     }
 

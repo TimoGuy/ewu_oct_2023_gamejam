@@ -212,7 +212,7 @@ namespace globalState
 
     void initGlobalState(SceneCamera& sc, EntityManager* em);
     void launchAsyncWriteTask();  // @NOTE: this is simply for things that are marked saved
-    void update(float_t deltaTime);
+    void update(float_t deltaTime, bool& requestSnapshotBlit, bool& skyboxIsSnapshotImage);
     void drawDebugVisualization();
     void cleanupGlobalState();
 

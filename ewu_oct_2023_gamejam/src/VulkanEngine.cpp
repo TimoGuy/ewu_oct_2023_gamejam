@@ -235,7 +235,7 @@ void VulkanEngine::run()
 			saveGlobalStateTimeElapsed = 0.0f;
 			globalState::launchAsyncWriteTask();
 		}
-		globalState::update(deltaTime);
+		globalState::update(deltaTime, _blitToSnapshotImageFlag, _skyboxIsSnapshotImage);
 		perfs[9] = SDL_GetPerformanceCounter() - perfs[9];
 
 
@@ -502,6 +502,16 @@ void VulkanEngine::renderShadowRenderpass(const FrameData& currentFrame, VkComma
 	}
 }
 
+void renderSkybox(VkCommandBuffer cmd, Material& skyboxMaterial, VkDescriptorSet currentFrameGlobalDescriptor, vkglTF::Model* skybox)
+{
+	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxMaterial.pipeline);
+	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxMaterial.pipelineLayout, 0, 1, &currentFrameGlobalDescriptor, 0, nullptr);
+	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxMaterial.pipelineLayout, 1, 1, &skyboxMaterial.textureSet, 0, nullptr);
+
+	skybox->bind(cmd);
+	skybox->draw(cmd);
+}
+
 void VulkanEngine::renderMainRenderpass(const FrameData& currentFrame, VkCommandBuffer cmd, const std::vector<ModelWithIndirectDrawId>& pickingIndirectDrawCommandIds)
 {
 	VkClearValue clearValue;
@@ -532,7 +542,6 @@ void VulkanEngine::renderMainRenderpass(const FrameData& currentFrame, VkCommand
 
 	Material& defaultMaterial = *getMaterial("pbrMaterial");    // @HACK: @TODO: currently, the way that the pipeline is getting used is by just hardcode using it in the draw commands for models... however, each model should get its pipeline set to this material instead (or whatever material its using... that's why we can't hardcode stuff!!!)   @TODO: create some kind of way to propagate the newly created pipeline to the primMat (calculated material in the gltf model) instead of using defaultMaterial directly.  -Timo
 	Material& defaultZPrepassMaterial = *getMaterial("pbrZPrepassMaterial");
-	Material& skyboxMaterial = *getMaterial("skyboxMaterial");
 
 	// Render z prepass //
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultZPrepassMaterial.pipeline);
@@ -547,19 +556,21 @@ void VulkanEngine::renderMainRenderpass(const FrameData& currentFrame, VkCommand
 	// Switch from zprepass subpass to main subpass
 	vkCmdNextSubpass(cmd, VK_SUBPASS_CONTENTS_INLINE);
 
-	// Render skybox //
-	// @TODO: put this into its own function!
-	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxMaterial.pipeline);
-	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxMaterial.pipelineLayout, 0, 1, &currentFrame.globalDescriptor, 0, nullptr);
-	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxMaterial.pipelineLayout, 1, 1, &skyboxMaterial.textureSet, 0, nullptr);
+	// Render skybox.
+	if (_skyboxIsSnapshotImage)
+	{
+		Material& snapshotImageMaterial = *getMaterial("snapshotImageMaterial");
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipeline);
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipelineLayout, 0, 1, &snapshotImageMaterial.textureSet, 0, nullptr);
+		vkCmdDraw(cmd, 3, 1, 0, 0);
+	}
+	else
+	{
+		Material& skyboxMaterial = *getMaterial("skyboxMaterial");
+		renderSkybox(cmd, skyboxMaterial, currentFrame.globalDescriptor, _roManager->getModel("Box", nullptr, [](){}));
+	}
 
-	auto skybox = _roManager->getModel("Box", nullptr, [](){});
-	skybox->bind(cmd);
-	skybox->draw(cmd);
-	///////////////////
-
-	// Bind material
-	// @TODO: put this into its own function!
+	// Bind material and render renderobjects.
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipeline);
 	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipelineLayout, 0, 1, &currentFrame.globalDescriptor, 0, nullptr);
 	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipelineLayout, 1, 1, &currentFrame.objectDescriptor, 0, nullptr);
@@ -567,12 +578,12 @@ void VulkanEngine::renderMainRenderpass(const FrameData& currentFrame, VkCommand
 	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipelineLayout, 3, 1, &defaultMaterial.textureSet, 0, nullptr);
 	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipelineLayout, 4, 1, vkglTF::Animator::getGlobalAnimatorNodeCollectionDescriptorSet(this), 0, nullptr);
 	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipelineLayout, 5, 1, &_voxelFieldLightingGridTextureSet.descriptor, 0, nullptr);
-	////////////////
 
 	renderRenderObjects(cmd, currentFrame);
 	if (!pickingIndirectDrawCommandIds.empty())
 		renderPickedObject(cmd, currentFrame, pickingIndirectDrawCommandIds);
 	physengine::renderDebugVisualization(cmd);
+	////////////////
 
 	// End renderpass
 	vkCmdEndRenderPass(cmd);
@@ -1302,7 +1313,7 @@ void VulkanEngine::renderPostprocessRenderpass(const FrameData& currentFrame, Vk
 		);
 
 		// Finish.
-		// _blitToSnapshotImageFlag = false; @DEBUG
+		_blitToSnapshotImageFlag = false;
 	}
 
 	// Finish postprocess stack.
@@ -3717,18 +3728,36 @@ void VulkanEngine::initDescriptors()    // @NOTE: don't destroy and then recreat
 	}
 
 	//
+	// Snapshot image.
+	//
+	{
+		VkDescriptorImageInfo singleTextureImageInfo = {
+			.sampler = _snapshotImage.sampler,
+			.imageView = _snapshotImage.imageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		};
+		VkDescriptorSet singleTextureSet;
+		vkutil::DescriptorBuilder::begin()
+			.bindImage(0, &singleTextureImageInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build(singleTextureSet, _singleTextureSetLayout);
+		attachTextureSetToMaterial(singleTextureSet, "snapshotImageMaterial");
+	}
+
+	//
 	// Single texture (i.e. skybox)
 	//
-	VkDescriptorImageInfo singleTextureImageInfo = {
-		.sampler = _loadedTextures["CubemapSkybox"].sampler,
-		.imageView = _loadedTextures["CubemapSkybox"].imageView,
-		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-	};
-	VkDescriptorSet singleTextureSet;
-	vkutil::DescriptorBuilder::begin()
-		.bindImage(0, &singleTextureImageInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-		.build(singleTextureSet, _singleTextureSetLayout);
-	attachTextureSetToMaterial(singleTextureSet, "skyboxMaterial");
+	{
+		VkDescriptorImageInfo singleTextureImageInfo = {
+			.sampler = _loadedTextures["CubemapSkybox"].sampler,
+			.imageView = _loadedTextures["CubemapSkybox"].imageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		};
+		VkDescriptorSet singleTextureSet;
+		vkutil::DescriptorBuilder::begin()
+			.bindImage(0, &singleTextureImageInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build(singleTextureSet, _singleTextureSetLayout);
+		attachTextureSetToMaterial(singleTextureSet, "skyboxMaterial");
+	}
 
 	//
 	// All PBR Textures
@@ -3944,6 +3973,34 @@ void VulkanEngine::initPipelines()
 		_swapchainDependentDeletionQueue
 	);
 	attachPipelineToMaterial(meshPipeline, meshPipelineLayout, "pbrMaterial");
+
+	// Snapshot image pipeline
+	VkPipeline snapshotImagePipeline;
+	VkPipelineLayout snapshotImagePipelineLayout;
+	vkutil::pipelinebuilder::build(
+		{},
+		{ _singleTextureSetLayout },
+		{
+			{ VK_SHADER_STAGE_VERTEX_BIT, "shader/genbrdflut.vert.spv" },
+			{ VK_SHADER_STAGE_FRAGMENT_BIT, "shader/snapshotImage.frag.spv" },
+		},
+		{},  // No triangles are actually streamed in
+		{},
+		vkinit::inputAssemblyCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST),
+		screenspaceViewport,
+		screenspaceScissor,
+		vkinit::rasterizationStateCreateInfo(VK_POLYGON_MODE_FILL, VK_CULL_MODE_NONE),
+		{ vkinit::colorBlendAttachmentState() },
+		vkinit::multisamplingStateCreateInfo(),
+		vkinit::depthStencilCreateInfo(false, false, VK_COMPARE_OP_ALWAYS),
+		{},
+		_mainRenderPass,
+		1,
+		snapshotImagePipeline,
+		snapshotImagePipelineLayout,
+		_swapchainDependentDeletionQueue
+	);
+	attachPipelineToMaterial(snapshotImagePipeline, snapshotImagePipelineLayout, "snapshotImageMaterial");
 
 	// Skybox pipeline
 	VkPipeline skyboxPipeline;

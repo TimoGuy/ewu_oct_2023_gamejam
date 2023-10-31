@@ -183,7 +183,8 @@ public:
 	// (to warp for screen transitions, pause menus, etc.)
 	//
 	Texture       _snapshotImage;
-	bool          _blitToSnapshotImageFlag = true;
+	bool          _blitToSnapshotImageFlag = false;
+	bool          _skyboxIsSnapshotImage = false;
 
 	//
 	// UI Renderpass
