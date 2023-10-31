@@ -2935,6 +2935,20 @@ void VulkanEngine::initPostprocessImages()
 			VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
 			_swapchainDependentDeletionQueue
 		);
+
+		// Create descriptor set.
+		{
+			VkDescriptorImageInfo singleTextureImageInfo = {
+				.sampler = _snapshotImage.sampler,
+				.imageView = _snapshotImage.imageView,
+				.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			};
+			VkDescriptorSet singleTextureSet;
+			vkutil::DescriptorBuilder::begin()
+				.bindImage(0, &singleTextureImageInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+				.build(singleTextureSet, _singleTextureSetLayout);
+			attachTextureSetToMaterial(singleTextureSet, "snapshotImageMaterial");
+		}
 	}
 
 	//
@@ -3725,22 +3739,6 @@ void VulkanEngine::initDescriptors()    // @NOTE: don't destroy and then recreat
 			vmaDestroyBuffer(_allocator, _frames[i].instancePtrBuffer._buffer, _frames[i].instancePtrBuffer._allocation);
 			vmaDestroyBuffer(_allocator, _frames[i].pickingSelectedIdBuffer._buffer, _frames[i].pickingSelectedIdBuffer._allocation);
 		});
-	}
-
-	//
-	// Snapshot image.
-	//
-	{
-		VkDescriptorImageInfo singleTextureImageInfo = {
-			.sampler = _snapshotImage.sampler,
-			.imageView = _snapshotImage.imageView,
-			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		};
-		VkDescriptorSet singleTextureSet;
-		vkutil::DescriptorBuilder::begin()
-			.bindImage(0, &singleTextureImageInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.build(singleTextureSet, _singleTextureSetLayout);
-		attachTextureSetToMaterial(singleTextureSet, "snapshotImageMaterial");
 	}
 
 	//
