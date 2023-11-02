@@ -25,7 +25,7 @@ namespace textbox
     uint32_t numQuerySelections = 0;
 
     VulkanEngine* engine;
-    AllocatedBuffer sqrVertexBuffer;
+    AllocatedBuffer sqrVertexBuffer;  // @TODO: use UIQuad.h/.cpp
     AllocatedBuffer sqrIndexBuffer;
     uint32_t sqrIndexCount;
     VkPipeline textboxBgPipeline;
@@ -165,7 +165,7 @@ namespace textbox
             { textmesh::gpuUICameraSetLayout },
             {
                 { VK_SHADER_STAGE_VERTEX_BIT, "shader/sdf.vert.spv" },
-                { VK_SHADER_STAGE_FRAGMENT_BIT, "shader/color_textbox_bg.frag.spv" },
+                { VK_SHADER_STAGE_FRAGMENT_BIT, "shader/color_ui_quad.frag.spv" },
             },
             attributes,
             bindings,

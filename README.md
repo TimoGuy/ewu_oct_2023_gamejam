@@ -94,10 +94,10 @@
         - [x] Blit it before it gets tonemapped.
     - [x] Draw render texture as a backdrop.
         - [f] Blit the former snapshot image to the newly created one when resizing the window.
-    - [ ] Create simple UI framework.
+    - [x] Create simple UI framework.
         > See the implementation in Textbox.h/.cpp
-        - [ ] Image quad.
-        - [ ] Color quad.
+        - [x] Image quad.
+        - [x] Color quad.
     - [ ] 4 directions of input lead to different dialog options
         - [ ] Bottom one is always "Will you go on a date with me?"
             - NOTE: never ask this on the first one bc it's supposed to be a pick-up line (but you CAN)

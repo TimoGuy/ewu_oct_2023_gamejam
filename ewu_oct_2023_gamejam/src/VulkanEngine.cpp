@@ -10,10 +10,11 @@
 #include "VkTextures.h"
 #include "VkglTFModel.h"
 #include "TextMesh.h"
+#include "Textbox.h"
+#include "UIQuad.h"
 #include "AudioEngine.h"
 #include "PhysicsEngine.h"
 #include "InputManager.h"
-#include "Textbox.h"
 #include "RenderObject.h"
 #include "Entity.h"
 #include "EntityManager.h"
@@ -316,6 +317,7 @@ void VulkanEngine::cleanup()
 		_mainDeletionQueue.flush();
 		_swapchainDependentDeletionQueue.flush();
 
+		ui::cleanup();
 		textbox::cleanup();
 		textmesh::cleanup();
 		vkutil::pipelinelayoutcache::cleanup();
@@ -616,6 +618,7 @@ void VulkanEngine::renderUIRenderpass(VkCommandBuffer cmd)
 
 	textmesh::renderTextMeshesBulk(cmd);
 	textbox::renderTextbox(cmd);
+	ui::renderUIQuads(cmd);
 
 	vkCmdEndRenderPass(cmd);
 }
@@ -1884,6 +1887,7 @@ void VulkanEngine::initVulkan()
 	vkutil::pipelinelayoutcache::init(_device);
 	textmesh::init(this);
 	textbox::init(this);
+	ui::init(this);
 	vkinit::_maxSamplerAnisotropy = _gpuProperties.limits.maxSamplerAnisotropy;
 
 	//
@@ -4447,6 +4451,7 @@ void VulkanEngine::initPipelines()
 	//
 	textmesh::initPipeline(screenspaceViewport, screenspaceScissor, _swapchainDependentDeletionQueue);
 	textbox::initPipeline(screenspaceViewport, screenspaceScissor, _swapchainDependentDeletionQueue);
+	ui::initPipeline(screenspaceViewport, screenspaceScissor, _swapchainDependentDeletionQueue);
 	physengine::initDebugVisPipelines(_mainRenderPass, screenspaceViewport, screenspaceScissor, _swapchainDependentDeletionQueue);
 }
 
