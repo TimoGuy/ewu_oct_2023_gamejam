@@ -104,7 +104,7 @@ namespace scene
         if (objectName == Hazard::TYPE_NAME)
             ent = new Hazard(engine->_entityManager, engine->_roManager, ds);
         if (objectName == DatingInterface::TYPE_NAME)
-            ent = new DatingInterface(engine->_entityManager, engine->_roManager, engine->_camera, ds);
+            ent = new DatingInterface(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
         if (objectName == MainMenu::TYPE_NAME)
             ent = new MainMenu(engine->_entityManager, engine->_roManager, ds);
 

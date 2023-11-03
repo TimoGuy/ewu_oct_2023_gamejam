@@ -1524,6 +1524,196 @@ void VulkanEngine::loadImages()
 		_loadedTextures["WoodFloor057"] = woodFloor057;
 	}
 
+	// Load date1
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date1.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["Date1"] = texture;
+	}
+
+	// Load date2
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date2.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["Date2"] = texture;
+	}
+
+	// Load date3
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date3.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["Date3"] = texture;
+	}
+
+	// Load thinkingBox
+	{
+		Texture thinkingBox;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/thinking_box.png", VK_FORMAT_R8G8B8A8_SRGB, 0, thinkingBox.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, thinkingBox.image._image, VK_IMAGE_ASPECT_COLOR_BIT, thinkingBox.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &thinkingBox.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(thinkingBox.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &thinkingBox.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, thinkingBox.sampler, nullptr);
+			vkDestroyImageView(_device, thinkingBox.imageView, nullptr);
+			});
+
+		_loadedTextures["ThinkingBox"] = thinkingBox;
+	}
+
+	// Load thinkingBoxTrailLeft
+	{
+		Texture thinkingBoxTrailLeft;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/thinking_box_trail_left.png", VK_FORMAT_R8G8B8A8_SRGB, 0, thinkingBoxTrailLeft.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, thinkingBoxTrailLeft.image._image, VK_IMAGE_ASPECT_COLOR_BIT, thinkingBoxTrailLeft.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &thinkingBoxTrailLeft.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(thinkingBoxTrailLeft.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &thinkingBoxTrailLeft.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, thinkingBoxTrailLeft.sampler, nullptr);
+			vkDestroyImageView(_device, thinkingBoxTrailLeft.imageView, nullptr);
+			});
+
+		_loadedTextures["ThinkingBoxTrailLeft"] = thinkingBoxTrailLeft;
+	}
+
+	// Load thinkingBoxTrailRight
+	{
+		Texture thinkingBoxTrailRight;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/thinking_box_trail_right.png", VK_FORMAT_R8G8B8A8_SRGB, 0, thinkingBoxTrailRight.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, thinkingBoxTrailRight.image._image, VK_IMAGE_ASPECT_COLOR_BIT, thinkingBoxTrailRight.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &thinkingBoxTrailRight.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(thinkingBoxTrailRight.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &thinkingBoxTrailRight.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, thinkingBoxTrailRight.sampler, nullptr);
+			vkDestroyImageView(_device, thinkingBoxTrailRight.imageView, nullptr);
+			});
+
+		_loadedTextures["ThinkingBoxTrailRight"] = thinkingBoxTrailRight;
+	}
+
+	// Load SpeechSelectionButton
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/speech_selection_button.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["SpeechSelectionButton"] = texture;
+	}
+
+	// Load MenuSelectingCursor
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/menu_selecting_cursor.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["MenuSelectingCursor"] = texture;
+	}
+
+	// Load DateSpeechBox
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date_speech_box.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["DateSpeechBox"] = texture;
+	}
+
+	// Load ContestantSpeechBox
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/contestant_speech_box.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["ContestantSpeechBox"] = texture;
+	}
+
 	// Load imguiTextureLayerVisible
 	{
 		Texture textureLayerVisible;

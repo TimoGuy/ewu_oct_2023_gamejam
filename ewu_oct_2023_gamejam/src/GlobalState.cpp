@@ -341,7 +341,7 @@ namespace globalState
             }
 
             // Delete all covered items.
-            for (auto& coveredItem : phase0.spawnedCoveredItems)
+            for (auto coveredItem : phase0.spawnedCoveredItems)
                 entityManagerRef->destroyEntity(coveredItem);
             phase0.spawnedCoveredItems.clear();
 
@@ -431,15 +431,20 @@ namespace globalState
             phase0.contestants[phase0.playerContestantIdx]->setAsCameraTargetObject();
 
             // Reset hazards.
-            for (auto& hazard : phase1.hazards)
+            for (auto hazard : phase1.hazards)
                 entityManagerRef->destroyEntity(hazard);
             phase1.hazards.clear();
-            std::map<float_t, Hazard*> spawnedHazardsMap;
+
+            std::vector<float_t> spawnLocationX;            
+            for (size_t i = 0; i < phase1.numHazardsToSpawn; i++)
+                spawnLocationX.push_back(rng::randomRealRange(phase1.hazardStartDistance, phase1.finishLineDistance));
+            std::sort(spawnLocationX.rbegin(), spawnLocationX.rend());
+
             for (size_t i = 0; i < phase1.numHazardsToSpawn; i++)
             {
                 vec3 spawnLocation;
                 glm_vec3_copy(phase1.contASpawnPosition, spawnLocation);
-                spawnLocation[0] += rng::randomRealRange(phase1.hazardStartDistance, phase1.finishLineDistance);
+                spawnLocation[0] += spawnLocationX[i];
                 int8_t hazardType = rng::randomIntegerRange(0, 0);
 
                 DataSerializer ds;
@@ -448,11 +453,8 @@ namespace globalState
                 ds.dumpFloat(hazardType);
                 DataSerialized dsd = ds.getSerializedData();
 
-                spawnedHazardsMap[spawnLocation[0]] =
-                    static_cast<Hazard*>(scene::spinupNewObject(":hazard", &dsd));
+                static_cast<Hazard*>(scene::spinupNewObject(":hazard", &dsd));
             }
-            for (auto it = spawnedHazardsMap.rbegin(); it != spawnedHazardsMap.rend(); it++)  // Left to right is -X, hence using reverse iterator.
-                phase1.hazards.push_back(it->second);
 
             // Activate Date.
             phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?
@@ -466,6 +468,7 @@ namespace globalState
         if (phase1.returnFromPhase2TriggerFlag && (phase1.transitionTimer -= deltaTime) < 0.0f)
         {
             // Simple return to phase 1.
+            skyboxIsSnapshotImage = false;
             phase2.datingInterface->deactivate();
             phase0.contestants[phase0.playerContestantIdx]->setAsCameraTargetObject();
             phase1.contACharacter->stun(1.5f);  // @HARDCODE.

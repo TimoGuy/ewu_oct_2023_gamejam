@@ -1,5 +1,7 @@
 #include "UIQuad.h"
 
+#include <array>
+#include <functional>
 #include "TextMesh.h"
 #include "VulkanEngine.h"
 #include "VkDescriptorBuilderUtil.h"
@@ -254,36 +256,33 @@ namespace ui
         );
     }
 
-    void divideUIQuadsIntoTextureAndColorQuadVariants(size_t& outTexturedQuadsCount, UIQuad**& outSortedUIQuads)
+    void renderQuads(VkCommandBuffer cmd, const std::vector<UIQuad*>& sortedUIQuads)
     {
-        size_t nextFrontIdx = 0;
-        size_t nextBackIdx = registeredUIQuads.size() - 1;
-        for (UIQuad* quad : registeredUIQuads)
-            if (quad->texture)
-                outSortedUIQuads[nextFrontIdx++] = quad;
-            else
-                outSortedUIQuads[nextBackIdx--] = quad;
-
-        outTexturedQuadsCount = nextFrontIdx;
-    }
-
-    void renderQuads(VkCommandBuffer cmd, UIQuad** sortedUIQuads, size_t startIdx, size_t endIdx, bool isTextured)
-    {
-        VkPipeline pipeline = isTextured ? texturedQuadPipeline : colorQuadPipeline;
-        VkPipelineLayout pipelineLayout = isTextured ? texturedQuadPipelineLayout : colorQuadPipelineLayout;
 
         textmesh::GPUSDFFontPushConstants pc = {
             .renderInScreenspace = (float_t)true,
         };
         ColorPushConstBlock cpc = {};
         
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &textmesh::gpuUICameraDescriptorSet, 0, nullptr);
-
-        for (size_t i = startIdx; i < endIdx; i++)
+        VkPipeline pipeline = texturedQuadPipeline;
+        VkPipelineLayout pipelineLayout = texturedQuadPipelineLayout;
+        bool prevIsTextured = false;
+        bool first = true;
+        for (size_t i = 0; i < sortedUIQuads.size(); i++)
         {
             if (!sortedUIQuads[i]->visible)
                 continue;
+
+            bool isTextured = (sortedUIQuads[i]->texture != nullptr);
+            if (first || isTextured != prevIsTextured)
+            {
+                pipeline = isTextured ? texturedQuadPipeline : colorQuadPipeline;
+                pipelineLayout = isTextured ? texturedQuadPipelineLayout : colorQuadPipelineLayout;
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &textmesh::gpuUICameraDescriptorSet, 0, nullptr);
+                first = false;
+                prevIsTextured = isTextured;
+            }
 
             glm_mat4_copy(sortedUIQuads[i]->transform, pc.modelMatrix);
             glm_vec4_copy(sortedUIQuads[i]->tint, cpc.color);
@@ -302,10 +301,13 @@ namespace ui
 
     void renderUIQuads(VkCommandBuffer cmd)
     {
-        size_t texturedQuadsCount;
-        UIQuad** sortedUIQuads = new UIQuad*[registeredUIQuads.size()];
-        divideUIQuadsIntoTextureAndColorQuadVariants(texturedQuadsCount, sortedUIQuads);
-        renderQuads(cmd, sortedUIQuads, 0, texturedQuadsCount, true);
-        renderQuads(cmd, sortedUIQuads, texturedQuadsCount, registeredUIQuads.size(), false);
+        std::sort(
+            registeredUIQuads.begin(),
+            registeredUIQuads.end(),
+            [&](UIQuad* a, UIQuad* b) {
+                return a->renderOrder > b->renderOrder;
+            }
+        );
+        renderQuads(cmd, registeredUIQuads);
     }
 }

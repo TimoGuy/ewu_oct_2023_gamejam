@@ -19,6 +19,7 @@ namespace ui
         Texture* texture = nullptr;
         vec4 tint        = { 1.0f, 1.0f, 1.0f, 1.0f };
         mat4 transform   = GLM_MAT4_IDENTITY_INIT;
+        float_t renderOrder = 0.0f;
         VkDescriptorSet builtTextureSet;
     };
 

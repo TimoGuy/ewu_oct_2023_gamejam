@@ -13,7 +13,7 @@ public:
     static const std::string TYPE_NAME;
     std::string getTypeName() { return TYPE_NAME; };
 
-    DatingInterface(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds);
+    DatingInterface(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds);
     ~DatingInterface();
 
     void physicsUpdate(const float_t& physicsDeltaTime);
