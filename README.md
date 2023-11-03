@@ -104,6 +104,8 @@
         - [ ] Pressing bad line will get contestant rejected, sending back to Phase 2
         - [ ] Pressing good line will get a good response from Date, and another set of options.
         - [ ] Pool of dialogue from Date and options for dialogue for player.
+    - [ ] "I don't think we're right for each other."
+        - [ ] Ends the dating interface.
     - [ ] "Will you go on a date with me?"
         - [ ] Random amount of thinking (very very soon and it's immediate NO. Early and it's very long, later and it's short (yes, there can be a short "no thanks"))
     > NOTE: Only the player enters phase 3. Other contestants just talk for a bit, then it results in either getting rejected after a random amt of time or hearing the contestant pop the question, Date thinks for random amt of time and then reject or accept.

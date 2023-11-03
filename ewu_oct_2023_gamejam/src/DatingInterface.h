@@ -5,6 +5,7 @@ class EntityManager;
 class RenderObjectManager;
 struct Camera;
 struct DatingInterface_XData;
+class VulkanEngine;
 
 
 class DatingInterface : public Entity

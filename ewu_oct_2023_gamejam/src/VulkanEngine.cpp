@@ -6011,7 +6011,7 @@ void VulkanEngine::submitSelectedRenderObjectId(int32_t poolIndex)
 
 void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 {
-	static bool showDemoWindows = false;
+	static bool showDemoWindows = true;
 	// if (input::onKeyF1Press)  // @DEBUG: enable this to allow toggling showing demo windows.
 	// 	showDemoWindows = !showDemoWindows;
 	if (showDemoWindows)
@@ -6035,7 +6035,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	//
 	static float_t scenePropertiesWindowWidth = 0.0f;
 	ImGui::SetNextWindowPos(ImVec2(_windowExtent.width - scenePropertiesWindowWidth, 0.0f), ImGuiCond_Always);
-	ImGui::Begin((globalState::savedActiveScene + " Properties").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Begin((globalState::savedActiveScene + " Properties").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove);
 	{
 		ImGui::Text(globalState::savedActiveScene.c_str());
 
@@ -6106,7 +6106,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	static float_t debugStatsWindowHeight = 0.0f;
 
 	ImGui::SetNextWindowPos(ImVec2(_windowExtent.width * 0.5f - debugStatsWindowWidth - windowPadding, _windowExtent.height - debugStatsWindowHeight), ImGuiCond_Always);		// @NOTE: the ImGuiCond_Always means that this line will execute always, when set to once, this line will be ignored after the first time it's called
-	ImGui::Begin("##Debug Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs);
+	ImGui::Begin("##Debug Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs);
 	{
 		ImGui::Text((std::to_string(_debugStats.currentFPS) + " FPS").c_str());
 		ImGui::Text(("Frame : " + std::to_string(_frameNumber)).c_str());
@@ -6137,7 +6137,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	//
 	static float_t gamestateInfoWindowHeight = 0.0f;
 	ImGui::SetNextWindowPos(ImVec2(_windowExtent.width * 0.5f + windowPadding, _windowExtent.height - gamestateInfoWindowHeight), ImGuiCond_Always);		// @NOTE: the ImGuiCond_Always means that this line will execute always, when set to once, this line will be ignored after the first time it's called
-	ImGui::Begin("##GameState Info", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("##GameState Info", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings);
 	{
 		ImGui::Text(("Health: " + std::to_string(globalState::savedPlayerHealth) + " / " + std::to_string(globalState::savedPlayerMaxHealth)).c_str());
 
@@ -6155,7 +6155,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	float_t maxWindowWidth = 0.0f;
 
 	ImGui::SetNextWindowPos(ImVec2(0, accumulatedWindowHeight + windowOffsetY), ImGuiCond_Always);
-	ImGui::Begin("PBR Shading Properties", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("PBR Shading Properties", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove);
 	{
 		if (ImGui::DragFloat3("Light Direction", _pbrRendering.gpuSceneShadingProps.lightDir))
 			glm_normalize(_pbrRendering.gpuSceneShadingProps.lightDir);		
@@ -6269,7 +6269,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	// Global Properties
 	//
 	ImGui::SetNextWindowPos(ImVec2(0, accumulatedWindowHeight + windowOffsetY), ImGuiCond_Always);
-	ImGui::Begin("Global Properties", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("Global Properties", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove);
 	{
 		if (ImGui::CollapsingHeader("Debug Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -6358,7 +6358,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	// Create Entity
 	//
 	ImGui::SetNextWindowPos(ImVec2(0, accumulatedWindowHeight + windowOffsetY), ImGuiCond_Always);
-	ImGui::Begin("Create Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("Create Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove);
 	{
 		static int32_t entityToCreateIndex = 1;  // @NOTE: don't want default setting to be `:player` or else you could accidentally create another player entity... and that is not needed for the levels
 		std::vector<std::string> listEntityTypes = scene::getListOfEntityTypes();
@@ -6487,7 +6487,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 		// Move the matrix via the decomposed values
 		//
 		ImGui::SetNextWindowPos(ImVec2(0, accumulatedWindowHeight + windowOffsetY), ImGuiCond_Always);
-		ImGui::Begin("Edit Selected", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
+		ImGui::Begin("Edit Selected", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove);
 		{
 			if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 			{
