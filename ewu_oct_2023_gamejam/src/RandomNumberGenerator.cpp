@@ -27,4 +27,9 @@ namespace rng
 		std::uniform_int_distribution<int32_t> distribution(min, max);
         return distribution(generator);
     }
+
+    void shuffleVectorSizeType(std::vector<size_t>& inoutVector)
+    {
+        std::shuffle(inoutVector.begin(), inoutVector.end(), generator);
+    }
 }

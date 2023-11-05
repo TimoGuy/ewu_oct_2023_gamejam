@@ -151,8 +151,12 @@ namespace globalState
     {
         bool isFirstPhase1 = true;
         bool isFirstPhase2Question = true;
-        float_t trustLevelIncrement;  // Add this for every correct answer.
-        float_t trustLevelDecrement;  // Subtract this for every incorrect answer.
+
+        // Trust Level Additions (depends on the answer the contestant chooses).
+        float_t veryGoodTLA;
+        float_t goodTLA;
+        float_t badTLA;
+        float_t veryBadTLA;
         float_t currentTrustLevel = 0.0f;  // @NOTE: Initialize at zero always (but, this value is persistant among all date interactions).
 
         // This threshold depends on how "nice" the date is (doesn't mutate).

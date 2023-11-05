@@ -5,6 +5,7 @@
 #include "GlobalState.h"
 #include "RenderObject.h"
 #include "InputManager.h"
+#include "RandomNumberGenerator.h"
 #include "UIQuad.h"
 #include "TextMesh.h"
 #include "Camera.h"
@@ -39,8 +40,6 @@ struct DatingInterface_XData
     float_t boxFillAmountMultiplier = 137.0f;
     const float_t thinkingTimerTime = 5.0f;
 
-    ui::UIQuad* menuSelectingCursor;
-
     struct SelectionButton
     {
         textmesh::TextMesh* text = nullptr;
@@ -51,8 +50,20 @@ struct DatingInterface_XData
     vec3    startingButtonPosition;
     float_t buttonStrideY;
 
+    ui::UIQuad* menuSelectingCursor;
     int8_t menuSelectionIdx;
 
+    std::vector<size_t> selectionShuffledIndices = { 0, 1, 2, 3 };
+    std::vector<std::string> selectionTexts = {
+        "VERY_GOOD",
+        "GOOD",
+        "BAD",
+        "VERY_BAD",
+    };
+
+    bool gotoRejection = false;
+
+    float_t stageTransitionTimer = -1.0f;  // This works by counting down if > 0.0, and if the timer goes <= 0.0, then set the next stage via some state machine-like thing.
     enum class DATING_STAGE
     {
         NONE = 0,
@@ -95,11 +106,14 @@ void initializePositionings(DatingInterface_XData* d)
     d->dateThinkingTrailingBubbles->renderOrder = 0.0f;
     glm_translate(d->dateThinkingTrailingBubbles->transform, vec3{ -101.0f, 276.0f, 0.0f });
     glm_scale(d->dateThinkingTrailingBubbles->transform, vec3{ 66.0f, 35.0f, 1.0f });
+    glm_vec4_copy(vec4{ 0.5647058824f, 0.2f, 0.2f, 1.0f }, d->dateThinkingTrailingBubbles->tint);
 
     d->dateSpeechBox->renderOrder = 0.0f;
     glm_translate(d->dateSpeechBox->transform, vec3{ 31.0f, 373.0f, 0.0f });
     glm_scale(d->dateSpeechBox->transform, vec3{ 188.0f, 50.0f, 1.0f });
     glm_vec4_copy(vec4{ 0.5647058824f, 0.2f, 0.2f, 1.0f }, d->dateSpeechBox->tint);
+
+    glm_vec3_copy(vec3{ -133.0f, 385.0f, 0.0f }, d->dateSpeechText->renderPosition);
 
     d->contestantThinkingBoxTex->renderOrder = 0.0f;
     glm_translate(d->contestantThinkingBoxTex->transform, vec3{ 310.0f, 109.0f, 0.0f });
@@ -119,6 +133,8 @@ void initializePositionings(DatingInterface_XData* d)
     glm_translate(d->contestantSpeechBox->transform, vec3{ 292.0f, 142.0f, 0.0f });
     glm_scale(d->contestantSpeechBox->transform, vec3{ 188.0f, 50.0f, 1.0f });
     glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantSpeechBox->tint);
+
+    glm_vec3_copy(vec3{ 122.0f, 148.0f, 0.0f }, d->contestantSpeechText->renderPosition);
 
     d->menuSelectingCursor->renderOrder = -1.0f;
     glm_vec4_copy(vec4{ 0.6823529412f, 0.8196078431f, 0.0313725490f, 1.0f }, d->menuSelectingCursor->tint);
@@ -158,6 +174,7 @@ void setMenuSelectingCursor(DatingInterface_XData* d)
 void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE newStage)
 {
     d->currentStage = newStage;
+    d->stageTransitionTimer = -1.0f;  // Clear timer.
 
     d->dateQuads[0]->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE && d->dateIdx == 0);
     d->dateQuads[1]->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE && d->dateIdx == 1);
@@ -197,14 +214,76 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     }
 
     d->contestantSpeechBox->visible =
-        (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE ||
-        d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_EXECUTE ||
+        (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE ||
+        d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE);
     d->contestantSpeechText->excludeFromBulkRender = !d->contestantSpeechBox->visible;
 
-    d->menuSelectionIdx = 0;  // Reset menu selection value.
-    setMenuSelectingCursor(d);
+    // Setup dialogue options.
+    bool setupDialogueOptions = false;
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT)
+    {
+        // @TODO: load in the respective asks.
+        //////////////////////////////////////
+        setupDialogueOptions = true;
+    }
+    else if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
+    {
+        // @TODO: load in the respective answers.
+        /////////////////////////////////////////
+        setupDialogueOptions = true;
+    }
+    if (setupDialogueOptions)
+    {
+        rng::shuffleVectorSizeType(d->selectionShuffledIndices);
+        size_t i = 0;
+        for (auto& ssi : d->selectionShuffledIndices)
+            textmesh::regenerateTextMeshMesh(d->buttons[i++].text, d->selectionTexts[ssi]);
+
+        d->menuSelectionIdx = 0;  // Reset menu selection value.
+        setMenuSelectingCursor(d);
+    }
+
+    // Setup dialogue executions.
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE ||
+        d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE)
+    {
+        textmesh::regenerateTextMeshMesh(d->contestantSpeechText, d->selectionTexts[d->selectionShuffledIndices[(size_t)d->menuSelectionIdx]]);
+        d->stageTransitionTimer = 1.5f;  // Give time to read dialog.
+    }
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE ||
+        d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT)
+    {
+        textmesh::regenerateTextMeshMesh(
+            (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE ?
+                d->contestantSpeechText :
+                d->dateSpeechText),
+            "Sorry, I don\'t think we\'re a good match for each other."
+        );
+        d->stageTransitionTimer = 2.0f;
+    }
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE)
+    {
+        textmesh::regenerateTextMeshMesh(
+            d->contestantSpeechText,
+            "Will you go on a date with me?"
+        );
+        d->stageTransitionTimer = 2.0f;
+    }
+
+    // Setup date thinkings.
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING ||
+        d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
+    {
+        textmesh::regenerateTextMeshMesh(d->dateSpeechText, "INSERT RESPONSE/ASK RIGHT HERE!");
+        d->stageTransitionTimer = rng::randomRealRange(0.5f, d->thinkingTimerTime);
+    }
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_EXECUTE ||
+        d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE)
+    {
+        d->stageTransitionTimer = 1.5f;
+    }
 }
 
 DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds) : Entity(em, ds), _data(new DatingInterface_XData())
@@ -246,7 +325,15 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
     _data->contestantSpeechBox = ui::registerUIQuad(&engine->_loadedTextures["ContestantSpeechBox"]);
     for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
     {
-        _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "message\nsecondline.");
+        if (i >= NUM_SELECTION_BUTTONS - 2)
+        {
+            if (i == NUM_SELECTION_BUTTONS - 2)
+                _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "Sorry, I don\'t think we\'re a good match for each other.");
+            else if (i == NUM_SELECTION_BUTTONS - 1)
+                _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "Will you go on a date with me?");
+        }
+        else
+            _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "DEBUGmessage\nsecondline.");
         _data->buttons[i].text->isPositionScreenspace = true;
         _data->buttons[i].text->scale = 40.0f;
         _data->buttons[i].background = ui::registerUIQuad(&engine->_loadedTextures["SpeechSelectionButton"]);
@@ -287,6 +374,59 @@ void DatingInterface::physicsUpdate(const float_t& physicsDeltaTime)
 {
 }
 
+void selectContestantDialogueOption(DatingInterface_XData* d)
+{
+    auto& dateProps = globalState::dates[globalState::phase2.dateIdx];
+
+    size_t dialogueOption = (d->menuSelectionIdx < 4 ? d->selectionShuffledIndices[(size_t)d->menuSelectionIdx] : (size_t)d->menuSelectionIdx);
+    bool rejected = false;
+    switch (dialogueOption)
+    {
+        case 0:
+            // VERY_GOOD
+            dateProps.currentTrustLevel += dateProps.veryGoodTLA;
+            break;
+
+        case 1:
+            // GOOD
+            dateProps.currentTrustLevel += dateProps.goodTLA;
+            break;
+
+        case 2:
+            // BAD
+            dateProps.currentTrustLevel += dateProps.badTLA;
+            if (dateProps.currentTrustLevel <= dateProps.harshRejectThreshold)
+                d->gotoRejection = true;
+            break;
+
+        case 3:
+            // VERY_BAD
+            dateProps.currentTrustLevel += dateProps.veryBadTLA;
+            if (dateProps.currentTrustLevel <= dateProps.harshRejectThreshold)
+                d->gotoRejection = true;
+            break;
+
+        case 4:
+            // We're not a very good match.
+            dateProps.currentTrustLevel += dateProps.veryBadTLA;  // Automatically add some VERY_BAD into the trust level with this response!
+            setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE);
+            return;
+
+        case 5:
+            // Will you go on a date with me?
+            setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE);
+            return;
+    }
+
+    std::cout << "NEW TRUST LEVEL: " << dateProps.currentTrustLevel << std::endl;
+
+    // Change stage (not applicable for case 4 & 5).
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT)
+        setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE);
+    else
+        setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE);
+}
+
 void DatingInterface::update(const float_t& deltaTime)
 {
     if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
@@ -313,7 +453,7 @@ void DatingInterface::update(const float_t& deltaTime)
 
         if (input::onKeyJumpPress)
         {
-
+            selectContestantDialogueOption(_data);
         }
     }
 
@@ -357,9 +497,63 @@ void DatingInterface::update(const float_t& deltaTime)
         glm_mat4_identity(_data->contestantThinkingBoxFill->transform);
         glm_translate(_data->contestantThinkingBoxFill->transform, position);
         glm_scale(_data->contestantThinkingBoxFill->transform, scale);
+
+        if (_data->contestantThinkingTimer > _data->thinkingTimerTime)
+        {
+            if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT)
+                _data->menuSelectionIdx = 5;  // Set it to "Will you go on a date with me?" if not selecting a question to ask.
+            selectContestantDialogueOption(_data);  // Select the currently selected option if answering a question.
+        }
     }
 
-    // globalState::phase1.transitionToPhase1FromPhase2();
+    if (_data->stageTransitionTimer > 0.0f)
+    {
+        _data->stageTransitionTimer -= deltaTime;
+        std::cout << "STAGE_TRANS_TIMER: " << _data->stageTransitionTimer << std::endl;
+        if (_data->stageTransitionTimer <= 0.0f)
+        {
+            // Transition!
+            DatingInterface_XData::DATING_STAGE nextStage = DatingInterface_XData::DATING_STAGE::LAST_STAGE;
+            switch (_data->currentStage)
+            {
+                case DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE:
+                        nextStage = DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING;
+                    break;
+
+                case DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE:
+                    nextStage = DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT;
+                    break;
+
+                case DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING:
+                    if (_data->gotoRejection)
+                    {
+                        nextStage = DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT;  // @NOTE: only transition to this when date is going to do an ask, not while answering a date's question (this mirrors the talking pattern of contestant too).
+                        _data->gotoRejection = false;
+                    }
+                    else
+                        nextStage = DatingInterface_XData::DATING_STAGE::DATE_ASK_EXECUTE;
+                    break;
+
+                case DatingInterface_XData::DATING_STAGE::DATE_ASK_EXECUTE:
+                    nextStage = DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT;
+                    break;
+
+                case DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING:
+                    nextStage = DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE;
+                    break;
+
+                case DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE:
+                    nextStage = DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING;
+                    break;
+
+                case DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE:
+                case DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT:
+                    globalState::phase1.transitionToPhase1FromPhase2();
+                    return;
+            }
+            setupStage(_data, nextStage);
+        }
+    }
 }
 
 void DatingInterface::lateUpdate(const float_t& deltaTime)

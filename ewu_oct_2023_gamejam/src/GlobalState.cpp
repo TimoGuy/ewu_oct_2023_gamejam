@@ -65,22 +65,28 @@ namespace globalState
         phase1.finishLineDistance = -182.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
         dates[0] = {
-            .trustLevelIncrement = 1.0f,
-            .trustLevelDecrement = 1.0f,
+            .veryGoodTLA = 2.0f,
+            .goodTLA = 1.0f,
+            .badTLA = -1.0f,
+            .veryBadTLA = -2.0f,
             .harshRejectThreshold = 20.0f,
             .maybeAcceptDateInviteThreshold = 80.0f,
             .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
         };
         dates[1] = {
-            .trustLevelIncrement = 1.0f,
-            .trustLevelDecrement = 1.0f,
+            .veryGoodTLA = 2.0f,
+            .goodTLA = 1.0f,
+            .badTLA = -1.0f,
+            .veryBadTLA = -2.0f,
             .harshRejectThreshold = 20.0f,
             .maybeAcceptDateInviteThreshold = 80.0f,
             .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
         };
         dates[2] = {
-            .trustLevelIncrement = 1.0f,
-            .trustLevelDecrement = 1.0f,
+            .veryGoodTLA = 2.0f,
+            .goodTLA = 1.0f,
+            .badTLA = -1.0f,
+            .veryBadTLA = -2.0f,
             .harshRejectThreshold = 20.0f,
             .maybeAcceptDateInviteThreshold = 80.0f,
             .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
