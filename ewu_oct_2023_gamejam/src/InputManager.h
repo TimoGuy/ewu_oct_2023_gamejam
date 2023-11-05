@@ -15,7 +15,9 @@ namespace input
 	extern ivec2  mouseScrollDelta;
 
 	extern bool
+		onKeyUpPress,
 		keyUpPressed,
+		onKeyDownPress,
 		keyDownPressed,
 		keyLeftPressed,
 		keyRightPressed,

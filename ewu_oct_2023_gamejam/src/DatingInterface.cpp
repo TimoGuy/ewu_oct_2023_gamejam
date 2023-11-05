@@ -114,10 +114,10 @@ void initializePositionings(DatingInterface_XData* d)
     glm_scale(d->contestantSpeechBox->transform, vec3{ 188.0f, 50.0f, 1.0f });
     glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantSpeechBox->tint);
 
-    d->menuSelectingCursor->renderOrder = 0.0f;
+    d->menuSelectingCursor->renderOrder = -1.0f;
     glm_vec4_copy(vec4{ 0.6823529412f, 0.8196078431f, 0.0313725490f, 1.0f }, d->menuSelectingCursor->tint);
 
-    d->buttonStrideY = -120.0f;
+    d->buttonStrideY = -80.0f;
     glm_vec3_copy(vec3{ 0.0f, -40.0f, 0.0f }, d->startingButtonPosition);
 
     vec3 currentPosition;
@@ -127,17 +127,20 @@ void initializePositionings(DatingInterface_XData* d)
         if (i > 0)
             currentPosition[1] += d->buttonStrideY;
 
-        d->buttons[i].background->renderOrder = 0.0f;
-        glm_translate(d->buttons[i].background->transform, currentPosition);
-        glm_scale(d->buttons[i].background->transform, vec3{ 150.0f, 50.0f, 1.0f });
-        glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->buttons[i].background->tint);  // Fade out if disabled!
+        auto& b = d->buttons[i];
+        b.background->renderOrder = 0.0f;
+        glm_translate(b.background->transform, currentPosition);
+        glm_scale(b.background->transform, vec3{ 150.0f, 50.0f, 1.0f });
+        glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, b.background->tint);  // Fade out if disabled!
+        vec3 offset = { -134.0f, 7.0f, 0.0f };
+        glm_vec3_add(currentPosition, offset, b.text->renderPosition);
     }
 }
 
 void setMenuSelectingCursor(DatingInterface_XData* d)
 {
     vec3 pos = {
-        d->startingButtonPosition[0],
+        d->startingButtonPosition[0] - 200.0f,
         d->startingButtonPosition[1] + d->buttonStrideY * d->menuSelectionIdx,
         d->startingButtonPosition[2]
     };
@@ -173,11 +176,14 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
             (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT ||
             d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT);
 
+    bool disableLastTwo = (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT);
     d->menuSelectingCursor->visible = d->contestantThinkingBoxTex->visible;
     for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
     {
         d->buttons[i].text->excludeFromBulkRender = !d->contestantThinkingBoxTex->visible;
         d->buttons[i].background->visible = d->contestantThinkingBoxTex->visible;
+        if (i >= NUM_SELECTION_BUTTONS - 2)
+            d->buttons[i].background->tint[3] = (disableLastTwo ? 0.25f : 1.0f);
     }
 
     d->contestantSpeechBox->visible =
@@ -216,20 +222,23 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
     _data->dateThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBox"]);
     _data->dateThinkingBoxFill = ui::registerUIQuad(nullptr);
     _data->dateThinkingTrailingBubbles = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxTrailLeft"]);
-    _data->dateSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, "message");
+    _data->dateSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "message");
     _data->dateSpeechText->isPositionScreenspace = true;
+    _data->dateSpeechText->scale = 40.0f;
     _data->contestantThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBox"]);
     _data->contestantThinkingBoxFill = ui::registerUIQuad(nullptr);
-    _data->contestantSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, "message");
+    _data->contestantSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "message");
     _data->contestantSpeechText->isPositionScreenspace = true;
+    _data->contestantSpeechText->scale = 40.0f;
     _data->contestantThinkingTrailingBubbles = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxTrailRight"]);
     _data->menuSelectingCursor = ui::registerUIQuad(&engine->_loadedTextures["MenuSelectingCursor"]);
     _data->dateSpeechBox = ui::registerUIQuad(&engine->_loadedTextures["DateSpeechBox"]);
     _data->contestantSpeechBox = ui::registerUIQuad(&engine->_loadedTextures["ContestantSpeechBox"]);
     for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
     {
-        _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, "message");
+        _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "message\nsecondline.");
         _data->buttons[i].text->isPositionScreenspace = true;
+        _data->buttons[i].text->scale = 40.0f;
         _data->buttons[i].background = ui::registerUIQuad(&engine->_loadedTextures["SpeechSelectionButton"]);
     }
 
@@ -270,24 +279,33 @@ void DatingInterface::physicsUpdate(const float_t& physicsDeltaTime)
 
 void DatingInterface::update(const float_t& deltaTime)
 {
-    bool changed = false;
-    if (input::keyUpPressed)
+    if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
+        _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
-        if (_data->menuSelectionIdx > 0)
-            _data->menuSelectionIdx--;
-        else
-            _data->menuSelectionIdx = NUM_SELECTION_BUTTONS - 1;
-        changed = true;
+        bool changed = false;
+        if (input::onKeyUpPress)
+        {
+            if (_data->menuSelectionIdx > 0)
+                _data->menuSelectionIdx--;
+            else
+                _data->menuSelectionIdx = NUM_SELECTION_BUTTONS - 1;
+            changed = true;
+        }
+        if (input::onKeyDownPress)
+        {
+            if (_data->menuSelectionIdx < NUM_SELECTION_BUTTONS - 1)
+                _data->menuSelectionIdx++;
+            else
+                _data->menuSelectionIdx = 0;
+            changed = true;
+        }
+        setMenuSelectingCursor(_data);
+
+        if (input::onKeyJumpPress)
+        {
+
+        }
     }
-    if (input::keyDownPressed)
-    {
-        if (_data->menuSelectionIdx < NUM_SELECTION_BUTTONS - 1)
-            _data->menuSelectionIdx++;
-        else
-            _data->menuSelectionIdx = 0;
-        changed = true;
-    }
-    setMenuSelectingCursor(_data);
 
     // globalState::phase1.transitionToPhase1FromPhase2();
 }

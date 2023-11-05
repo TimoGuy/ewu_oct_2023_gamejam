@@ -616,9 +616,9 @@ void VulkanEngine::renderUIRenderpass(VkCommandBuffer cmd)
 	// Renderpass
 	vkCmdBeginRenderPass(cmd, &renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+	ui::renderUIQuads(cmd);
 	textmesh::renderTextMeshesBulk(cmd);
 	textbox::renderTextbox(cmd);
-	ui::renderUIQuads(cmd);
 
 	vkCmdEndRenderPass(cmd);
 }

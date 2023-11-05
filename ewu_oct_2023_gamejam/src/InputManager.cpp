@@ -18,7 +18,9 @@ extern bool input::RMBPressed = false;
 extern ivec2 input::mouseDelta = { 0, 0 };
 extern ivec2 input::mouseScrollDelta = { 0, 0 };
 
+extern bool input::onKeyUpPress = false;
 extern bool input::keyUpPressed = false;
+extern bool input::onKeyDownPress = false;
 extern bool input::keyDownPressed = false;
 extern bool input::keyLeftPressed = false;
 extern bool input::keyRightPressed = false;
@@ -52,6 +54,8 @@ extern bool input::onKeyF1Press = false;
 
 void input::processInput(bool* isRunning, bool* isWindowMinimized)
 {
+    input::onKeyUpPress = false;
+    input::onKeyDownPress = false;
     input::onLMBPress = false;
     input::onLMBRelease = false;
     input::onRMBPress = false;
@@ -121,7 +125,9 @@ void input::processInput(bool* isRunning, bool* isWindowMinimized)
 			if (e.key.repeat)
 				break;  // @NOTE: ignore key repeats (i.e. when you hold a key down and it repeats the character) (e.g. aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
 
+			if (e.key.keysym.sym == SDLK_w)                                           input::onKeyUpPress = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_w)                                           input::keyUpPressed = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_s)                                           input::onKeyDownPress = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_s)                                           input::keyDownPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_a)                                           input::keyLeftPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_d)                                           input::keyRightPressed = (e.key.type == SDL_KEYDOWN);
