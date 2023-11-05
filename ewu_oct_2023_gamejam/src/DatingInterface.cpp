@@ -35,6 +35,8 @@ struct DatingInterface_XData
     ui::UIQuad* contestantSpeechBox;
     float_t contestantThinkingTimer = 0.0f;
 
+    float_t boxFillXOffset = -160.0f;
+    float_t boxFillAmountMultiplier = 137.0f;
     const float_t thinkingTimerTime = 5.0f;
 
     ui::UIQuad* menuSelectingCursor;
@@ -315,15 +317,36 @@ void DatingInterface::update(const float_t& deltaTime)
         }
     }
 
+    if (_data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING ||
+        _data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
+    {
+        _data->dateThinkingTimer += deltaTime;
+        float_t fillAmount = glm_clamp(_data->dateThinkingTimer, 0.0f, _data->thinkingTimerTime) / _data->thinkingTimerTime;
+        float_t fillAmountReal = 160.0f * fillAmount;
+        vec3 position = {
+            60.0f + _data->boxFillXOffset + fillAmountReal,
+            373.0f,
+            0.0f
+        };
+        vec3 scale = {
+            fillAmountReal,
+            25.0f,
+            1.0f
+        };
+        glm_mat4_identity(_data->dateThinkingBoxFill->transform);
+        glm_translate(_data->dateThinkingBoxFill->transform, position);
+        glm_scale(_data->dateThinkingBoxFill->transform, scale);
+    }
+
     if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
         _data->contestantThinkingTimer += deltaTime;
-        float_t fillAmount = _data->contestantThinkingTimer / _data->thinkingTimerTime;
-        float_t fillAmountReal = 160.0f * fillAmount;
+        float_t fillAmount = glm_clamp(_data->contestantThinkingTimer, 0.0f, _data->thinkingTimerTime) / _data->thinkingTimerTime;
+        float_t fillAmountReal = _data->boxFillAmountMultiplier * fillAmount;
         vec3 position = {
-            60.0f - fillAmountReal,
-            373.0f,
+            310.0f + _data->boxFillXOffset + fillAmountReal,
+            140.0f,
             0.0f
         };
         vec3 scale = {
@@ -334,12 +357,6 @@ void DatingInterface::update(const float_t& deltaTime)
         glm_mat4_identity(_data->contestantThinkingBoxFill->transform);
         glm_translate(_data->contestantThinkingBoxFill->transform, position);
         glm_scale(_data->contestantThinkingBoxFill->transform, scale);
-    }
-
-    if (_data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING ||
-        _data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
-    {
-        _data->dateThinkingTimer += deltaTime;
     }
 
     // globalState::phase1.transitionToPhase1FromPhase2();
@@ -453,6 +470,9 @@ void DatingInterface::renderImGui()
         imguiUIQuad("buttons[" + std::to_string(i) + "].background", _data->buttons[i].background);
         imguiTextMesh("buttons[" + std::to_string(i) + "].text", _data->buttons[i].text);
     }
+
+    ImGui::DragFloat("boxFillXOffset", &_data->boxFillXOffset);
+    ImGui::DragFloat("boxFillAmountMultiplier", &_data->boxFillAmountMultiplier);
 }
 
 void DatingInterface::activate(size_t dateIdx)
