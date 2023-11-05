@@ -434,9 +434,9 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
             if (dateProps.currentTrustLevel < dateProps.maybeAcceptDateInviteThreshold)
                 d->dateProcessingBeingAskedOut = 1;
             else if (dateProps.currentTrustLevel < dateProps.acceptDateInviteThreshold)
-                d->dateProcessingBeingAskedOut = (rng::randomReal() < 0.5f ? 1 : 2);
+                d->dateProcessingBeingAskedOut = (rng::randomReal() > 0.5f ? 1 : 2);
             else
-                d->dateProcessingBeingAskedOut = (rng::randomReal() < 0.9f ? 1 : 2);
+                d->dateProcessingBeingAskedOut = (rng::randomReal() > 0.9f ? 1 : 2);
             // d->dateProcessingBeingAskedOut = 2;  @DEBUG
             setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE);
             return;
