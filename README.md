@@ -88,7 +88,7 @@
         - [ ] Press X to set off the trap.
         - [ ] Move to next open booby trap operator booth.
 
-- [ ] Phase 3: "Grab hand speed date"
+- [x] Phase 3: "Grab hand speed date"
     - [x] Create render texture that is the screenspace size. This is "Freeze Frame Render Texture".
         - [x] Blit it
         - [x] Blit it before it gets tonemapped.
@@ -98,17 +98,20 @@
         > See the implementation in Textbox.h/.cpp
         - [x] Image quad.
         - [x] Color quad.
-    - [ ] 4 directions of input lead to different dialog options
-        - [ ] Bottom one is always "Will you go on a date with me?"
+    - [x] 4 directions of input lead to different dialog options
+        - [x] Bottom one is always "Will you go on a date with me?"
             - NOTE: never ask this on the first one bc it's supposed to be a pick-up line (but you CAN)
-        - [ ] Pressing bad line will get contestant rejected, sending back to Phase 2
-        - [ ] Pressing good line will get a good response from Date, and another set of options.
-        - [ ] Pool of dialogue from Date and options for dialogue for player.
-    - [ ] "I don't think we're right for each other."
-        - [ ] Ends the dating interface.
-    - [ ] "Will you go on a date with me?"
-        - [ ] Random amount of thinking (very very soon and it's immediate NO. Early and it's very long, later and it's short (yes, there can be a short "no thanks"))
+        - [x] Pressing bad line will get contestant rejected, sending back to Phase 2
+        - [x] Pressing good line will get a good response from Date, and another set of options.
+        - [x] Pool of dialogue from Date and options for dialogue for player.
+    - [x] "I don't think we're right for each other."
+        - [x] Ends the dating interface.
+    - [x] "Will you go on a date with me?"
+        - [x] Random amount of thinking (very very soon and it's immediate NO. Early and it's very long, later and it's short (yes, there can be a short "no thanks"))
     > NOTE: Only the player enters phase 3. Other contestants just talk for a bit, then it results in either getting rejected after a random amt of time or hearing the contestant pop the question, Date thinks for random amt of time and then reject or accept.
+
+- [ ] Game over and game win screens
+    - [ ] Correctly shows the correct date pic for the game win screens.
 
 How do we handle if a contestant other than the player gets a date success?
     GAME OVER, you LOSE, type deal.
