@@ -62,6 +62,7 @@ struct DatingInterface_XData
     };
 
     bool gotoRejection = false;
+    int8_t dateProcessingBeingAskedOut = 0;  // 0: inactive | 1: rejects date invite | 2: accepts date invite.
 
     float_t stageTransitionTimer = -1.0f;  // This works by counting down if > 0.0, and if the timer goes <= 0.0, then set the next stage via some state machine-like thing.
     enum class DATING_STAGE
@@ -271,13 +272,29 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         );
         d->stageTransitionTimer = 2.0f;
     }
+    if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ACCEPT_DATE_INVITE)
+    {
+        textmesh::regenerateTextMeshMesh(
+            d->dateSpeechText,
+            "Yes. I would love to."
+        );
+        d->stageTransitionTimer = 3.0f;
+    }
 
     // Setup date thinkings.
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
     {
-        textmesh::regenerateTextMeshMesh(d->dateSpeechText, "INSERT RESPONSE/ASK RIGHT HERE!");
-        d->stageTransitionTimer = rng::randomRealRange(0.5f, d->thinkingTimerTime);
+        if (d->dateProcessingBeingAskedOut == 0)
+        {
+            textmesh::regenerateTextMeshMesh(d->dateSpeechText, "INSERT RESPONSE/ASK RIGHT HERE!");
+            d->stageTransitionTimer = rng::randomRealRange(0.5f, d->thinkingTimerTime);
+        }
+        else
+        {
+            auto& dateProps = globalState::dates[globalState::phase2.dateIdx];
+            d->stageTransitionTimer = rng::randomRealRange(dateProps.acceptDateInviteWaitTimeRange[0], dateProps.acceptDateInviteWaitTimeRange[1]);
+        }
     }
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_EXECUTE ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE)
@@ -414,6 +431,13 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
 
         case 5:
             // Will you go on a date with me?
+            if (dateProps.currentTrustLevel < dateProps.maybeAcceptDateInviteThreshold)
+                d->dateProcessingBeingAskedOut = 1;
+            else if (dateProps.currentTrustLevel < dateProps.acceptDateInviteThreshold)
+                d->dateProcessingBeingAskedOut = (rng::randomReal() < 0.5f ? 1 : 2);
+            else
+                d->dateProcessingBeingAskedOut = (rng::randomReal() < 0.9f ? 1 : 2);
+            // d->dateProcessingBeingAskedOut = 2;  @DEBUG
             setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE);
             return;
     }
@@ -461,8 +485,8 @@ void DatingInterface::update(const float_t& deltaTime)
         _data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
     {
         _data->dateThinkingTimer += deltaTime;
-        float_t fillAmount = glm_clamp(_data->dateThinkingTimer, 0.0f, _data->thinkingTimerTime) / _data->thinkingTimerTime;
-        float_t fillAmountReal = 160.0f * fillAmount;
+        float_t fillAmount = _data->dateThinkingTimer / _data->thinkingTimerTime;
+        float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
             60.0f + _data->boxFillXOffset + fillAmountReal,
             373.0f,
@@ -482,8 +506,8 @@ void DatingInterface::update(const float_t& deltaTime)
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
         _data->contestantThinkingTimer += deltaTime;
-        float_t fillAmount = glm_clamp(_data->contestantThinkingTimer, 0.0f, _data->thinkingTimerTime) / _data->thinkingTimerTime;
-        float_t fillAmountReal = _data->boxFillAmountMultiplier * fillAmount;
+        float_t fillAmount = _data->contestantThinkingTimer / _data->thinkingTimerTime;
+        float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
             310.0f + _data->boxFillXOffset + fillAmountReal,
             140.0f,
@@ -517,7 +541,8 @@ void DatingInterface::update(const float_t& deltaTime)
             switch (_data->currentStage)
             {
                 case DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE:
-                        nextStage = DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING;
+                case DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE:
+                    nextStage = DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING;
                     break;
 
                 case DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE:
@@ -539,7 +564,18 @@ void DatingInterface::update(const float_t& deltaTime)
                     break;
 
                 case DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING:
-                    nextStage = DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE;
+                    if (_data->dateProcessingBeingAskedOut == 0)
+                    {
+                        nextStage = DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE;
+                    }
+                    else
+                    {
+                        if (_data->dateProcessingBeingAskedOut == 1)
+                            nextStage = DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT;
+                        else if (_data->dateProcessingBeingAskedOut == 2)
+                            nextStage = DatingInterface_XData::DATING_STAGE::DATE_ACCEPT_DATE_INVITE;
+                        _data->dateProcessingBeingAskedOut = 0;  // Reset.
+                    }
                     break;
 
                 case DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE:
@@ -549,6 +585,10 @@ void DatingInterface::update(const float_t& deltaTime)
                 case DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE:
                 case DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT:
                     globalState::phase1.transitionToPhase1FromPhase2();
+                    return;
+                
+                case DatingInterface_XData::DATING_STAGE::DATE_ACCEPT_DATE_INVITE:
+                    globalState::gotoWinGame();
                     return;
             }
             setupStage(_data, nextStage);
@@ -678,6 +718,8 @@ void DatingInterface::activate(size_t dateIdx)
     Entity::_enableLateUpdate = true;
 
     _data->dateIdx = dateIdx;
+    _data->gotoRejection = false;
+    _data->dateProcessingBeingAskedOut = 0;
     setupStage(_data, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT);
 }
 

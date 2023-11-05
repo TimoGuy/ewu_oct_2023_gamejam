@@ -46,6 +46,7 @@ namespace globalState
 
     void resetGameState();
     void startNewGame();
+    void gotoWinGame();
 
     struct Phase0
     {
@@ -171,9 +172,9 @@ namespace globalState
         // Depends on how "nice" the date is (doesn't mutate).
         // If trust level is >= the "maybe" value, then the date waits.
         // Within the "maybe" range, the acceptance rate is 50%. Within
-        // the "accept" range, the acceptance rate is 100%.
+        // the "accept" range, the acceptance rate is 90%.
         float_t maybeAcceptDateInviteThreshold = 80.0f;
-        float_t acceptDateInviteThreshold = 100.0f;  // 100% chance of accepting the date, but wait is still required (player shouldn't know that there is a 100% range).
+        float_t acceptDateInviteThreshold = 100.0f;  // 90% chance of accepting the date, but wait is still required (player shouldn't know that there is a 90% range).
         vec2    acceptDateInviteWaitTimeRange = { 2.0f, 6.0f };  // Choose random value in this range.
     };
     extern DateProps dates[NUM_CONTESTANTS];  // Equal number of dates to number of contestants.

@@ -65,31 +65,34 @@ namespace globalState
         phase1.finishLineDistance = -182.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
         dates[0] = {
-            .veryGoodTLA = 2.0f,
-            .goodTLA = 1.0f,
-            .badTLA = -1.0f,
-            .veryBadTLA = -2.0f,
-            .harshRejectThreshold = 20.0f,
-            .maybeAcceptDateInviteThreshold = 80.0f,
-            .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
+            .veryGoodTLA = 40.0f,
+            .goodTLA = 20.0f,
+            .badTLA = -20.0f,
+            .veryBadTLA = -40.0f,
+            .harshRejectThreshold = 40.0f,
+            .maybeAcceptDateInviteThreshold = 50.0f,
+            .acceptDateInviteThreshold = 90.0f,
+            .acceptDateInviteWaitTimeRange = { 4.0f, 8.0f },
         };
         dates[1] = {
-            .veryGoodTLA = 2.0f,
-            .goodTLA = 1.0f,
-            .badTLA = -1.0f,
-            .veryBadTLA = -2.0f,
-            .harshRejectThreshold = 20.0f,
-            .maybeAcceptDateInviteThreshold = 80.0f,
-            .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
+            .veryGoodTLA = 40.0f,
+            .goodTLA = 20.0f,
+            .badTLA = -20.0f,
+            .veryBadTLA = -40.0f,
+            .harshRejectThreshold = 40.0f,
+            .maybeAcceptDateInviteThreshold = 50.0f,
+            .acceptDateInviteThreshold = 90.0f,
+            .acceptDateInviteWaitTimeRange = { 4.0f, 8.0f },
         };
         dates[2] = {
-            .veryGoodTLA = 2.0f,
-            .goodTLA = 1.0f,
-            .badTLA = -1.0f,
-            .veryBadTLA = -2.0f,
-            .harshRejectThreshold = 20.0f,
-            .maybeAcceptDateInviteThreshold = 80.0f,
-            .acceptDateInviteWaitTimeRange = { 2.0f, 6.0f },
+            .veryGoodTLA = 40.0f,
+            .goodTLA = 20.0f,
+            .badTLA = -20.0f,
+            .veryBadTLA = -40.0f,
+            .harshRejectThreshold = 40.0f,
+            .maybeAcceptDateInviteThreshold = 50.0f,
+            .acceptDateInviteThreshold = 90.0f,
+            .acceptDateInviteWaitTimeRange = { 4.0f, 8.0f },
         };
     }
 
@@ -99,6 +102,11 @@ namespace globalState
         phase0.transitionToPhase0(false);
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
+    }
+
+    void gotoWinGame()
+    {
+        std::cout << "YOU WON THE GAME CONGRATULATIONS!!!!" << std::endl;
     }
 
     void Phase0::setDateDummyPosition(size_t dateIdx, vec3 position)
