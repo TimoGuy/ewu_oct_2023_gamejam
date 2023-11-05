@@ -26,12 +26,16 @@ struct DatingInterface_XData
     ui::UIQuad* dateThinkingTrailingBubbles;
     textmesh::TextMesh* dateSpeechText = nullptr;
     ui::UIQuad* dateSpeechBox;
+    float_t dateThinkingTimer = 0.0f;
 
     ui::UIQuad* contestantThinkingBoxTex;
     ui::UIQuad* contestantThinkingBoxFill;
     ui::UIQuad* contestantThinkingTrailingBubbles;
     textmesh::TextMesh* contestantSpeechText = nullptr;
     ui::UIQuad* contestantSpeechBox;
+    float_t contestantThinkingTimer = 0.0f;
+
+    const float_t thinkingTimerTime = 5.0f;
 
     ui::UIQuad* menuSelectingCursor;
 
@@ -162,6 +166,8 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         d->dateThinkingTrailingBubbles->visible =
             (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING ||
             d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING);
+    if (d->dateThinkingBoxFill->visible)
+        d->dateThinkingTimer = 0.0f;
 
     d->dateSpeechBox->visible =
         (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE ||
@@ -175,6 +181,8 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         d->contestantThinkingTrailingBubbles->visible =
             (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT ||
             d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT);
+    if (d->contestantThinkingBoxFill->visible)
+        d->contestantThinkingTimer = 0.0f;
 
     bool disableLastTwo = (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT);
     d->menuSelectingCursor->visible = d->contestantThinkingBoxTex->visible;
@@ -305,6 +313,33 @@ void DatingInterface::update(const float_t& deltaTime)
         {
 
         }
+    }
+
+    if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
+        _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
+    {
+        _data->contestantThinkingTimer += deltaTime;
+        float_t fillAmount = _data->contestantThinkingTimer / _data->thinkingTimerTime;
+        float_t fillAmountReal = 160.0f * fillAmount;
+        vec3 position = {
+            60.0f - fillAmountReal,
+            373.0f,
+            0.0f
+        };
+        vec3 scale = {
+            fillAmountReal,
+            25.0f,
+            1.0f
+        };
+        glm_mat4_identity(_data->contestantThinkingBoxFill->transform);
+        glm_translate(_data->contestantThinkingBoxFill->transform, position);
+        glm_scale(_data->contestantThinkingBoxFill->transform, scale);
+    }
+
+    if (_data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING ||
+        _data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
+    {
+        _data->dateThinkingTimer += deltaTime;
     }
 
     // globalState::phase1.transitionToPhase1FromPhase2();
