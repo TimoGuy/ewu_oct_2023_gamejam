@@ -4056,7 +4056,7 @@ void VulkanEngine::initDescriptors()    // @NOTE: don't destroy and then recreat
 	//
 	// Text Mesh Fonts
 	//
-	textmesh::loadFontSDF("res/textures/font_sdf_rgba.png", "res/font.fnt", "defaultFont");
+	textmesh::loadFontSDF("res/textures/font_sdf_timofont.png", "res/timofont.fnt", "defaultFont");
 
 	physengine::initDebugVisDescriptors(this);
 }

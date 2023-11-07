@@ -218,6 +218,8 @@ namespace textmesh
 				if (tf.fontChars[charid].width == 0)
 					tf.fontChars[charid].width = 36;
 			}
+
+			// @TODO: load in kerning data too.
 		}
 	}
 
@@ -241,8 +243,9 @@ namespace textmesh
 
 		// Upload font settings
 		GPUSDFFontSettings fontSettings = {  // @HARDCODE: for now it's default settings only, but catch me!
+			.fillColor = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f, 0.0f },
 			.outlineColor = { 26 / 255.0f, 102 / 255.0f, 50 / 255.0f, 0.0f },
-			.outlineWidth = 0.6f,
+			.outlineWidth = 0.55f,
 			.outline = (float_t)true,
 		};
 		tf.fontSettingsBuffer = engine->createBuffer(sizeof(GPUSDFFontSettings), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
@@ -309,9 +312,9 @@ namespace textmesh
 
 			const BMChar* charInfo = &tf.fontChars[(int32_t)text[i]];
 
-			float_t charw = ((float_t)(charInfo->width) / 36.0f);
+			float_t charw = ((float_t)(charInfo->width) / 32.0f);
 			float_t dimx = 1.0f * charw;
-			float_t charh = ((float_t)(charInfo->height) / 36.0f);
+			float_t charh = ((float_t)(charInfo->height) / 32.0f);
 			float_t dimy = 1.0f * charh;
 
 			float_t us = charInfo->x / w;
@@ -319,8 +322,8 @@ namespace textmesh
 			float_t ts = charInfo->y / w;
 			float_t te = (charInfo->y + charInfo->height) / w;
 
-			float_t xo = charInfo->xoffset / 36.0f;
-			float_t yo = charInfo->yoffset / 36.0f;
+			float_t xo = charInfo->xoffset / 32.0f;
+			float_t yo = 1.0f - (charInfo->yoffset / 32.0f);
 
 			posy = yo + (numLines - 1) * 1.0f;
 
@@ -336,7 +339,7 @@ namespace textmesh
 			}
 			indexOffset += 4;
 
-			float_t advance = ((float_t)(charInfo->xadvance) / 36.0f);
+			float_t advance = ((float_t)(charInfo->xadvance) / 32.0f);
 			posx += advance;
 			width = std::max(width, posx);
 		}

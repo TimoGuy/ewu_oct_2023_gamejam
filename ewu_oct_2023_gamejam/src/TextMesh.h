@@ -72,6 +72,7 @@ namespace textmesh
 
 	struct GPUSDFFontSettings
 	{
+		vec4 fillColor;
 		vec4 outlineColor;
 		float_t outlineWidth;
 		float_t outline;  // Boolean

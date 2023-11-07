@@ -38,7 +38,8 @@ struct DatingInterface_XData
 
     float_t boxFillXOffset = -160.0f;
     float_t boxFillAmountMultiplier = 137.0f;
-    const float_t thinkingTimerTime = 5.0f;
+    const float_t contestantThinkingTimerTime = 10.0f;
+    const float_t dateThinkingTimerTime = 5.0f;
 
     struct SelectionButton
     {
@@ -288,7 +289,7 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         if (d->dateProcessingBeingAskedOut == 0)
         {
             textmesh::regenerateTextMeshMesh(d->dateSpeechText, "INSERT RESPONSE/ASK RIGHT HERE!");
-            d->stageTransitionTimer = rng::randomRealRange(0.5f, d->thinkingTimerTime);
+            d->stageTransitionTimer = rng::randomRealRange(0.5f, d->dateThinkingTimerTime);
         }
         else
         {
@@ -485,7 +486,7 @@ void DatingInterface::update(const float_t& deltaTime)
         _data->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING)
     {
         _data->dateThinkingTimer += deltaTime;
-        float_t fillAmount = _data->dateThinkingTimer / _data->thinkingTimerTime;
+        float_t fillAmount = _data->dateThinkingTimer / _data->dateThinkingTimerTime;
         float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
             60.0f + _data->boxFillXOffset + fillAmountReal,
@@ -506,7 +507,7 @@ void DatingInterface::update(const float_t& deltaTime)
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
         _data->contestantThinkingTimer += deltaTime;
-        float_t fillAmount = _data->contestantThinkingTimer / _data->thinkingTimerTime;
+        float_t fillAmount = _data->contestantThinkingTimer / _data->contestantThinkingTimerTime;
         float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
             310.0f + _data->boxFillXOffset + fillAmountReal,
@@ -522,10 +523,8 @@ void DatingInterface::update(const float_t& deltaTime)
         glm_translate(_data->contestantThinkingBoxFill->transform, position);
         glm_scale(_data->contestantThinkingBoxFill->transform, scale);
 
-        if (_data->contestantThinkingTimer > _data->thinkingTimerTime)
+        if (_data->contestantThinkingTimer > _data->contestantThinkingTimerTime)
         {
-            if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT)
-                _data->menuSelectionIdx = 5;  // Set it to "Will you go on a date with me?" if not selecting a question to ask.
             selectContestantDialogueOption(_data);  // Select the currently selected option if answering a question.
         }
     }

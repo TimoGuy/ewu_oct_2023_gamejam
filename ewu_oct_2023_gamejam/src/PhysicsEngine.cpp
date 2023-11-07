@@ -1870,10 +1870,8 @@ namespace physengine
         glm_vec3_copy(pt2, dvl.pt2);
         dvl.type = type;
 
-        // @DEBUG: @NOCHECKIN: turn off debug vis lines.
-        //                     This should definitely be its own switch/button in imgui.
-        // std::lock_guard<std::mutex> lg(mutateDebugVisLines);
-        // debugVisLines.push_back(dvl);
+        std::lock_guard<std::mutex> lg(mutateDebugVisLines);
+        debugVisLines.push_back(dvl);
     }
 
     void renderImguiPerformanceStats()
@@ -1901,9 +1899,9 @@ namespace physengine
 
         const VkDeviceSize offsets[1] = { 0 };
 
-        // Draw capsules
         if (engine->generateCollisionDebugVisualization)
         {
+            // Draw capsules
             vkCmdBindVertexBuffers(cmd, 0, 1, &capsuleVisVertexBuffer._buffer, offsets);
             for (size_t i = 0; i < numCapsCreated; i++)
             {
@@ -1920,57 +1918,57 @@ namespace physengine
 
                 vkCmdDraw(cmd, capsuleVisVertexCount, 1, 0, 0);
             }
-        }
 
-        // Draw lines
-        // @NOTE: draw all lines all the time, bc `generateCollisionDebugVisualization` controls creation of the lines (when doing a raycast only), not the drawing.
-        std::vector<DebugVisLine> visLinesCopy;
-        {
-            // Copy debug vis lines so locking time is minimal.
-            std::lock_guard<std::mutex> lg(mutateDebugVisLines);
-            visLinesCopy = debugVisLines;
-        }
-        vkCmdBindVertexBuffers(cmd, 0, 1, &lineVisVertexBuffer._buffer, offsets);
-        for (DebugVisLine& dvl : visLinesCopy)
-        {
-            GPUVisInstancePushConst pc = {};
-            switch (dvl.type)
+            // Draw lines
+            // @NOTE: draw all lines all the time, bc `generateCollisionDebugVisualization` controls creation of the lines (when doing a raycast only), not the drawing.
+            std::vector<DebugVisLine> visLinesCopy;
             {
-                case PURPTEAL:
-                    glm_vec4_copy(vec4{ 0.75f, 0.0f, 1.0f, 1.0f }, pc.color1);
-                    glm_vec4_copy(vec4{ 0.0f, 0.75f, 1.0f, 1.0f }, pc.color2);
-                    break;
-
-                case AUDACITY:
-                    glm_vec4_copy(vec4{ 0.0f, 0.1f, 0.5f, 1.0f }, pc.color1);
-                    glm_vec4_copy(vec4{ 0.0f, 0.25f, 1.0f, 1.0f }, pc.color2);
-                    break;
-
-                case SUCCESS:
-                    glm_vec4_copy(vec4{ 0.1f, 0.1f, 0.1f, 1.0f }, pc.color1);
-                    glm_vec4_copy(vec4{ 0.0f, 1.0f, 0.7f, 1.0f }, pc.color2);
-                    break;
-
-                case VELOCITY:
-                    glm_vec4_copy(vec4{ 0.75f, 0.2f, 0.1f, 1.0f }, pc.color1);
-                    glm_vec4_copy(vec4{ 1.0f, 0.0f, 0.0f, 1.0f }, pc.color2);
-                    break;
-
-                case KIKKOARMY:
-                    glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, pc.color1);
-                    glm_vec4_copy(vec4{ 0.0f, 0.25f, 0.0f, 1.0f }, pc.color2);
-                    break;
-
-                case YUUJUUFUDAN:
-                    glm_vec4_copy(vec4{ 0.69f, 0.69f, 0.69f, 1.0f }, pc.color1);
-                    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, pc.color2);
-                    break;
+                // Copy debug vis lines so locking time is minimal.
+                std::lock_guard<std::mutex> lg(mutateDebugVisLines);
+                visLinesCopy = debugVisLines;
             }
-            glm_vec4(dvl.pt1, 0.0f, pc.pt1);
-            glm_vec4(dvl.pt2, 0.0f, pc.pt2);
-            vkCmdPushConstants(cmd, debugVisPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUVisInstancePushConst), &pc);
+            vkCmdBindVertexBuffers(cmd, 0, 1, &lineVisVertexBuffer._buffer, offsets);
+            for (DebugVisLine& dvl : visLinesCopy)
+            {
+                GPUVisInstancePushConst pc = {};
+                switch (dvl.type)
+                {
+                    case PURPTEAL:
+                        glm_vec4_copy(vec4{ 0.75f, 0.0f, 1.0f, 1.0f }, pc.color1);
+                        glm_vec4_copy(vec4{ 0.0f, 0.75f, 1.0f, 1.0f }, pc.color2);
+                        break;
 
-            vkCmdDraw(cmd, lineVisVertexCount, 1, 0, 0);
+                    case AUDACITY:
+                        glm_vec4_copy(vec4{ 0.0f, 0.1f, 0.5f, 1.0f }, pc.color1);
+                        glm_vec4_copy(vec4{ 0.0f, 0.25f, 1.0f, 1.0f }, pc.color2);
+                        break;
+
+                    case SUCCESS:
+                        glm_vec4_copy(vec4{ 0.1f, 0.1f, 0.1f, 1.0f }, pc.color1);
+                        glm_vec4_copy(vec4{ 0.0f, 1.0f, 0.7f, 1.0f }, pc.color2);
+                        break;
+
+                    case VELOCITY:
+                        glm_vec4_copy(vec4{ 0.75f, 0.2f, 0.1f, 1.0f }, pc.color1);
+                        glm_vec4_copy(vec4{ 1.0f, 0.0f, 0.0f, 1.0f }, pc.color2);
+                        break;
+
+                    case KIKKOARMY:
+                        glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, pc.color1);
+                        glm_vec4_copy(vec4{ 0.0f, 0.25f, 0.0f, 1.0f }, pc.color2);
+                        break;
+
+                    case YUUJUUFUDAN:
+                        glm_vec4_copy(vec4{ 0.69f, 0.69f, 0.69f, 1.0f }, pc.color1);
+                        glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, pc.color2);
+                        break;
+                }
+                glm_vec4(dvl.pt1, 0.0f, pc.pt1);
+                glm_vec4(dvl.pt2, 0.0f, pc.pt2);
+                vkCmdPushConstants(cmd, debugVisPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUVisInstancePushConst), &pc);
+
+                vkCmdDraw(cmd, lineVisVertexCount, 1, 0, 0);
+            }
         }
     }
 #endif
