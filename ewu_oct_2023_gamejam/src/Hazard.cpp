@@ -5,6 +5,7 @@
 #include "RenderObject.h"
 #include "EntityManager.h"
 #include "DataSerialization.h"
+#include "RandomNumberGenerator.h"
 #include "PhysicsEngine.h"
 #include "VkglTFModel.h"
 #include "imgui/imgui.h"
@@ -22,9 +23,10 @@ struct Hazard_XData
     vec3 position;
     int8_t hazardType = -1;
 
-    bool setOffTrigger = false;
     int32_t hazardTimer = -1;
     bool isHazardAttacking = false;
+
+    float_t hazardTriggerXOffset;
 };
 
 struct HazardHitscanData
@@ -70,7 +72,7 @@ void loadRenderObjForHazard(Hazard_XData* d, Hazard* _this, const std::string& m
     glm_translate(d->renderObj->transformMatrix, d->position);
 
     versor quatIdentity = GLM_QUAT_IDENTITY_INIT;
-    d->dangerTriggerBodyId = physengine::createBoxColliderBody(myGuid, d->position, quatIdentity, vec3{ 0.5f, 5.0f, 10.0f }, true);
+    d->dangerTriggerBodyId = physengine::createBoxColliderBody(myGuid, d->position, quatIdentity, vec3{ 0.05f, 5.0f, 10.0f }, true);
 }
 
 Hazard::Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) : Entity(em, ds), _data(new Hazard_XData())
@@ -83,6 +85,10 @@ Hazard::Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) 
 
     if (ds)
         load(*ds);
+
+    constexpr float_t MIDPOINT = 2.0f;  // 2.0 is guarateed to fall on character.
+    constexpr float_t SPREAD = 3.0f;
+    _data->hazardTriggerXOffset = rng::randomRealRange(MIDPOINT - SPREAD, MIDPOINT + SPREAD);
 
     loadRenderObjForHazard(_data, this, getGUID());
 
@@ -99,11 +105,21 @@ Hazard::~Hazard()
 
 void Hazard::physicsUpdate(const float_t& physicsDeltaTime)
 {
-    if (_data->setOffTrigger)
+    if (_data->hazardTimer < 0)
     {
-        _data->hazardTimer = 0;
-        _data->renderObj->animator->setTrigger("goto_set_off");
-        _data->setOffTrigger = false;
+        // Visualize
+        constexpr float_t lineExtent = 5.0f;
+        vec3 p1, p2;
+        glm_vec3_add(_data->position, vec3{ _data->hazardTriggerXOffset, 0.0f, -lineExtent }, p1);
+        glm_vec3_add(_data->position, vec3{ _data->hazardTriggerXOffset, 0.0f,  lineExtent }, p2);
+        physengine::drawDebugVisLine(p1, p2, physengine::DebugVisLineType::VELOCITY);
+
+        // Trigger hazard.
+        if ((*globalState::playerPositionRef)[0] < _data->position[0] + _data->hazardTriggerXOffset)
+        {
+            _data->renderObj->animator->setTrigger("goto_set_off");
+            _data->hazardTimer = 0;
+        }
     }
 
     // Update whether hazard is actively attacking this frame.
@@ -123,8 +139,6 @@ void Hazard::physicsUpdate(const float_t& physicsDeltaTime)
 
 void Hazard::update(const float_t& deltaTime)
 {
-    if (input::onKeyJumpPress)
-        setOff();  // @DEBUG.
 }
 
 void Hazard::lateUpdate(const float_t& deltaTime)
@@ -156,6 +170,7 @@ void Hazard::reportMoved(mat4* matrixMoved)
 
 void Hazard::renderImGui()
 {
+    ImGui::DragFloat("hazardTriggerXOffset", &_data->hazardTriggerXOffset);
 }
 
 void Hazard::reportTriggerActivation(const std::string& entityGUID)
@@ -168,10 +183,4 @@ void Hazard::reportTriggerActivation(const std::string& entityGUID)
     ds.dumpString("msg_stunned_by_hazard");
     DataSerialized dsd = ds.getSerializedData();
     _em->sendMessage(entityGUID, dsd);
-}
-
-void Hazard::setOff()
-{
-    if (_data->hazardTimer < 0)
-        _data->setOffTrigger = true;
 }

@@ -1870,8 +1870,10 @@ namespace physengine
         glm_vec3_copy(pt2, dvl.pt2);
         dvl.type = type;
 
-        std::lock_guard<std::mutex> lg(mutateDebugVisLines);
-        debugVisLines.push_back(dvl);
+        // @DEBUG: @NOCHECKIN: turn off debug vis lines.
+        //                     This should definitely be its own switch/button in imgui.
+        // std::lock_guard<std::mutex> lg(mutateDebugVisLines);
+        // debugVisLines.push_back(dvl);
     }
 
     void renderImguiPerformanceStats()

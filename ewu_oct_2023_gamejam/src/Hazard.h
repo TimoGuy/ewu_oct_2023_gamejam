@@ -27,7 +27,6 @@ public:
     void renderImGui();
 
     void reportTriggerActivation(const std::string& entityGUID);
-    void setOff();
 
 private:
     Hazard_XData* _data;
