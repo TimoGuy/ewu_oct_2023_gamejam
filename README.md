@@ -83,10 +83,7 @@
         - [x] Moves forward (tune by how much)
         - [x] If get hit by booby trap, get stunned for 0.75 seconds (tune).
         - [x] If reach end, go to Phase 1
-    - [ ] Contestant B(s) logic
-        - [ ] Stand at next open booby trap operator booth that is in front of contestant A.
-        - [ ] Press X to set off the trap.
-        - [ ] Move to next open booby trap operator booth.
+    - [x] Set off hazards when player gets near to them (random).
 
 - [x] Phase 3: "Grab hand speed date"
     - [x] Create render texture that is the screenspace size. This is "Freeze Frame Render Texture".
