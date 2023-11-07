@@ -57,6 +57,7 @@ struct CoveredItem_XData
 
 #ifdef _DEVELOP
     bool requestChangeItemModel = false;
+    bool requestChangeItemBody = false;
 #endif
 };
 
@@ -123,6 +124,7 @@ CoveredItem::CoveredItem(EntityManager* em, RenderObjectManager* rom, Camera* ca
         load(*ds);
 
     _data->requestChangeItemModel = true;
+    _data->requestChangeItemBody = true;
     createInteractionROs(_data, this, getGUID());
 }
 
@@ -146,6 +148,24 @@ CoveredItem::~CoveredItem()
 
 void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
 {
+    if (_data->requestChangeItemBody)
+    {
+        // Create collision box.
+        if (!_data->collisionBoxBodyId.IsInvalid())
+            physengine::destroyBody(_data->collisionBoxBodyId);
+        mat4 rotation;
+        glm_euler_zyx(vec3{ 0.0f, _data->yRotation, 0.0f }, rotation);
+        versor rotationV;
+        glm_mat4_quat(rotation, rotationV);
+        _data->collisionBoxBodyId = physengine::createBoxColliderBody(getGUID(), _data->position, rotationV, myItemType(_data).collisionBoxExtent, false);
+
+        _data->requestChangeItemBody = false;
+    }
+
+    // Do not do any physics until collision body is valid.
+    if (_data->collisionBoxBodyId.IsInvalid())
+        return;
+
     // Update position.
     {
         mat4 transform;
@@ -336,15 +356,6 @@ void CoveredItem::update(const float_t& deltaTime)
             { &_data->renderObj }
         );
 
-        // Create collision box.
-        if (!_data->collisionBoxBodyId.IsInvalid())
-            physengine::destroyBody(_data->collisionBoxBodyId);
-        mat4 rotation;
-        glm_euler_zyx(vec3{ 0.0f, _data->yRotation, 0.0f }, rotation);
-        versor rotationV;
-        glm_mat4_quat(rotation, rotationV);
-        _data->collisionBoxBodyId = physengine::createBoxColliderBody(getGUID(), _data->position, rotationV, myItemType(_data).collisionBoxExtent, false);
-
         // Choose uncover time.
         _data->chosenUncoverTime = rng::randomRealRange(myItemType(_data).uncoverTimeMinMax[0], myItemType(_data).uncoverTimeMinMax[1]);
 
@@ -474,11 +485,14 @@ void CoveredItem::renderImGui()
     {
         _data->itemTypeId = (size_t)glm_clamp(iti, 0, CoveredItem_XData::numItemTypes - 1);
         _data->requestChangeItemModel = true;
+        _data->requestChangeItemBody = true;
     }
 
     ImGui::Text("Edit covered item ID props");
     if (ImGui::DragFloat3("collisionBoxExtent", myItemType(_data).collisionBoxExtent, 0.1f, 0.001f, 10.0f))
-        _data->requestChangeItemModel = true;  // To trigger shape getting recreated.
+    {
+        _data->requestChangeItemBody = true;  // To trigger shape getting recreated.
+    }
     ImGui::DragFloat3("interactionOrigin", myItemType(_data).interactionOrigin);
     ImGui::DragFloat("interactionRadius", &myItemType(_data).interactionRadius);
     ImGui::DragFloat("interactionIconYoff", &myItemType(_data).interactionIconYoff);

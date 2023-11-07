@@ -53,7 +53,7 @@ namespace globalState
         // @HARDCODE values.
         // @NOCHECKIN: @TODO: fill in the correct values when creating.
         glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
-        glm_vec2_copy(vec2{ 15.5f, 18.0f }, phase0.spawnBoundsExtent);
+        glm_vec2_copy(vec2{ 13.5f, 16.0f }, phase0.spawnBoundsExtent);
         // phase0.numCoveredItemsToSpawn = 40;  // About 10 per contestant... ish.
         phase0.numCoveredItemsToSpawn = 3;  // About 10 per contestant... ish.
         glm_vec3_copy(vec3{ 243.0f, 0.5f, 20.0f }, phase1.contASpawnPosition);
@@ -427,6 +427,11 @@ namespace globalState
             // phase1.setDateIndex(0);
 
             // Load phase 1.
+            // Delete all covered items from phase 0.
+            for (auto coveredItem : phase0.spawnedCoveredItems)
+                entityManagerRef->destroyEntity(coveredItem);
+            phase0.spawnedCoveredItems.clear();
+
             // Move contestant A and Date to hallway.
             phase1.contACharacter->moreOrLessSpawnAtPosition(phase1.contASpawnPosition);
             phase1.dateCharacter->moreOrLessSpawnAtPosition(phase1.dateSpawnPosition);

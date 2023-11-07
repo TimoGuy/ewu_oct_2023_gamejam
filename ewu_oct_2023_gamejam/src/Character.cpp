@@ -1800,7 +1800,8 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
     //
     if (d->characterType == CHARACTER_TYPE_MONSTER && d->isDateRunningDownHallway)
     {
-        if (d->position[0] < globalState::phase1.getWorldSpaceFinishLine())
+        if (d->position[0] < globalState::phase1.getWorldSpaceFinishLine() ||
+            input::keyBPressed)  // @NOCHECKIN: @DEBUG
         {
             d->isDateRunningDownHallway = false;
 
