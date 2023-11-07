@@ -54,13 +54,13 @@ namespace globalState
         // @NOCHECKIN: @TODO: fill in the correct values when creating.
         glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
         glm_vec2_copy(vec2{ 13.5f, 16.0f }, phase0.spawnBoundsExtent);
-        // phase0.numCoveredItemsToSpawn = 40;  // About 10 per contestant... ish.
-        phase0.numCoveredItemsToSpawn = 3;  // About 10 per contestant... ish.
+        phase0.numCoveredItemsToSpawn = 30;  // About 10 per contestant... ish.
+        // phase0.numCoveredItemsToSpawn = 3;  // @DEBUG
         glm_vec3_copy(vec3{ 243.0f, 0.5f, 20.0f }, phase1.contASpawnPosition);
         glm_vec3_copy(vec3{ 233.0f, 0.5f, 20.0f }, phase1.dateSpawnPosition);
         glm_vec3_copy(vec3{ 243.0f, -1.5f, 12.5f }, phase1.contBSpawnPosition);
         glm_vec3_copy(vec3{ -3.0f, 0.0f, 0.0f }, phase1.contBSpawnStride);
-        phase1.numHazardsToSpawn = 10;
+        phase1.numHazardsToSpawn = 12;
         phase1.hazardStartDistance = -10.0f;
         phase1.finishLineDistance = -182.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
