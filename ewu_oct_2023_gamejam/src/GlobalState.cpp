@@ -61,7 +61,8 @@ namespace globalState
         glm_vec3_copy(vec3{ 243.0f, -1.5f, 12.5f }, phase1.contBSpawnPosition);
         glm_vec3_copy(vec3{ -3.0f, 0.0f, 0.0f }, phase1.contBSpawnStride);
         phase1.numHazardsToSpawn = 12;
-        phase1.hazardStartDistance = -10.0f;
+        phase1.hazardStartDistance = -40.0f;
+        phase1.hazardEndDistance = -150.0f;
         phase1.finishLineDistance = -182.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
         dates[0] = {
@@ -454,9 +455,9 @@ namespace globalState
                 entityManagerRef->destroyEntity(hazard);
             phase1.hazards.clear();
 
-            std::vector<float_t> spawnLocationX;            
+            std::vector<float_t> spawnLocationX;
             for (size_t i = 0; i < phase1.numHazardsToSpawn; i++)
-                spawnLocationX.push_back(rng::randomRealRange(phase1.hazardStartDistance, phase1.finishLineDistance));
+                spawnLocationX.push_back(rng::randomRealRange(phase1.hazardStartDistance, phase1.hazardEndDistance));
             std::sort(spawnLocationX.rbegin(), spawnLocationX.rend());
 
             for (size_t i = 0; i < phase1.numHazardsToSpawn; i++)
@@ -572,6 +573,11 @@ namespace globalState
             glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.hazardStartDistance, 0.0f, -lineExtent }, hazardStartLineP1);
             glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.hazardStartDistance, 0.0f,  lineExtent }, hazardStartLineP2);
             physengine::drawDebugVisLine(hazardStartLineP1, hazardStartLineP2, physengine::DebugVisLineType::PURPTEAL);
+
+            vec3 hazardEndLineP1, hazardEndLineP2;
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.hazardEndDistance, 0.0f, -lineExtent }, hazardEndLineP1);
+            glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.hazardEndDistance, 0.0f,  lineExtent }, hazardEndLineP2);
+            physengine::drawDebugVisLine(hazardEndLineP1, hazardEndLineP2, physengine::DebugVisLineType::PURPTEAL);
 
             vec3 finishLineP1, finishLineP2;
             glm_vec3_add(phase1.contASpawnPosition, vec3{ phase1.finishLineDistance, 0.0f, -lineExtent }, finishLineP1);

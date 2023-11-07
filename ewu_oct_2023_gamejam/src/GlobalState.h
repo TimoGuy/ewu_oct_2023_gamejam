@@ -95,6 +95,7 @@ namespace globalState
         std::vector<Hazard*> hazards;
         size_t               numHazardsToSpawn;
         float_t              hazardStartDistance;
+        float_t              hazardEndDistance;
         float_t              finishLineDistance;
         float_t              contADatePhase2ActivationDistance;
 
