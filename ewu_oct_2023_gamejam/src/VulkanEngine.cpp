@@ -6339,6 +6339,7 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 			ImGui::DragFloat3("contBSpawnPosition", globalState::phase1.contBSpawnPosition, 0.1f);
 			ImGui::DragFloat3("contBSpawnStride", globalState::phase1.contBSpawnStride, 0.1f);
 			ImGui::DragFloat("hazardStartDistance", &globalState::phase1.hazardStartDistance, 0.1f);
+			ImGui::DragFloat("hazardEndDistance", &globalState::phase1.hazardEndDistance, 0.1f);
 			ImGui::DragFloat("finishLineDistance", &globalState::phase1.finishLineDistance, 0.1f);
 		}
 

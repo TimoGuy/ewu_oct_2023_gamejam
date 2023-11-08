@@ -163,7 +163,7 @@ namespace ui
                 VkPushConstantRange{
                     .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
                     .offset = sizeof(textmesh::GPUSDFFontPushConstants),
-                    .size = sizeof(ColorPushConstBlock)
+                    .size = sizeof(UIQuadSettingsConstBlock)
                 },
             },
             { textmesh::gpuUICameraSetLayout, engine->_singleTextureSetLayout },
@@ -263,6 +263,7 @@ namespace ui
             .renderInScreenspace = (float_t)true,
         };
         ColorPushConstBlock cpc = {};
+        UIQuadSettingsConstBlock uqspc = {};
         
         VkPipeline pipeline = texturedQuadPipeline;
         VkPipelineLayout pipelineLayout = texturedQuadPipelineLayout;
@@ -284,13 +285,32 @@ namespace ui
                 prevIsTextured = isTextured;
             }
 
-            glm_mat4_copy(sortedUIQuads[i]->transform, pc.modelMatrix);
-            glm_vec4_copy(sortedUIQuads[i]->tint, cpc.color);
+            glm_vec4_copy(sortedUIQuads[i]->tint, (isTextured ? uqspc.tint : cpc.color));
+
+            glm_mat4_identity(pc.modelMatrix);
+            glm_translate(pc.modelMatrix, sortedUIQuads[i]->position);
+            glm_quat_rotate(pc.modelMatrix, sortedUIQuads[i]->rotation, pc.modelMatrix);
+            glm_scale(pc.modelMatrix, sortedUIQuads[i]->scale);
+
+            if (isTextured)
+            {
+                uqspc.useNineSlicing = (float_t)sortedUIQuads[i]->useNineSlicing;
+                if (sortedUIQuads[i]->useNineSlicing)
+                {
+                    uqspc.nineSlicingBoundX1 = sortedUIQuads[i]->nineSlicingSizeX / sortedUIQuads[i]->scale[0];  // Scaling the nineslicing from units to uv coordinate units.
+                    uqspc.nineSlicingBoundY1 = sortedUIQuads[i]->nineSlicingSizeY / sortedUIQuads[i]->scale[1];
+                    uqspc.nineSlicingBoundX2 = 1.0f - uqspc.nineSlicingBoundX1;
+                    uqspc.nineSlicingBoundY2 = 1.0f - uqspc.nineSlicingBoundY1;
+                }
+            }
 
             if (isTextured)
                 vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &sortedUIQuads[i]->builtTextureSet, 0, nullptr);
             vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(textmesh::GPUSDFFontPushConstants), &pc);
-            vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(textmesh::GPUSDFFontPushConstants), sizeof(ColorPushConstBlock), &cpc);
+            if (isTextured)
+                vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(textmesh::GPUSDFFontPushConstants), sizeof(UIQuadSettingsConstBlock), &uqspc);
+            else
+                vkCmdPushConstants(cmd, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(textmesh::GPUSDFFontPushConstants), sizeof(ColorPushConstBlock), &cpc);
 
             const VkDeviceSize offsets[1] = { 0 };
             vkCmdBindVertexBuffers(cmd, 0, 1, &vertexBuffer._buffer, offsets);

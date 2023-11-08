@@ -31,11 +31,13 @@ struct Hazard_XData
 
 struct HazardHitscanData
 {
+    std::string modelName;
     std::vector<int32_t> triggerActiveTimes;
 };
 HazardHitscanData hazardDatas[] = {
     {
-        .triggerActiveTimes = { 10, 11, 12, }
+        .modelName = "HazardType1",
+        .triggerActiveTimes = { 17, 18, 19, 20, },
     },
 };
 
@@ -44,14 +46,7 @@ void loadRenderObjForHazard(Hazard_XData* d, Hazard* _this, const std::string& m
     if (d->hazardType < 0)
         return;
 
-    std::string modelName;
-    switch (d->hazardType)
-    {
-        case 0:
-            modelName = "HazardType1";
-            break;
-    }
-    vkglTF::Model* model = d->rom->getModel(modelName, _this, [](){});
+    vkglTF::Model* model = d->rom->getModel(hazardDatas[d->hazardType].modelName, _this, [](){});
     std::vector<vkglTF::Animator::AnimatorCallback> callbacks = {
         {
             "SetOffSfx", [&]() {
@@ -86,7 +81,7 @@ Hazard::Hazard(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds) 
     if (ds)
         load(*ds);
 
-    constexpr float_t MIDPOINT = 2.0f;  // 2.0 is guarateed to fall on character.
+    constexpr float_t MIDPOINT = 3.15f;  // 2.0 is guarateed to fall on character.
     constexpr float_t SPREAD = 3.0f;
     _data->hazardTriggerXOffset = rng::randomRealRange(MIDPOINT - SPREAD, MIDPOINT + SPREAD);
 

@@ -91,49 +91,55 @@ void initializePositionings(DatingInterface_XData* d)
     for (size_t i = 0; i < 3; i++)
     {
         d->dateQuads[i]->renderOrder = 10.0f;
-        glm_translate(d->dateQuads[i]->transform, vec3{ -456.0f, 0.0f, 0.0f });
-        glm_scale(d->dateQuads[i]->transform, vec3{ 500.0f, 500.0f, 1.0f });
+        glm_vec3_copy(vec3{ -456.0f, 0.0f, 0.0f }, d->dateQuads[i]->position);
+        glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, d->dateQuads[i]->scale);
     }
 
     d->dateThinkingBoxTex->renderOrder = 0.0f;
-    glm_translate(d->dateThinkingBoxTex->transform, vec3{ 60.0f, 341.0f, 0.0f });
-    glm_scale(d->dateThinkingBoxTex->transform, vec3{ 200.0f, 100.0f, 1.0f });
+    glm_vec3_copy(vec3{ 60.0f, 341.0f, 0.0f }, d->dateThinkingBoxTex->position);
+    glm_vec3_copy(vec3{ 200.0f, 100.0f, 1.0f }, d->dateThinkingBoxTex->scale);
     glm_vec4_copy(vec4{ 0.5647058824f, 0.2f, 0.2f, 1.0f }, d->dateThinkingBoxTex->tint);
 
     d->dateThinkingBoxFill->renderOrder = 1.0f;
-    glm_translate(d->dateThinkingBoxFill->transform, vec3{ -100.0f, 373.0f, 0.0f });
-    glm_scale(d->dateThinkingBoxFill->transform, vec3{ 0.0f, 25.0f, 1.0f });
+    glm_vec3_copy(vec3{ -100.0f, 373.0f, 0.0f }, d->dateThinkingBoxFill->position);
+    glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->dateThinkingBoxFill->scale);
     glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, d->dateThinkingBoxFill->tint);
 
     d->dateThinkingTrailingBubbles->renderOrder = 0.0f;
-    glm_translate(d->dateThinkingTrailingBubbles->transform, vec3{ -101.0f, 276.0f, 0.0f });
-    glm_scale(d->dateThinkingTrailingBubbles->transform, vec3{ 66.0f, 35.0f, 1.0f });
+    glm_vec3_copy(vec3{ -101.0f, 276.0f, 0.0f }, d->dateThinkingTrailingBubbles->position);
+    glm_vec3_copy(vec3{ 66.0f, 35.0f, 1.0f }, d->dateThinkingTrailingBubbles->scale);
     glm_vec4_copy(vec4{ 0.5647058824f, 0.2f, 0.2f, 1.0f }, d->dateThinkingTrailingBubbles->tint);
 
     d->dateSpeechBox->renderOrder = 0.0f;
-    glm_translate(d->dateSpeechBox->transform, vec3{ 31.0f, 373.0f, 0.0f });
-    glm_scale(d->dateSpeechBox->transform, vec3{ 188.0f, 50.0f, 1.0f });
+    glm_vec3_copy(vec3{ 31.0f, 373.0f, 0.0f }, d->dateSpeechBox->position);
+    glm_vec3_copy(vec3{ 188.0f, 50.0f, 1.0f }, d->dateSpeechBox->scale);
+    d->dateSpeechBox->useNineSlicing = true;
+    d->dateSpeechBox->nineSlicingSizeX = 20.0f;
+    d->dateSpeechBox->nineSlicingSizeY = 20.0f;
     glm_vec4_copy(vec4{ 0.5647058824f, 0.2f, 0.2f, 1.0f }, d->dateSpeechBox->tint);
 
     glm_vec3_copy(vec3{ -133.0f, 385.0f, 0.0f }, d->dateSpeechText->renderPosition);
 
     d->contestantThinkingBoxTex->renderOrder = 0.0f;
-    glm_translate(d->contestantThinkingBoxTex->transform, vec3{ 310.0f, 109.0f, 0.0f });
-    glm_scale(d->contestantThinkingBoxTex->transform, vec3{ 200.0f, 100.0f, 1.0f });
+    glm_vec3_copy(vec3{ 310.0f, 109.0f, 0.0f }, d->contestantThinkingBoxTex->position);
+    glm_vec3_copy(vec3{ 200.0f, 100.0f, 1.0f }, d->contestantThinkingBoxTex->scale);
     glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantThinkingBoxTex->tint);
 
     d->contestantThinkingBoxFill->renderOrder = 1.0f;
-    glm_translate(d->contestantThinkingBoxFill->transform, vec3{ 148.0f, 140.0f, 0.0f });
-    glm_scale(d->contestantThinkingBoxFill->transform, vec3{ 0.0f, 25.0f, 1.0f });
+    glm_vec3_copy(vec3{ 148.0f, 140.0f, 0.0f }, d->contestantThinkingBoxFill->position);
+    glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->contestantThinkingBoxFill->scale);
     glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, d->contestantThinkingBoxFill->tint);
 
     d->contestantThinkingTrailingBubbles->renderOrder = 0.0f;
-    glm_translate(d->contestantThinkingTrailingBubbles->transform, vec3{ 456.0f, 39.0f, 0.0f });
-    glm_scale(d->contestantThinkingTrailingBubbles->transform, vec3{ 66.0f, 35.0f, 1.0f });
+    glm_vec3_copy(vec3{ 456.0f, 39.0f, 0.0f }, d->contestantThinkingTrailingBubbles->position);
+    glm_vec3_copy(vec3{ 66.0f, 35.0f, 1.0f }, d->contestantThinkingTrailingBubbles->scale);
 
     d->contestantSpeechBox->renderOrder = 0.0f;
-    glm_translate(d->contestantSpeechBox->transform, vec3{ 292.0f, 142.0f, 0.0f });
-    glm_scale(d->contestantSpeechBox->transform, vec3{ 188.0f, 50.0f, 1.0f });
+    glm_vec3_copy(vec3{ 292.0f, 142.0f, 0.0f }, d->contestantSpeechBox->position);
+    glm_vec3_copy(vec3{ 188.0f, 50.0f, 1.0f }, d->contestantSpeechBox->scale);
+    d->contestantSpeechBox->useNineSlicing = true;
+    d->contestantSpeechBox->nineSlicingSizeX = 20.0f;
+    d->contestantSpeechBox->nineSlicingSizeY = 20.0f;
     glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantSpeechBox->tint);
 
     glm_vec3_copy(vec3{ 122.0f, 148.0f, 0.0f }, d->contestantSpeechText->renderPosition);
@@ -153,8 +159,11 @@ void initializePositionings(DatingInterface_XData* d)
 
         auto& b = d->buttons[i];
         b.background->renderOrder = 0.0f;
-        glm_translate(b.background->transform, currentPosition);
-        glm_scale(b.background->transform, vec3{ 150.0f, 50.0f, 1.0f });
+        glm_vec3_copy(currentPosition, b.background->position);
+        glm_vec3_copy(vec3{ 150.0f, 50.0f, 1.0f }, b.background->scale);
+        b.background->useNineSlicing = true;
+        b.background->nineSlicingSizeX = 20.0f;
+        b.background->nineSlicingSizeY = 20.0f;
         glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, b.background->tint);  // Fade out if disabled!
         vec3 offset = { -134.0f, 7.0f, 0.0f };
         glm_vec3_add(currentPosition, offset, b.text->renderPosition);
@@ -168,9 +177,8 @@ void setMenuSelectingCursor(DatingInterface_XData* d)
         d->startingButtonPosition[1] + d->buttonStrideY * d->menuSelectionIdx,
         d->startingButtonPosition[2]
     };
-    glm_mat4_identity(d->menuSelectingCursor->transform);
-    glm_translate(d->menuSelectingCursor->transform, pos);
-    glm_scale(d->menuSelectingCursor->transform, vec3{ 20.0f, 20.0f, 1.0f });
+    glm_vec3_copy(pos, d->menuSelectingCursor->position);
+    glm_vec3_copy(vec3{ 20.0f, 20.0f, 1.0f }, d->menuSelectingCursor->scale);
 }
 
 void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE newStage)
@@ -498,9 +506,8 @@ void DatingInterface::update(const float_t& deltaTime)
             25.0f,
             1.0f
         };
-        glm_mat4_identity(_data->dateThinkingBoxFill->transform);
-        glm_translate(_data->dateThinkingBoxFill->transform, position);
-        glm_scale(_data->dateThinkingBoxFill->transform, scale);
+        glm_vec3_copy(position, _data->dateThinkingBoxFill->position);
+        glm_vec3_copy(scale, _data->dateThinkingBoxFill->scale);
     }
 
     if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
@@ -519,9 +526,8 @@ void DatingInterface::update(const float_t& deltaTime)
             25.0f,
             1.0f
         };
-        glm_mat4_identity(_data->contestantThinkingBoxFill->transform);
-        glm_translate(_data->contestantThinkingBoxFill->transform, position);
-        glm_scale(_data->contestantThinkingBoxFill->transform, scale);
+        glm_vec3_copy(position, _data->contestantThinkingBoxFill->position);
+        glm_vec3_copy(scale, _data->contestantThinkingBoxFill->scale);
 
         if (_data->contestantThinkingTimer > _data->contestantThinkingTimerTime)
         {
@@ -624,38 +630,28 @@ void imguiUIQuad(const std::string& uiQuadName, ui::UIQuad* uiQuad)
     if (ImGui::TreeNode((uiQuadName + nameSuffix).c_str()))
     {
         ImGui::Checkbox(("visible" + nameSuffix).c_str(), &uiQuad->visible);
-        ImGui::ColorPicker4(("tint" + nameSuffix).c_str(), uiQuad->tint);
-        ImGui::DragFloat(("renderOrder" + nameSuffix).c_str(), &uiQuad->renderOrder);
-        
-        // @COPYPASTA: from VulkanEngine.cpp
+        ImGui::Checkbox(("useNineSlicing" + nameSuffix).c_str(), &uiQuad->useNineSlicing);
+        if (uiQuad->useNineSlicing)
         {
-            vec3 position, eulerAngles, scale;
-            ImGuizmo::DecomposeMatrixToComponents(
-                (const float_t*)*uiQuad->transform,
-                position,
-                eulerAngles,
-                scale
-            );
-
-            bool changed = false;
-            ImGui::Text("Transform");
-            changed |= ImGui::DragFloat3(("Pos" + nameSuffix).c_str(), position);
-            changed |= ImGui::DragFloat3(("Rot" + nameSuffix).c_str(), eulerAngles);
-            changed |= ImGui::DragFloat3(("Sca" + nameSuffix).c_str(), scale);
-            if (changed)
-            {
-                // Recompose the matrix
-                // @TODO: Figure out when to invalidate the cache bc the euler angles will reset!
-                //        Or... maybe invalidating the cache isn't necessary for this window????
-                ImGuizmo::RecomposeMatrixFromComponents(
-                    position,
-                    eulerAngles,
-                    scale,
-                    (float_t*)*uiQuad->transform
-                );
-            }
+            ImGui::DragFloat(("nineSlicingSizeX" + nameSuffix).c_str(), &uiQuad->nineSlicingSizeX);
+            ImGui::DragFloat(("nineSlicingSizeY" + nameSuffix).c_str(), &uiQuad->nineSlicingSizeY);
         }
-        ////////////////////////////////////
+        ImGui::ColorPicker4(("tint" + nameSuffix).c_str(), uiQuad->tint);
+        
+        ImGui::Text("Transform");
+        ImGui::DragFloat3(("Pos" + nameSuffix).c_str(), uiQuad->position);
+        // @TODO: @INCOMPLETE: convert quaternion of the rotation to euler angles, so that they can be edited here!
+        // vec3 eulerAngles;
+        // glm_decompose
+        // if (ImGui::DragFloat3(("Rot" + nameSuffix).c_str(), eulerAngles))
+        // {
+        //     mat4 newRot;
+        //     glm_euler_zyx(eulerAngles, newRot);
+        //     glm_mat4_quat(rotation, rotationV);
+        // }
+        ImGui::DragFloat3(("Sca" + nameSuffix).c_str(), uiQuad->scale);
+
+        ImGui::DragFloat(("renderOrder" + nameSuffix).c_str(), &uiQuad->renderOrder);
 
         ImGui::TreePop();
         ImGui::Separator();

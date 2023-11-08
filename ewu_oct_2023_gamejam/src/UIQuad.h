@@ -17,10 +17,16 @@ namespace ui
     {
         bool visible     = true;
         Texture* texture = nullptr;
-        vec4 tint        = { 1.0f, 1.0f, 1.0f, 1.0f };
-        mat4 transform   = GLM_MAT4_IDENTITY_INIT;
-        float_t renderOrder = 0.0f;
         VkDescriptorSet builtTextureSet;
+        bool useNineSlicing = false;
+        float_t nineSlicingSizeX = 1.0f;
+        float_t nineSlicingSizeY = 1.0f;
+        vec4 tint        = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+        vec3 position = GLM_VEC3_ZERO_INIT;
+        versor rotation = GLM_QUAT_IDENTITY_INIT;
+        vec3 scale = GLM_VEC3_ONE_INIT;
+        float_t renderOrder = 0.0f;
     };
 
     void init(VulkanEngine* engine);

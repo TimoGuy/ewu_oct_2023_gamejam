@@ -61,9 +61,9 @@ namespace globalState
         glm_vec3_copy(vec3{ 243.0f, -1.5f, 12.5f }, phase1.contBSpawnPosition);
         glm_vec3_copy(vec3{ -3.0f, 0.0f, 0.0f }, phase1.contBSpawnStride);
         phase1.numHazardsToSpawn = 12;
-        phase1.hazardStartDistance = -40.0f;
+        phase1.hazardStartDistance = -42.0f;
         phase1.hazardEndDistance = -150.0f;
-        phase1.finishLineDistance = -182.0f;
+        phase1.finishLineDistance = -189.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
         dates[0] = {
             .veryGoodTLA = 40.0f,
