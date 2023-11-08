@@ -45,6 +45,7 @@ struct DatingInterface_XData
     {
         textmesh::TextMesh* text = nullptr;
         ui::UIQuad* background = nullptr;
+        bool disabled = false;
     };
     #define NUM_SELECTION_BUTTONS 6
     SelectionButton buttons[NUM_SELECTION_BUTTONS];
@@ -170,8 +171,20 @@ void initializePositionings(DatingInterface_XData* d)
     }
 }
 
-void setMenuSelectingCursor(DatingInterface_XData* d)
+void setMenuSelectingCursor(DatingInterface_XData* d, int32_t directionOfMovement)
 {
+    // @NOTE: @CODESMELL: this shouldn't be here.
+    while (d->buttons[d->menuSelectionIdx].disabled)
+    {
+        if (d->menuSelectionIdx + directionOfMovement < 0)
+            d->menuSelectionIdx = NUM_SELECTION_BUTTONS - 1;
+        else if (d->menuSelectionIdx + directionOfMovement >= NUM_SELECTION_BUTTONS)
+            d->menuSelectionIdx = 0;
+        else
+            d->menuSelectionIdx += directionOfMovement;
+    }
+    /////////////////////////////////////////////
+
     vec3 pos = {
         d->startingButtonPosition[0] - 200.0f,
         d->startingButtonPosition[1] + d->buttonStrideY * d->menuSelectionIdx,
@@ -214,13 +227,15 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         d->contestantThinkingTimer = 0.0f;
 
     bool disableLastTwo = (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT);
+    d->buttons[NUM_SELECTION_BUTTONS - 2].disabled = disableLastTwo;
+    d->buttons[NUM_SELECTION_BUTTONS - 1].disabled = disableLastTwo;
+
     d->menuSelectingCursor->visible = d->contestantThinkingBoxTex->visible;
     for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
     {
         d->buttons[i].text->excludeFromBulkRender = !d->contestantThinkingBoxTex->visible;
         d->buttons[i].background->visible = d->contestantThinkingBoxTex->visible;
-        if (i >= NUM_SELECTION_BUTTONS - 2)
-            d->buttons[i].background->tint[3] = (disableLastTwo ? 0.25f : 1.0f);
+        d->buttons[i].background->tint[3] = (d->buttons[i].disabled ? 0.25f : 1.0f);
     }
 
     d->contestantSpeechBox->visible =
@@ -252,7 +267,7 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
             textmesh::regenerateTextMeshMesh(d->buttons[i++].text, d->selectionTexts[ssi]);
 
         d->menuSelectionIdx = 0;  // Reset menu selection value.
-        setMenuSelectingCursor(d);
+        setMenuSelectingCursor(d, 1);
     }
 
     // Setup dialogue executions.
@@ -466,6 +481,7 @@ void DatingInterface::update(const float_t& deltaTime)
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
         bool changed = false;
+        int32_t direction = 0;
         if (input::onKeyUpPress)
         {
             if (_data->menuSelectionIdx > 0)
@@ -473,6 +489,7 @@ void DatingInterface::update(const float_t& deltaTime)
             else
                 _data->menuSelectionIdx = NUM_SELECTION_BUTTONS - 1;
             changed = true;
+            direction = -1;
         }
         if (input::onKeyDownPress)
         {
@@ -481,8 +498,9 @@ void DatingInterface::update(const float_t& deltaTime)
             else
                 _data->menuSelectionIdx = 0;
             changed = true;
+            direction = 1;
         }
-        setMenuSelectingCursor(_data);
+        setMenuSelectingCursor(_data, direction);
 
         if (input::onKeyJumpPress)
         {
@@ -538,7 +556,8 @@ void DatingInterface::update(const float_t& deltaTime)
     if (_data->stageTransitionTimer > 0.0f)
     {
         _data->stageTransitionTimer -= deltaTime;
-        std::cout << "STAGE_TRANS_TIMER: " << _data->stageTransitionTimer << std::endl;
+        // @DEBUG: show how much time remaining on transition timer.
+        // std::cout << "STAGE_TRANS_TIMER: " << _data->stageTransitionTimer << std::endl;
         if (_data->stageTransitionTimer <= 0.0f)
         {
             // Transition!
