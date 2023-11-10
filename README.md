@@ -114,10 +114,13 @@
 - [x] For no more questions to ask, gray out all 4 question slots and just make player answer rejection or date ask question
     - [x] If ask on date get rejected subtract VERY_BAD trust level
     - [x] If say not feasible, then no change to trust level
-- [ ] Fix BUGS
-    - [ ] Dating interface disabled text selections don't immediately get grayed out.
-    - [ ] Dating interface doesn't get text regenerated when text to regenerate is set to "".
-- [ ] Add text showing if trust level got better or not in the dating sim
+- [x] Fix BUGS
+    - [x] Dating interface disabled text selections don't immediately get grayed out.
+    - [x] Dating interface doesn't get text regenerated when text to regenerate is set to "".
+- [ ] Create wrapped text.
+- [ ] ~~Add text showing if trust level got better or not in the dating sim~~
+    - [ ] Add flowers particle effect for good reaction.
+    - [ ] Add disgusted particle effect for bad reaction.
 - [ ] Add text showing how far away from date in hallway
 - [ ] Create 3d interior for hallway and ballroom
 

@@ -241,7 +241,6 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     {
         d->buttons[i].text->excludeFromBulkRender = !d->contestantThinkingBoxTex->visible;
         d->buttons[i].background->visible = d->contestantThinkingBoxTex->visible;
-        d->buttons[i].background->tint[3] = (d->buttons[i].disabled ? 0.25f : 1.0f);
     }
 
     d->contestantSpeechBox->visible =
@@ -292,6 +291,12 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
 
         d->menuSelectionIdx = 0;  // Reset menu selection value.
         setMenuSelectingCursor(d, 1);
+    }
+    for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)  // After setting all the disabled attributes, get the background tint.
+    {
+        if (i < 4 && d->selectionTexts[d->selectionShuffledIndices[i]].contestantQuestionOrAnswer.empty())
+            d->buttons[i].text->excludeFromBulkRender = true;  // @HACK: Disable the text render if the selection text is empty (since regenerating empty text is unsupported with textmesh)
+        d->buttons[i].background->tint[3] = (d->buttons[i].disabled ? 0.25f : 1.0f);
     }
 
     // Setup dialogue executions.
