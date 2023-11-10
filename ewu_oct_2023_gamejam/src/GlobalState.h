@@ -151,6 +151,37 @@ namespace globalState
     extern Phase2 phase2;
     struct DateProps
     {
+        struct DialogueOption
+        {
+            std::string text;
+            bool used = false;
+        };
+        struct ContestantQuestion
+        {
+            DialogueOption question0;
+            DialogueOption answer0;
+            DialogueOption question1;
+            DialogueOption answer1;
+            DialogueOption question2;
+            DialogueOption answer2;
+            DialogueOption question3;
+            DialogueOption answer3;
+        };
+        std::vector<ContestantQuestion> contestantQuestions;
+        size_t currentContestantQuestionIdx = 0;
+
+        struct DateQuestion
+        {
+            DialogueOption question;
+            DialogueOption veryGoodAnswer;
+            DialogueOption goodAnswer;
+            DialogueOption badAnswer;
+            DialogueOption veryBadAnswer;
+            bool isLastQuestion = false;  // If true, can't mark question as used.
+        };
+        std::vector<DateQuestion> dateQuestions;
+        size_t currentDateQuestionIdx = 0;
+
         bool isFirstPhase1 = true;
         bool isFirstPhase2Question = true;
 

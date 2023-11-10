@@ -107,6 +107,21 @@
         - [x] Random amount of thinking (very very soon and it's immediate NO. Early and it's very long, later and it's short (yes, there can be a short "no thanks"))
     > NOTE: Only the player enters phase 3. Other contestants just talk for a bit, then it results in either getting rejected after a random amt of time or hearing the contestant pop the question, Date thinks for random amt of time and then reject or accept.
 
+- [x] Add in Dialogue options for dating sim
+    - [x] Disable questions from contestant as they ask.
+    - [x] Disable questions from date as they ask.
+        - [x] Don't disable the last question (marked as lastQuestion) since this will just be "are you enjoying the mixer?"
+- [x] For no more questions to ask, gray out all 4 question slots and just make player answer rejection or date ask question
+    - [x] If ask on date get rejected subtract VERY_BAD trust level
+    - [x] If say not feasible, then no change to trust level
+- [ ] Fix BUGS
+    - [ ] Dating interface disabled text selections don't immediately get grayed out.
+    - [ ] Dating interface doesn't get text regenerated when text to regenerate is set to "".
+- [ ] Add text showing if trust level got better or not in the dating sim
+- [ ] Add text showing how far away from date in hallway
+- [ ] Create 3d interior for hallway and ballroom
+
+
 - [ ] Game over and game win screens
     - [ ] Correctly shows the correct date pic for the game win screens.
 

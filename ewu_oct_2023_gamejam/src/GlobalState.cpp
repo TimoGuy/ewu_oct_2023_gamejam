@@ -65,7 +65,60 @@ namespace globalState
         phase1.hazardEndDistance = -150.0f;
         phase1.finishLineDistance = -189.0f;
         phase1.contADatePhase2ActivationDistance = 1.75f;  // Both radii of the capsules (0.75) times 2 plus 0.25
+
+        // Monster 0: "Ophelia" (ghost).
         dates[0] = {
+            .contestantQuestions = {
+                {
+                    .question0 = { "Hey." },
+                    .answer0 = { "Hey." },
+                    .question1 = { "I think you just took my breath away... from running." },
+                    .answer1 = { "Yeah, it looks hard to keep up." },
+                    .question2 = { "I like your hair, what era?" },
+                    .answer2 = { "I just did it last week, thank you for asking." },
+                    .question3 = { "Whoa. What happened to your head?" },
+                    .answer3 = { "My uncle cut it off when I said I wouldn't have sex with him." },
+                },
+                {
+                    .question0 = { "I feel like I don't know much about you... can you tell me more about yourself?" },
+                    .answer0 = { "Hmm. There's not much to me, just someone who makes video games. It was a little hard to get the hand-eye coordination down." },
+                    .question1 = { "On a scale of 1 - 10, how insane do you feel? I'm about an 8." },
+                    .answer1 = { "Honestly, for agreeing to participate, a full Hamlet 10." },
+                    .question2 = { "So do you know what a meme is?" },
+                    .answer2 = { "Who even asks that?" },
+                    .question3 = { "Do you like alone?" },
+                    .answer3 = { "Why do you wanna know? Creep." },
+                },
+                {
+                    // Final "question" but it's everything being blocked out and the only option is to select "we're not a good fit" or "go out with me?"
+                    .question0 = { "", true },
+                    .answer0 = { "", true },
+                    .question1 = { "", true },
+                    .answer1 = { "", true },
+                    .question2 = { "", true },
+                    .answer2 = { "", true },
+                    .question3 = { "", true },
+                    .answer3 = { "", true },
+                },
+            },
+            .dateQuestions = {
+                {
+                    .question = { "How do you feel about incest?" },
+                    .veryGoodAnswer = { "Whoa, what the fuck? This is not Alabama. Did that happen to you? Are you okay?" },
+                    .goodAnswer = { "I've heard of people doing it. Weirds me out though." },
+                    .badAnswer = { "What kind of incest? Oedipus?" },
+                    .veryBadAnswer = { "It's a guilty pleasure of mine. 2TB worth." },
+                },
+                {
+                    // Final "question" that's just like "enjoying the mixer?"
+                    .question = { "Umm, enjoying the mixer?" },
+                    .veryGoodAnswer = { "Oh heck yeah!" },
+                    .goodAnswer = { "It's pretty cool." },
+                    .badAnswer = { "It's awesome. It's like shooting fish in a barrel." },
+                    .veryBadAnswer = { "As amazing as my fantasies with you." },
+                    .isLastQuestion = true,
+                },
+            },
             .veryGoodTLA = 40.0f,
             .goodTLA = 20.0f,
             .badTLA = -20.0f,
@@ -75,7 +128,60 @@ namespace globalState
             .acceptDateInviteThreshold = 90.0f,
             .acceptDateInviteWaitTimeRange = { 4.0f, 8.0f },
         };
+
+        // Monster 1: "Nefertiti" (mummy).
         dates[1] = {
+            .contestantQuestions = {
+                {
+                    .question0 = { "Your wraps look supa high quality?" },
+                    .answer0 = { "Thanks they're Levie Vitt." },
+                    .question1 = { "Your hands are so soft for a mummy." },
+                    .answer1 = { "Maybe you should use some... you could use it for $15." },
+                    .question2 = { "Areola sticking out." },
+                    .answer2 = { "Pay me 20 and I'll put it away." },
+                    .question3 = { "Are those natural?" },
+                    .answer3 = { "No." },
+                },
+                {
+                    .question0 = { "If we went on a vacation for our date, where would you wanna go?" },
+                    .answer0 = { "You have the resources to take me? ... Greece." },
+                    .question1 = { "Nefertiti, what does your name mean?" },
+                    .answer1 = { "No one's asked me that before, it means \"The beautiful one has come\" ;)" },
+                    .question2 = { "What kind of food would you want on our first date?" },
+                    .answer2 = { "Hun, if you're gonna ask a girl like me out, you should already have everything planned out." },
+                    .question3 = { "Would you wanna go back to my place and get... unwrapped?" },
+                    .answer3 = { "Oh... sweetie no..." },
+                },
+                {
+                    // Final "question" but it's everything being blocked out and the only option is to select "we're not a good fit" or "go out with me?"
+                    .question0 = { "", true },
+                    .answer0 = { "", true },
+                    .question1 = { "", true },
+                    .answer1 = { "", true },
+                    .question2 = { "", true },
+                    .answer2 = { "", true },
+                    .question3 = { "", true },
+                    .answer3 = { "", true },
+                },
+            },
+            .dateQuestions = {
+                {
+                    .question = { "So... what kinda body mod is that?" },
+                    .veryGoodAnswer = { "It was the best preservation money can buy." },
+                    .goodAnswer = { "I had an accident at work." },
+                    .badAnswer = { "Uh... I was just born this way." },
+                    .veryBadAnswer = { "..." },
+                },
+                {
+                    // Final "question" that's just like "enjoying the mixer?"
+                    .question = { "Umm, enjoying the mixer?" },
+                    .veryGoodAnswer = { "Oh heck yeah!" },
+                    .goodAnswer = { "It's pretty cool." },
+                    .badAnswer = { "It's awesome. It's like shooting fish in a barrel." },
+                    .veryBadAnswer = { "As amazing as my fantasies with you." },
+                    .isLastQuestion = true,
+                },
+            },
             .veryGoodTLA = 40.0f,
             .goodTLA = 20.0f,
             .badTLA = -20.0f,
@@ -85,7 +191,60 @@ namespace globalState
             .acceptDateInviteThreshold = 90.0f,
             .acceptDateInviteWaitTimeRange = { 4.0f, 8.0f },
         };
+
+        // Monster 2: "Isabella" (bat).
         dates[2] = {
+            .contestantQuestions = {
+                {
+                    .question0 = { "Your beauty entranced me, and I just knew I had to get to know you." },
+                    .answer0 = { "You might not like me, after getting to know me though." },
+                    .question1 = { "What kind of qualities do you look--wait sorry--smell for in a man?" },
+                    .answer1 = { "Someone that respects me and doesn't look down on me for being blind... and really old." },
+                    .question2 = { "If you're blind, that means I have a chance, right?" },
+                    .answer2 = { "I can still smell how ugly you are." },
+                    .question3 = { "Have you tried glasses?" },
+                    .answer3 = { "Are you actually mentally disabled." },
+                },
+                {
+                    .question0 = { "My family specializes in Human Trafficking, want me to hook you with some blood?" },
+                    .answer0 = { "That's the most romantic thing anyone has ever said to me." },
+                    .question1 = { "What do I smell like to you?" },
+                    .answer1 = { "Like shit." },
+                    .question2 = { "What was your favorite time period?" },
+                    .answer2 = { "Definitely the Dark Ages... I ate good those years." },
+                    .question3 = { "Would you like to slurp me up?" },
+                    .answer3 = { "I can already tell your blood is riddled with diabetes. No thanks." },
+                },
+                {
+                    // Final "question" but it's everything being blocked out and the only option is to select "we're not a good fit" or "go out with me?"
+                    .question0 = { "", true },
+                    .answer0 = { "", true },
+                    .question1 = { "", true },
+                    .answer1 = { "", true },
+                    .question2 = { "", true },
+                    .answer2 = { "", true },
+                    .question3 = { "", true },
+                    .answer3 = { "", true },
+                },
+            },
+            .dateQuestions = {
+                {
+                    .question = { "What brought you to sign up for this 'killer mixer'?" },
+                    .veryGoodAnswer = { "If I tell you I just woke up here, would you believe me?" },
+                    .goodAnswer = { "I'm not into vore, and everybody else tries to eat me." },
+                    .badAnswer = { "I'm really ugly." },
+                    .veryBadAnswer = { "Everyone looked hot." },
+                },
+                {
+                    // Final "question" that's just like "enjoying the mixer?"
+                    .question = { "Umm, enjoying the mixer?" },
+                    .veryGoodAnswer = { "Oh heck yeah!" },
+                    .goodAnswer = { "It's pretty cool." },
+                    .badAnswer = { "It's awesome. It's like shooting fish in a barrel." },
+                    .veryBadAnswer = { "As amazing as my fantasies with you." },
+                    .isLastQuestion = true,
+                },
+            },
             .veryGoodTLA = 40.0f,
             .goodTLA = 20.0f,
             .badTLA = -20.0f,

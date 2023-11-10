@@ -56,11 +56,17 @@ struct DatingInterface_XData
     int8_t menuSelectionIdx;
 
     std::vector<size_t> selectionShuffledIndices = { 0, 1, 2, 3 };
-    std::vector<std::string> selectionTexts = {
-        "VERY_GOOD",
-        "GOOD",
-        "BAD",
-        "VERY_BAD",
+    struct SelectionText
+    {
+        std::string contestantQuestionOrAnswer;
+        std::string dateAnswer;
+        bool disabled;
+    };
+    std::vector<SelectionText> selectionTexts = {
+        { "VERY_GOOD", "VERY_GOOD_ANSWER", false },
+        { "GOOD", "GOOD_ANSWER", false },
+        { "BAD", "BAD_ANSWER", false },
+        { "VERY_BAD", "VERY_BAD_ANSWER", false },
     };
 
     bool gotoRejection = false;
@@ -251,12 +257,26 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     {
         // @TODO: load in the respective asks.
         //////////////////////////////////////
+        auto& dateProps = globalState::dates[globalState::phase2.dateIdx];
+        auto& q = dateProps.contestantQuestions[dateProps.currentContestantQuestionIdx];
+        d->selectionTexts[0] = { q.question0.text, q.answer0.text, q.question0.used };
+        d->selectionTexts[1] = { q.question1.text, q.answer1.text, q.question1.used };
+        d->selectionTexts[2] = { q.question2.text, q.answer2.text, q.question2.used };
+        d->selectionTexts[3] = { q.question3.text, q.answer3.text, q.question3.used };
+
         setupDialogueOptions = true;
     }
     else if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
         // @TODO: load in the respective answers.
         /////////////////////////////////////////
+        auto& dateProps = globalState::dates[globalState::phase2.dateIdx];
+        auto& q = dateProps.dateQuestions[dateProps.currentDateQuestionIdx];
+        d->selectionTexts[0] = { q.veryGoodAnswer.text, "", false };
+        d->selectionTexts[1] = { q.goodAnswer.text, "", false };
+        d->selectionTexts[2] = { q.badAnswer.text, "", false };
+        d->selectionTexts[3] = { q.veryBadAnswer.text, "", false };
+
         setupDialogueOptions = true;
     }
     if (setupDialogueOptions)
@@ -264,7 +284,11 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         rng::shuffleVectorSizeType(d->selectionShuffledIndices);
         size_t i = 0;
         for (auto& ssi : d->selectionShuffledIndices)
-            textmesh::regenerateTextMeshMesh(d->buttons[i++].text, d->selectionTexts[ssi]);
+        {
+            textmesh::regenerateTextMeshMesh(d->buttons[i].text, d->selectionTexts[ssi].contestantQuestionOrAnswer);
+            d->buttons[i].disabled = d->selectionTexts[ssi].disabled;
+            i++;
+        }
 
         d->menuSelectionIdx = 0;  // Reset menu selection value.
         setMenuSelectingCursor(d, 1);
@@ -274,7 +298,42 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE)
     {
-        textmesh::regenerateTextMeshMesh(d->contestantSpeechText, d->selectionTexts[d->selectionShuffledIndices[(size_t)d->menuSelectionIdx]]);
+        auto& dateProps = globalState::dates[globalState::phase2.dateIdx];
+        if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_EXECUTE)
+        {
+            switch (d->selectionShuffledIndices[(size_t)d->menuSelectionIdx])
+            {
+                case 0:
+                    dateProps.contestantQuestions[dateProps.currentContestantQuestionIdx].question0.used = true;
+                    break;
+
+                case 1:
+                    dateProps.contestantQuestions[dateProps.currentContestantQuestionIdx].question1.used = true;
+                    break;
+
+                case 2:
+                    dateProps.contestantQuestions[dateProps.currentContestantQuestionIdx].question2.used = true;
+                    break;
+
+                case 3:
+                    dateProps.contestantQuestions[dateProps.currentContestantQuestionIdx].question3.used = true;
+                    break;
+            }
+
+            dateProps.currentContestantQuestionIdx = (dateProps.currentContestantQuestionIdx + 1) % dateProps.contestantQuestions.size();
+        }
+        if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_EXECUTE)
+        {
+            auto& dq = dateProps.dateQuestions[dateProps.currentDateQuestionIdx];
+            if (!dq.isLastQuestion)
+            {
+                dq.question.used = true;
+                while (dateProps.dateQuestions[dateProps.currentDateQuestionIdx].question.used)
+                    dateProps.currentDateQuestionIdx = (dateProps.currentDateQuestionIdx + 1) % dateProps.dateQuestions.size();
+            }
+        }
+        textmesh::regenerateTextMeshMesh(d->contestantSpeechText, d->selectionTexts[d->selectionShuffledIndices[(size_t)d->menuSelectionIdx]].contestantQuestionOrAnswer);
+        textmesh::regenerateTextMeshMesh(d->dateSpeechText, d->selectionTexts[d->selectionShuffledIndices[(size_t)d->menuSelectionIdx]].dateAnswer);
         d->stageTransitionTimer = 1.5f;  // Give time to read dialog.
     }
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE ||
@@ -311,7 +370,12 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     {
         if (d->dateProcessingBeingAskedOut == 0)
         {
-            textmesh::regenerateTextMeshMesh(d->dateSpeechText, "INSERT RESPONSE/ASK RIGHT HERE!");
+            if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING)
+            {
+                auto& dateProps = globalState::dates[globalState::phase2.dateIdx];
+                auto& q = dateProps.dateQuestions[dateProps.currentDateQuestionIdx];
+                textmesh::regenerateTextMeshMesh(d->dateSpeechText, q.question.text);
+            }
             d->stageTransitionTimer = rng::randomRealRange(0.5f, d->dateThinkingTimerTime);
         }
         else
@@ -449,7 +513,6 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
 
         case 4:
             // We're not a very good match.
-            dateProps.currentTrustLevel += dateProps.veryBadTLA;  // Automatically add some VERY_BAD into the trust level with this response!
             setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE);
             return;
 
@@ -461,6 +524,9 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
                 d->dateProcessingBeingAskedOut = (rng::randomReal() > 0.5f ? 1 : 2);
             else
                 d->dateProcessingBeingAskedOut = (rng::randomReal() > 0.9f ? 1 : 2);
+
+            if (d->dateProcessingBeingAskedOut == 1)
+                dateProps.currentTrustLevel += dateProps.veryBadTLA;  // Add VERY_BAD if date rejects the invite.
             // d->dateProcessingBeingAskedOut = 2;  @DEBUG
             setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE);
             return;
