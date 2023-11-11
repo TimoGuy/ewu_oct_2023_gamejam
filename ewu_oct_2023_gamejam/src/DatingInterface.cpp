@@ -191,12 +191,10 @@ void setMenuSelectingCursor(DatingInterface_XData* d, int32_t directionOfMovemen
     }
     /////////////////////////////////////////////
 
-    vec3 pos = {
-        d->startingButtonPosition[0] - 200.0f,
-        d->startingButtonPosition[1] + d->buttonStrideY * d->menuSelectionIdx,
-        d->startingButtonPosition[2]
-    };
-    glm_vec3_copy(pos, d->menuSelectingCursor->position);
+    vec3 buttonPosition;
+    glm_vec3_copy(d->buttons[d->menuSelectionIdx].background->position, buttonPosition);
+    buttonPosition[0] += -d->buttons[d->menuSelectionIdx].background->scale[0] - 50.0f;
+    glm_vec3_copy(buttonPosition, d->menuSelectingCursor->position);
     glm_vec3_copy(vec3{ 20.0f, 20.0f, 1.0f }, d->menuSelectingCursor->scale);
 }
 
@@ -551,22 +549,38 @@ void DatingInterface::update(const float_t& deltaTime)
     if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
-        // Update size of contestant select buttons.
+        constexpr float_t padding = 10.0f;
         for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
         {
+            // Update size of contestant select buttons.
             vec3 scale = { 150.0f, 50.0f, 1.0f };  // Default.
             if (!_data->buttons[i].text->excludeFromBulkRender)
             {
                 auto& text = _data->buttons[i].text;
-                scale[0] = text->generatedInfo.unscaledWidth * text->scale;
-                scale[1] = text->generatedInfo.unscaledHeight * text->scale;
+                scale[0] = text->generatedInfo.unscaledWidth * text->scale + padding * 6.0f;
+                scale[1] = text->generatedInfo.unscaledHeight * text->scale + padding * 3.0f;
             }
-            
-            glm_vec3_copy(scale, _data->buttons[i].background->scale);
+
+            vec3 halfScale;
+            glm_vec3_scale(scale, 0.5f, halfScale);
+            glm_vec3_copy(halfScale, _data->buttons[i].background->scale);
+
+            // Update positions of all the select buttons and their text.
+            vec3 leftAlignPosition = { -75.0f, 0.0f, 0.0f };
+            glm_vec3_add(leftAlignPosition, halfScale, _data->buttons[i].background->position);
+            _data->buttons[i].background->position[2] = 0.0f;  // Make sure z position stays at 0.
+            glm_vec3_add(leftAlignPosition, vec3{ padding, halfScale[1], 0.0f }, _data->buttons[i].text->renderPosition);
         }
 
-        // Update positions of all the select buttons.
-        // @TODO: @INCOMPLETE:
+        float_t currentPositioningY = -460.0f;
+        for (int32_t i = NUM_SELECTION_BUTTONS - 1; i >= 0; i--)
+        {
+            // Align the select buttons vertically.
+            float_t height = _data->buttons[i].background->scale[1] * 2.0f;
+            _data->buttons[i].background->position[1] = currentPositioningY + height * 0.5f;
+            _data->buttons[i].text->renderPosition[1] = currentPositioningY + height * 0.5f;
+            currentPositioningY += height + padding;
+        }
 
         // Interact.
         bool changed = false;
