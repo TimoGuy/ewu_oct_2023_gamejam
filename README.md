@@ -128,7 +128,7 @@
 - [ ] ~~Add text showing if trust level got better or not in the dating sim~~
     - [ ] ~~Add flowers particle effect for good reaction.~~ Tint image green then fadeaway for good reaction.
     - [ ] ~~Add disgusted particle effect for bad reaction.~~ Tint image red then fadeaway for bad reaction.
-- [ ] Add text showing how far away from date in hallway
+- [x] Add text showing how far away from date in hallway
 - [ ] Create 3d interior for hallway and ballroom
 
 

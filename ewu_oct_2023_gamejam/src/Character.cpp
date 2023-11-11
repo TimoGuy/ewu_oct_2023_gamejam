@@ -39,6 +39,7 @@ struct Character_XData
     size_t contestantId       = (size_t)-1;
     size_t dateId             = (size_t)-1;  // @NOTE: only applicable if is MONSTER_DUMMY or MONSTER type of character.
     bool   isDateRunningDownHallway = false;
+    textmesh::TextMesh* uiDistanceToPlayerText = nullptr;
 
     float_t stunTimer = 0.0f;
 
@@ -1584,6 +1585,14 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         hotswapres::addReloadCallback("res/waza/air_waza.hwac", this, loadWazasLambda);
         loadWazasLambda();
     }
+    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        _data->uiDistanceToPlayerText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::TOP, -1.0f, "Distance: 0m");
+        _data->uiDistanceToPlayerText->isPositionScreenspace = true;
+        _data->uiDistanceToPlayerText->excludeFromBulkRender = true;
+        glm_vec3_copy(vec3{ 0.0f, -200.0f, 0.0f }, _data->uiDistanceToPlayerText->renderPosition);
+        _data->uiDistanceToPlayerText->scale = 25.0f;
+    }
 }
 
 Character::~Character()
@@ -1600,6 +1609,10 @@ Character::~Character()
     {
         globalState::playerGUID = "";
         globalState::playerPositionRef = nullptr;
+    }
+    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        textmesh::destroyAndUnregisterTextMesh(_data->uiDistanceToPlayerText);
     }
 
     // delete _data->characterRenderObj->animator;  // @NOTE: for EWU Game Jam.  
@@ -1633,6 +1646,17 @@ inline float_t deltaAngle(float_t fromRad, float_t toRad)  // @NOCHECKIN: @COPYP
 
 void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Character_XData* d, EntityManager* em, const std::string& myGuid)
 {
+    if (d->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        // Calc and display how far player is from me.
+        d->uiDistanceToPlayerText->excludeFromBulkRender = (!d->isDateRunningDownHallway || globalState::currentPhase != globalState::GamePhases::P1_HALLWAY);
+        if (d->isDateRunningDownHallway)
+        {
+            float_t distanceToPlayer = glm_vec3_distance(*globalState::playerPositionRef, d->position);
+            textmesh::regenerateTextMeshMesh(d->uiDistanceToPlayerText, "Distance: " + std::to_string((int32_t)distanceToPlayer) + "m");
+        }
+    }
+
     if (d->currentWaza == nullptr)
     {
         //
@@ -2964,6 +2988,12 @@ void defaultRenderImGui(Character_XData* d)
         if (interactionUIText)
         {
             ImGui::DragFloat3("interactionUIText->renderPosition", interactionUIText->renderPosition);
+        }
+        if (d->uiDistanceToPlayerText)
+        {
+            ImGui::Checkbox("uiDistanceToPlayerText->excludeFromBulkRender", &d->uiDistanceToPlayerText->excludeFromBulkRender);
+            ImGui::DragFloat3("uiDistanceToPlayerText->renderPosition", d->uiDistanceToPlayerText->renderPosition);
+            ImGui::DragFloat("uiDistanceToPlayerText->scale", &d->uiDistanceToPlayerText->scale);
         }
         ImGui::InputInt("currentWeaponDurability", &d->currentWeaponDurability);
         ImGui::DragFloat("inputMaxXZSpeed", &d->inputMaxXZSpeed);
