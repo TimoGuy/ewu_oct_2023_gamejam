@@ -421,12 +421,12 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
     _data->dateThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBox"]);
     _data->dateThinkingBoxFill = ui::registerUIQuad(nullptr);
     _data->dateThinkingTrailingBubbles = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxTrailLeft"]);
-    _data->dateSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "message");
+    _data->dateSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "message");
     _data->dateSpeechText->isPositionScreenspace = true;
     _data->dateSpeechText->scale = 40.0f;
     _data->contestantThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBox"]);
     _data->contestantThinkingBoxFill = ui::registerUIQuad(nullptr);
-    _data->contestantSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "message");
+    _data->contestantSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "message");
     _data->contestantSpeechText->isPositionScreenspace = true;
     _data->contestantSpeechText->scale = 40.0f;
     _data->contestantThinkingTrailingBubbles = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxTrailRight"]);
@@ -438,12 +438,12 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
         if (i >= NUM_SELECTION_BUTTONS - 2)
         {
             if (i == NUM_SELECTION_BUTTONS - 2)
-                _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "Sorry, I don\'t think we\'re a good match for each other.");
+                _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "Sorry, I don\'t think we\'re a good match for each other.");
             else if (i == NUM_SELECTION_BUTTONS - 1)
-                _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "Will you go on a date with me?");
+                _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "Will you go on a date with me?");
         }
         else
-            _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, "DEBUGmessage\nsecondline.");
+            _data->buttons[i].text = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "DEBUGmessage\nsecondline.");
         _data->buttons[i].text->isPositionScreenspace = true;
         _data->buttons[i].text->scale = 40.0f;
         _data->buttons[i].background = ui::registerUIQuad(&engine->_loadedTextures["SpeechSelectionButton"]);
@@ -756,6 +756,10 @@ void imguiTextMesh(const std::string& textMeshName, textmesh::TextMesh* textMesh
         ImGui::Checkbox(("excludeFromBulkRender" + nameSuffix).c_str(), &textMesh->excludeFromBulkRender);
         ImGui::DragFloat3(("renderPosition" + nameSuffix).c_str(), textMesh->renderPosition);
         ImGui::DragFloat(("scale" + nameSuffix).c_str(), &textMesh->scale);
+        if (ImGui::DragFloat(("maxLineLength" + nameSuffix).c_str(), &textMesh->maxLineLength))
+        {
+            textmesh::regenerateTextMeshMesh(textMesh, "This is a test text mesh word so that you can see just how well the words wrap.");
+        }
 
         ImGui::TreePop();
         ImGui::Separator();

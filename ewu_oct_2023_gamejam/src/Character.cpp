@@ -320,7 +320,7 @@ void pushPlayerNotification(const std::string& message, Character_XData* d)
     // Lazyload the message textmesh. (@NOTE: no multithreading so no locks required)
     if (d->notification.message == nullptr)
     {
-        d->notification.message = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, message);
+        d->notification.message = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, message);
         d->notification.message->isPositionScreenspace = true;
         glm_vec3_copy(vec3{ 0.0f, 250.0f, 0.0f }, d->notification.message->renderPosition);
         d->notification.message->scale = 25.0f;
@@ -1564,13 +1564,13 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         globalState::playerGUID = getGUID();
         globalState::playerPositionRef = &_data->cpd->currentCOMPosition;
 
-        _data->uiMaterializeItem = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::RIGHT, textmesh::BOTTOM, getUIMaterializeItemText(_data));
+        _data->uiMaterializeItem = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::RIGHT, textmesh::BOTTOM, -1.0f, getUIMaterializeItemText(_data));
         _data->uiMaterializeItem->isPositionScreenspace = true;
         // glm_vec3_copy(vec3{ 925.0f, -510.0f, 0.0f }, _data->uiMaterializeItem->renderPosition);  // @NOTE: for EWU Game Jam.
         glm_vec3_copy(vec3{ 925.0f, -1000.0f, 0.0f }, _data->uiMaterializeItem->renderPosition);
         _data->uiMaterializeItem->scale = 25.0f;
 
-        _data->uiStamina = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, getStaminaText(_data));
+        _data->uiStamina = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, -1.0f, getStaminaText(_data));
         _data->uiStamina->isPositionScreenspace = true;
         glm_vec3_copy(vec3{ 25.0f, -135.0f, 0.0f }, _data->uiStamina->renderPosition);
         _data->uiStamina->scale = 25.0f;
@@ -2487,7 +2487,7 @@ void Character::physicsUpdate(const float_t& physicsDeltaTime)
             if (playTimeRemainingUIText == nullptr)
             {
                 playTimeRemainingUICurrentText = "";
-                playTimeRemainingUIText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, playTimeRemainingUICurrentText);
+                playTimeRemainingUIText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, playTimeRemainingUICurrentText);
                 playTimeRemainingUIText->isPositionScreenspace = true;
                 glm_vec3_copy(vec3{ 250.0f, -100.0f, 0.0f }, playTimeRemainingUIText->renderPosition);
                 playTimeRemainingUIText->scale = 25.0f;
@@ -2739,7 +2739,7 @@ void updateInteractionUI()
     if (interactionUIText == nullptr)
     {
         currentText = "";
-        interactionUIText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, currentText);
+        interactionUIText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, currentText);
         interactionUIText->isPositionScreenspace = true;
         // glm_vec3_copy(vec3{ 0.0f, -50.0f, 0.0f }, interactionUIText->renderPosition);  // @NOTE: for EWU Game Jam.
         glm_vec3_copy(vec3{ 0.0f, -245.0f, 0.0f }, interactionUIText->renderPosition);

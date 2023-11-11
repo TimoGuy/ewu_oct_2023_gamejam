@@ -225,7 +225,7 @@ namespace textbox
                 for (uint32_t i = 0; i < numQuerySelections; i++)
                 {
                     querySelectionTexts.push_back(
-                        textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, messageQueue.front().endingQuery.queryOptions[(size_t)i])
+                        textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, -1.0f, messageQueue.front().endingQuery.queryOptions[(size_t)i])
                     );
                     querySelectionTexts.back()->excludeFromBulkRender = true;
                     querySelectionTexts.back()->isPositionScreenspace = true;
@@ -277,7 +277,7 @@ namespace textbox
         {
             AudioEngine::getInstance().playSound("res/sfx/wip_Sys_Do_Start.wav");
             currentTextIndex = 0;
-            myText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, message.texts[currentTextIndex]);
+            myText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, message.texts[currentTextIndex]);
             myText->excludeFromBulkRender = true;
             myText->isPositionScreenspace = true;
             myText->scale = 50.0f;

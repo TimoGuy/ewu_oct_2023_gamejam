@@ -302,6 +302,13 @@ namespace textmesh
 
 		for (uint32_t i = 0; i < text.size(); i++)
 		{
+			if (tm.maxLineLength >= 0.0f && posx >= tm.maxLineLength)
+			{
+				// Newline (align left) @COPYPASTA. Without skipping the current character.
+				numLines++;
+				posx = 0.0f;
+			}
+
 			if (text[i] == '\n')
 			{
 				// Newline (align left)
@@ -471,7 +478,7 @@ namespace textmesh
 		deleteRequests.push_back(tm);
 	}
 
-	TextMesh* createAndRegisterTextMesh(std::string fontName, HorizontalAlignment halign, VerticalAlignment valign, std::string text)
+	TextMesh* createAndRegisterTextMesh(std::string fontName, HorizontalAlignment halign, VerticalAlignment valign, float_t maxLineLength, std::string text)
 	{
 		if (textmeshes.size() >= RENDER_OBJECTS_MAX_CAPACITY)
 		{
@@ -483,6 +490,7 @@ namespace textmesh
 		textmeshes.back().typeFace = tf;
 		textmeshes.back().halign = halign;
 		textmeshes.back().valign = valign;
+		textmeshes.back().maxLineLength = maxLineLength;
 		
 		sortTextMeshesByTypeFace();  // To keep descriptor set switches to a minimum.
 		addChangeRequest(&textmeshes.back(), text);
