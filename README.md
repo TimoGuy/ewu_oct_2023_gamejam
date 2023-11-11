@@ -132,6 +132,7 @@
         > Now you can use where those sfx are being played as where to add in the reactions.
 - [x] Add text showing how far away from date in hallway
 - [ ] Create 3d interior for hallway and ballroom
+    - [ ] Create 3d exporting tool for the voxel fields.
 
 
 - [ ] Game over and game win screens
