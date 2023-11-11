@@ -128,12 +128,12 @@ void initializePositionings(DatingInterface_XData* d)
     glm_vec3_copy(vec3{ -133.0f, 385.0f, 0.0f }, d->dateSpeechText->renderPosition);
 
     d->contestantThinkingBoxTex->renderOrder = 0.0f;
-    glm_vec3_copy(vec3{ 310.0f, 109.0f, 0.0f }, d->contestantThinkingBoxTex->position);
+    glm_vec3_copy(vec3{ 310.0f, 209.0f, 0.0f }, d->contestantThinkingBoxTex->position);
     glm_vec3_copy(vec3{ 200.0f, 100.0f, 1.0f }, d->contestantThinkingBoxTex->scale);
     glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantThinkingBoxTex->tint);
 
     d->contestantThinkingBoxFill->renderOrder = 1.0f;
-    glm_vec3_copy(vec3{ 148.0f, 140.0f, 0.0f }, d->contestantThinkingBoxFill->position);
+    glm_vec3_copy(vec3{ 148.0f, 240.0f, 0.0f }, d->contestantThinkingBoxFill->position);
     glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->contestantThinkingBoxFill->scale);
     glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, d->contestantThinkingBoxFill->tint);
 
@@ -546,10 +546,56 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
 
 void DatingInterface::update(const float_t& deltaTime)
 {
+    constexpr float_t padding = 10.0f;
+    if (_data->contestantSpeechBox->visible)
+    {
+        vec3 scale = { 188.0f, 50.0f, 1.0f };  // Default.
+        if (!_data->contestantSpeechText->excludeFromBulkRender)
+        {
+            auto& text = _data->contestantSpeechText;
+            scale[0] = text->generatedInfo.unscaledWidth * text->scale + padding * 6.0f;
+            scale[1] = text->generatedInfo.unscaledHeight * text->scale + padding * 3.0f;
+        }
+        vec3 halfScale;
+        glm_vec3_scale(scale, 0.5f, halfScale);
+        glm_vec3_copy(halfScale, _data->contestantSpeechBox->scale);
+
+        // Position.
+        vec3 position = { 780.0f, 192.0f, 0.0f };  // Default (right align).
+        halfScale[0] = -halfScale[0];
+        glm_vec3_add(position, halfScale, position);
+        position[2] = 0.0f;
+        halfScale[0] = -halfScale[0];
+        glm_vec3_copy(position, _data->contestantSpeechBox->position);
+        position[0] += -halfScale[0] + padding;
+        glm_vec3_copy(position, _data->contestantSpeechText->renderPosition);
+    }
+
+    if (_data->dateSpeechBox->visible)
+    {
+        vec3 scale = { 188.0f, 50.0f, 1.0f };  // Default.
+        if (!_data->dateSpeechText->excludeFromBulkRender)
+        {
+            auto& text = _data->dateSpeechText;
+            scale[0] = text->generatedInfo.unscaledWidth * text->scale + padding * 6.0f;
+            scale[1] = text->generatedInfo.unscaledHeight * text->scale + padding * 3.0f;
+        }
+        vec3 halfScale;
+        glm_vec3_scale(scale, 0.5f, halfScale);
+        glm_vec3_copy(halfScale, _data->dateSpeechBox->scale);
+
+        // Position.
+        vec3 position = { -157.0f, 323.0f, 0.0f };  // Default (left align).
+        glm_vec3_add(position, halfScale, position);
+        position[2] = 0.0f;
+        glm_vec3_copy(position, _data->dateSpeechBox->position);
+        position[0] += -halfScale[0] + padding;
+        glm_vec3_copy(position, _data->dateSpeechText->renderPosition);
+    }
+
     if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
-        constexpr float_t padding = 10.0f;
         for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
         {
             // Update size of contestant select buttons.
@@ -639,7 +685,7 @@ void DatingInterface::update(const float_t& deltaTime)
         float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
             310.0f + _data->boxFillXOffset + fillAmountReal,
-            140.0f,
+            240.0f,
             0.0f
         };
         vec3 scale = {

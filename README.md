@@ -117,12 +117,14 @@
 - [x] Fix BUGS
     - [x] Dating interface disabled text selections don't immediately get grayed out.
     - [x] Dating interface doesn't get text regenerated when text to regenerate is set to "".
-- [ ] Create wrapped text.
+- [x] Create wrapped text.
     - [x] Initial wrapped text.
     - [f] Make text break on words.
-    - [ ] Apply text rendered size to size of speech box.
-        - [ ] Move x position of character speech bubble based off of the size of the rendered text.
-        - [ ] Move the 6 speech selection bubble positions based off of their respective heights.
+    - [x] Apply text rendered size to size of speech box.
+        - [x] Move x position of character speech bubble based off of the size of the rendered text.
+        - [x] Move the 6 speech selection bubble positions based off of their respective heights.
+    - [x] Apply to date character speech bubble.
+    - [x] Apply to contestant speech bubble.
 - [ ] ~~Add text showing if trust level got better or not in the dating sim~~
     - [ ] ~~Add flowers particle effect for good reaction.~~ Tint image green then fadeaway for good reaction.
     - [ ] ~~Add disgusted particle effect for bad reaction.~~ Tint image red then fadeaway for bad reaction.
