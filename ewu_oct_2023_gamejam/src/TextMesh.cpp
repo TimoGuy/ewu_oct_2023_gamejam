@@ -351,6 +351,10 @@ namespace textmesh
 			width = std::max(width, posx);
 		}
 
+		// Fill in generated size.
+		tm.generatedInfo.unscaledWidth = width;
+		tm.generatedInfo.unscaledHeight = (float_t)numLines;
+
 		// Don't attempt to generate buffers with size 0
 		// (@NOTE: VK_ERROR_INITIALIZATION_FAILED was given when attempting this.)
 		if (indices.size() == 0)

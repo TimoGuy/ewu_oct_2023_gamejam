@@ -63,6 +63,12 @@ namespace textmesh
 		vec3 renderPosition = GLM_VEC3_ZERO_INIT;
 		bool isPositionScreenspace = false;
 		float_t scale = 1.0f;
+
+		struct GeneratedInfo
+		{
+			float_t unscaledWidth;
+			float_t unscaledHeight;
+		} generatedInfo;
 	};
 
 	struct GPUSDFFontPushConstants

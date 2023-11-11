@@ -551,6 +551,24 @@ void DatingInterface::update(const float_t& deltaTime)
     if (_data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT ||
         _data->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT)
     {
+        // Update size of contestant select buttons.
+        for (size_t i = 0; i < NUM_SELECTION_BUTTONS; i++)
+        {
+            vec3 scale = { 150.0f, 50.0f, 1.0f };  // Default.
+            if (!_data->buttons[i].text->excludeFromBulkRender)
+            {
+                auto& text = _data->buttons[i].text;
+                scale[0] = text->generatedInfo.unscaledWidth * text->scale;
+                scale[1] = text->generatedInfo.unscaledHeight * text->scale;
+            }
+            
+            glm_vec3_copy(scale, _data->buttons[i].background->scale);
+        }
+
+        // Update positions of all the select buttons.
+        // @TODO: @INCOMPLETE:
+
+        // Interact.
         bool changed = false;
         int32_t direction = 0;
         if (input::onKeyUpPress)
