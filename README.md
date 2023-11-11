@@ -148,5 +148,5 @@ How do we handle if there are no more places to uncover or <# of dates?
 
 ## Action Items for Otomege part of Game.
 
-- [ ] Blur out background of 3d game.
-- [ ] Show UI for selecting 3 buttons for answers and then a textbox for what the other says.
+- [x] Blur out background of 3d game.
+- [x] Show UI for selecting 3 buttons for answers and then a textbox for what the other says.
