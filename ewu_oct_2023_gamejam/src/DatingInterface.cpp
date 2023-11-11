@@ -3,6 +3,7 @@
 #include <iostream>
 #include "VulkanEngine.h"
 #include "GlobalState.h"
+#include "AudioEngine.h"
 #include "RenderObject.h"
 #include "InputManager.h"
 #include "RandomNumberGenerator.h"
@@ -28,6 +29,7 @@ struct DatingInterface_XData
     textmesh::TextMesh* dateSpeechText = nullptr;
     ui::UIQuad* dateSpeechBox;
     float_t dateThinkingTimer = 0.0f;
+    bool dateAnswerPositively;
 
     ui::UIQuad* contestantThinkingBoxTex;
     ui::UIQuad* contestantThinkingBoxFill;
@@ -342,6 +344,8 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT)
     {
+        if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_REJECT_CONTESTANT)
+            AudioEngine::getInstance().playSound("res/sfx/icky_squish.wav");
         textmesh::regenerateTextMeshMesh(
             (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_REJECT_DATE ?
                 d->contestantSpeechText :
@@ -360,6 +364,7 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     }
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ACCEPT_DATE_INVITE)
     {
+        AudioEngine::getInstance().playSound("res/sfx/wip_Sys_ExtraHeartUp_01.wav");
         textmesh::regenerateTextMeshMesh(
             d->dateSpeechText,
             "Yes. I would love to."
@@ -390,6 +395,13 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_EXECUTE ||
         d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE)
     {
+        if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE)
+        {
+            if (d->dateAnswerPositively)
+                AudioEngine::getInstance().playSound("res/sfx/wip_Sys_ExtraHeartUp_01.wav");
+            else
+                AudioEngine::getInstance().playSound("res/sfx/icky_squish.wav");
+        }
         d->stageTransitionTimer = 1.5f;
     }
 }
@@ -492,16 +504,19 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
     {
         case 0:
             // VERY_GOOD
+            d->dateAnswerPositively = true;
             dateProps.currentTrustLevel += dateProps.veryGoodTLA;
             break;
 
         case 1:
             // GOOD
+            d->dateAnswerPositively = true;
             dateProps.currentTrustLevel += dateProps.goodTLA;
             break;
 
         case 2:
             // BAD
+            d->dateAnswerPositively = false;
             dateProps.currentTrustLevel += dateProps.badTLA;
             if (dateProps.currentTrustLevel <= dateProps.harshRejectThreshold)
                 d->gotoRejection = true;
@@ -509,6 +524,7 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
 
         case 3:
             // VERY_BAD
+            d->dateAnswerPositively = false;
             dateProps.currentTrustLevel += dateProps.veryBadTLA;
             if (dateProps.currentTrustLevel <= dateProps.harshRejectThreshold)
                 d->gotoRejection = true;
@@ -529,7 +545,12 @@ void selectContestantDialogueOption(DatingInterface_XData* d)
                 d->dateProcessingBeingAskedOut = (rng::randomReal() > 0.9f ? 1 : 2);
 
             if (d->dateProcessingBeingAskedOut == 1)
+            {
+                d->dateAnswerPositively = false;
                 dateProps.currentTrustLevel += dateProps.veryBadTLA;  // Add VERY_BAD if date rejects the invite.
+            }
+            else
+                d->dateAnswerPositively = true;
             // d->dateProcessingBeingAskedOut = 2;  @DEBUG
             setupStage(d, DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_DATE_ON_DATE);
             return;
