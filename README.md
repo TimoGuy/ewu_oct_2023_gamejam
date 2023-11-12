@@ -146,7 +146,8 @@ How do we handle if there are no more places to uncover or <# of dates?
 - [ ] Phase 0: View Tarot cards
     - [x] 10 cards show up, and 3 are flipped over
     - [x] Move to the center of the screen ~~and they show the bios of the 3 girls.~~
-    - [ ] Show the bios in text underneath the cards.
+    - [x] Show the bios in text underneath the cards.
+        - [f] Have the bios all show up after all of the cards are gone.
     - [ ] Press any key to continue to Phase 1.
 
 

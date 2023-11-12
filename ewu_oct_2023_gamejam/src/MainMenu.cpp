@@ -10,7 +10,7 @@
 #include "InputManager.h"
 #include "SceneManagement.h"
 #include "GlobalState.h"
-#include "Textbox.h"
+#include "TextMesh.h"
 #include "Camera.h"
 #include "Debug.h"
 #include "imgui/imgui.h"
@@ -31,6 +31,14 @@ struct MainMenu_XData
     size_t currentDrawIdx = 0;
     size_t currentCard = 0;
     bool launchingCards = false;
+
+    struct Bio
+    {
+        textmesh::TextMesh* name;
+        textmesh::TextMesh* description;
+        float_t enabledAmount = -1.0f;  // < 0.0 is invisible. | >0.0 is visible.
+    };
+    Bio bio1, bio2, bio3;
 };
 
 
@@ -90,8 +98,23 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
             {
                 "EventHideMe", [&, i]() {
                     _data->tarotCardROs[i]->renderLayer = RenderLayer::INVISIBLE;
-                }
-            }
+                },
+            },
+            {
+                "EventShowBio1", [&]() {
+                    _data->bio1.enabledAmount = 0.0f;
+                },
+            },
+            {
+                "EventShowBio2", [&]() {
+                    _data->bio2.enabledAmount = 0.0f;
+                },
+            },
+            {
+                "EventShowBio3", [&]() {
+                    _data->bio3.enabledAmount = 0.0f;
+                },
+            },
         };
         inROs.push_back({
             .model = model,
@@ -118,10 +141,48 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     glm_euler_zyx(vec3{ 0.0f, glm_rad(180.0f), 0.0f }, _data->launchTransform);
 
     _data->camera->mainCamMode.setMainCamTargetObject(_data->renderObj);
+
+    // Create bios.
+    _data->bio1.name = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, -1.0f, "Nefertiti");
+    glm_vec3_copy(vec3{ 10.0f, 1.0f, 0.0f }, _data->bio1.name->renderPosition);
+    _data->bio1.name->scale = 1.0f;
+    _data->bio1.name->excludeFromBulkRender = true;
+
+    _data->bio1.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Mummy from blah blah blah blah blah blah.");
+    glm_vec3_copy(vec3{ 9.75f, -0.5f, 0.0f }, _data->bio1.description->renderPosition);
+    _data->bio1.description->scale = 0.5f;
+    _data->bio1.description->excludeFromBulkRender = true;
+
+    _data->bio2.name = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, -1.0f, "Ophelia");
+    glm_vec3_copy(vec3{ 3.0f, 1.0f, 0.0f }, _data->bio2.name->renderPosition);
+    _data->bio2.name->scale = 1.0f;
+    _data->bio2.name->excludeFromBulkRender = true;
+
+    _data->bio2.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Ghost from blah blah blah blah blah blah.");
+    glm_vec3_copy(vec3{ 2.6f, -0.5f, 0.0f }, _data->bio2.description->renderPosition);
+    _data->bio2.description->scale = 0.5f;
+    _data->bio2.description->excludeFromBulkRender = true;
+
+    _data->bio3.name = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, -1.0f, "Isabella");
+    glm_vec3_copy(vec3{ -4.0f, 1.0f, 0.0f }, _data->bio3.name->renderPosition);
+    _data->bio3.name->scale = 1.0f;
+    _data->bio3.name->excludeFromBulkRender = true;
+
+    _data->bio3.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Vampire from blah blah blah blah blah blah.");
+    glm_vec3_copy(vec3{ -4.5f, -0.5f, 0.0f }, _data->bio3.description->renderPosition);
+    _data->bio3.description->scale = 0.5f;
+    _data->bio3.description->excludeFromBulkRender = true;
 }
 
 MainMenu::~MainMenu()
 {
+    textmesh::destroyAndUnregisterTextMesh(_data->bio1.name);
+    textmesh::destroyAndUnregisterTextMesh(_data->bio1.description);
+    textmesh::destroyAndUnregisterTextMesh(_data->bio2.name);
+    textmesh::destroyAndUnregisterTextMesh(_data->bio2.description);
+    textmesh::destroyAndUnregisterTextMesh(_data->bio3.name);
+    textmesh::destroyAndUnregisterTextMesh(_data->bio3.description);
+
     _data->rom->unregisterRenderObjects(_data->tarotCardROs);
     _data->rom->unregisterRenderObjects({ _data->renderObj });
     _data->rom->removeModelCallbacks(this);
@@ -173,6 +234,18 @@ void MainMenu::update(const float_t& deltaTime)
         if (_data->currentCard >= _data->tarotCardROs.size())
             _data->launchingCards = false;
     }
+
+    _data->bio1.name->excludeFromBulkRender =
+        _data->bio1.description->excludeFromBulkRender =
+        (_data->bio1.enabledAmount < 0.0f);
+
+    _data->bio2.name->excludeFromBulkRender =
+        _data->bio2.description->excludeFromBulkRender =
+        (_data->bio2.enabledAmount < 0.0f);
+
+    _data->bio3.name->excludeFromBulkRender =
+        _data->bio3.description->excludeFromBulkRender =
+        (_data->bio3.enabledAmount < 0.0f);
 }
 
 void MainMenu::lateUpdate(const float_t& deltaTime)
@@ -199,7 +272,31 @@ void MainMenu::reportMoved(mat4* matrixMoved)
 {
 }
 
+// @COPYPASTA from DatingInterface.cpp
+void imguiTextMesh2(const std::string& textMeshName, textmesh::TextMesh* textMesh)  // That's why this is renamed to 2 bc of a symbol collision.
+{
+    std::string nameSuffix = "##69420textmesh" + textMeshName;
+    if (ImGui::TreeNode((textMeshName + nameSuffix).c_str()))
+    {
+        ImGui::Checkbox(("excludeFromBulkRender" + nameSuffix).c_str(), &textMesh->excludeFromBulkRender);
+        ImGui::DragFloat3(("renderPosition" + nameSuffix).c_str(), textMesh->renderPosition);
+        ImGui::DragFloat(("scale" + nameSuffix).c_str(), &textMesh->scale);
+        if (ImGui::DragFloat(("maxLineLength" + nameSuffix).c_str(), &textMesh->maxLineLength))
+        {
+            textmesh::regenerateTextMeshMesh(textMesh, "This is a test text mesh word so that you can see just how well the words wrap.");
+        }
+
+        ImGui::TreePop();
+        ImGui::Separator();
+    }
+}
+
 void MainMenu::renderImGui()
 {
-    ImGui::Button("Add Menu Item");
+    imguiTextMesh2("bio1.name", _data->bio1.name);
+    imguiTextMesh2("bio1.description", _data->bio1.description);
+    imguiTextMesh2("bio2.name", _data->bio2.name);
+    imguiTextMesh2("bio2.description", _data->bio2.description);
+    imguiTextMesh2("bio3.name", _data->bio3.name);
+    imguiTextMesh2("bio3.description", _data->bio3.description);
 }

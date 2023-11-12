@@ -9,7 +9,7 @@
 :StateFlyAround
   animation FlyAround
   loop      0
-  event     0.99    EventHideMe
+  event     0.8749999    EventHideMe
 
 :StateDrawTo1_Fly
   animation FlyAround_Draw
@@ -29,11 +29,14 @@
 :StateDrawTo1_Lay
   animation Draw_ToPos1
   loop      0
+  event     0.3749999    EventShowBio1
 
 :StateDrawTo2_Lay
   animation Draw_ToPos2
   loop      0
+  event     0.3749999    EventShowBio2
 
 :StateDrawTo3_Lay
   animation Draw_ToPos3
   loop      0
+  event     0.3749999    EventShowBio3
