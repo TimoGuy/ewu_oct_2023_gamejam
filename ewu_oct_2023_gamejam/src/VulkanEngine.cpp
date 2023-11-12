@@ -559,18 +559,19 @@ void VulkanEngine::renderMainRenderpass(const FrameData& currentFrame, VkCommand
 	vkCmdNextSubpass(cmd, VK_SUBPASS_CONTENTS_INLINE);
 
 	// Render skybox.
-	if (_skyboxIsSnapshotImage)
-	{
-		Material& snapshotImageMaterial = *getMaterial("snapshotImageMaterial");
-		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipeline);
-		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipelineLayout, 0, 1, &snapshotImageMaterial.textureSet, 0, nullptr);
-		vkCmdDraw(cmd, 3, 1, 0, 0);
-	}
-	else
-	{
-		Material& skyboxMaterial = *getMaterial("skyboxMaterial");
-		renderSkybox(cmd, skyboxMaterial, currentFrame.globalDescriptor, _roManager->getModel("Box", nullptr, [](){}));
-	}
+	if (globalState::renderSkybox)
+		if (_skyboxIsSnapshotImage)
+		{
+			Material& snapshotImageMaterial = *getMaterial("snapshotImageMaterial");
+			vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipeline);
+			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipelineLayout, 0, 1, &snapshotImageMaterial.textureSet, 0, nullptr);
+			vkCmdDraw(cmd, 3, 1, 0, 0);
+		}
+		else
+		{
+			Material& skyboxMaterial = *getMaterial("skyboxMaterial");
+			renderSkybox(cmd, skyboxMaterial, currentFrame.globalDescriptor, _roManager->getModel("Box", nullptr, [](){}));
+		}
 
 	// Bind material and render renderobjects.
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipeline);
@@ -1712,6 +1713,82 @@ void VulkanEngine::loadImages()
 			});
 
 		_loadedTextures["ContestantSpeechBox"] = texture;
+	}
+
+	// Load LoseArt
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/lose_art.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["LoseArt"] = texture;
+	}
+
+	// Load DateArt0
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date_art_0.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["DateArt0"] = texture;
+	}
+
+	// Load DateArt1
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date_art_1.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["DateArt1"] = texture;
+	}
+
+	// Load DateArt2
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/date_art_2.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["DateArt2"] = texture;
 	}
 
 	// Load imguiTextureLayerVisible

@@ -2531,7 +2531,8 @@ void Character::physicsUpdate(const float_t& physicsDeltaTime)
 
         if (globalState::gameIsOver())
         {
-            std::cout << "GAME OVER!!!!!!! tODOO" << std::endl;
+            globalState::gameFinishState.isWin = false;
+            scene::loadScene("game_over.ssdat", true);
         }
     }
 

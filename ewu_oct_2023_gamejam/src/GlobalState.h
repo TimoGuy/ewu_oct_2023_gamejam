@@ -211,6 +211,14 @@ namespace globalState
     };
     extern DateProps dates[NUM_CONTESTANTS];  // Equal number of dates to number of contestants.
 
+    struct GameFinishState
+    {
+        bool isWin = false;
+        int8_t dateIdx;
+    };
+    extern GameFinishState gameFinishState;
+    extern bool renderSkybox;
+
     enum AncientWeaponItemType
     {
         WEAPON,

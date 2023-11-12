@@ -259,6 +259,7 @@ namespace globalState
     void startNewGame()
     {
         // Trigger loading phase 0.
+        renderSkybox = true;
         phase0.transitionToPhase0(false);
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
@@ -266,7 +267,9 @@ namespace globalState
 
     void gotoWinGame()
     {
-        std::cout << "YOU WON THE GAME CONGRATULATIONS!!!!" << std::endl;
+        gameFinishState.isWin = true;
+        gameFinishState.dateIdx = phase2.dateIdx;
+        scene::loadScene("game_over.ssdat", true);
     }
 
     void Phase0::setDateDummyPosition(size_t dateIdx, vec3 position)
@@ -320,6 +323,9 @@ namespace globalState
 
     Phase2 phase2 = Phase2();
     DateProps dates[NUM_CONTESTANTS];
+
+    GameFinishState gameFinishState = GameFinishState();
+    bool renderSkybox = false;
 
     SceneCamera* sceneCameraRef = nullptr;
     EntityManager* entityManagerRef = nullptr;

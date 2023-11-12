@@ -158,6 +158,7 @@ copy $(SolutionDir)libs\cglm\cglm.dll $(OutDirfullPath)cglm.dll</Command>
     <ClInclude Include="src\GlobalState.h" />
     <ClInclude Include="src\HarvestableItem.h" />
     <ClInclude Include="src\MainMenu.h" />
+    <ClInclude Include="src\GameOverMenu.h" />
     <ClInclude Include="src\CoveredItem.h" />
     <ClInclude Include="src\DatingInterface.h" />
     <ClInclude Include="src\Hazard.h" />
@@ -214,6 +215,7 @@ copy $(SolutionDir)libs\cglm\cglm.dll $(OutDirfullPath)cglm.dll</Command>
     <ClCompile Include="src\GlobalState.cpp" />
     <ClCompile Include="src\HarvestableItem.cpp" />
     <ClCompile Include="src\MainMenu.cpp" />
+    <ClCompile Include="src\GameOverMenu.cpp" />
     <ClCompile Include="src\CoveredItem.cpp" />
     <ClCompile Include="src\DatingInterface.cpp" />
     <ClCompile Include="src\Hazard.cpp" />

@@ -55,6 +55,7 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
         load(*ds);
 
     globalState::isGameActive = false;
+    globalState::renderSkybox = false;
 
     _data->rom->registerRenderObjects({
             {
