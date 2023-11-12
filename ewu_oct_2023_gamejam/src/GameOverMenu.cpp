@@ -57,6 +57,8 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
         { &_data->renderObj }
     );
 
+    _data->camera->mainCamMode.setMainCamTargetObject(_data->renderObj);
+
     _data->loseArt = ui::registerUIQuad(&engine->_loadedTextures["LoseArt"]);
     glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->loseArt->scale);
     _data->loseArt->visible = false;
@@ -81,6 +83,7 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
 
 GameOverMenu::~GameOverMenu()
 {
+    textmesh::destroyAndUnregisterTextMesh(_data->returnToMainMenuPromptText);
     ui::unregisterUIQuad(_data->loseArt);
     for (size_t i = 0; i < 3; i++)
         ui::unregisterUIQuad(_data->dateArt[i]);
@@ -98,6 +101,7 @@ void GameOverMenu::physicsUpdate(const float_t& physicsDeltaTime)
 void GameOverMenu::update(const float_t& deltaTime)
 {
     bool canReturn = (_data->enableReturnToMainMenuTimer < 0.0f);
+    _data->returnToMainMenuPromptText->excludeFromBulkRender = !canReturn;
     if (!canReturn)
         _data->enableReturnToMainMenuTimer -= deltaTime;
     if (canReturn && input::onKeyJumpPress)

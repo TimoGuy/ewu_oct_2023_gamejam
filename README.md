@@ -131,24 +131,29 @@
     - [x] Add the corresponding sounds for the reactions.
         > Now you can use where those sfx are being played as where to add in the reactions.
 - [x] Add text showing how far away from date in hallway
-- [ ] Game over and game win screens
-    - [ ] Correctly shows the correct date pic for the game win screens.
-- [ ] Create 3d interior for hallway and ballroom
-    - [ ] Create 3d exporting tool for the voxel fields.
+- [x] Game over and game win screens
+    - [x] Correctly shows the correct date pic for the game win screens.
 
-
-
-
-- [ ] Phase 0: View Tarot cards
+- [x] Phase 0: View Tarot cards
     - [x] 10 cards show up, and 3 are flipped over
     - [x] Move to the center of the screen ~~and they show the bios of the 3 girls.~~
     - [x] Show the bios in text underneath the cards.
         - [f] Have the bios all show up after all of the cards are gone.
-    - [ ] Press any key to continue to Phase 1.
+    - [x] Press any key to continue to Phase 1.
+
+- [ ] Create 3d interior for hallway and ballroom
+    - [ ] Create 3d exporting tool for the voxel fields.
+
+- [ ] Add in music for chase and main menu
+- [ ] Add in start game and exit game buttons for main menu
 
 
 ## Things to do if I have time before the deadline.
 
+- [ ] Fix reset state when restarting game.
+    - [ ] Skybox is the picture instead of normal skybox.
+    - [ ] Player cannot move for some reason.
+    - [ ] Player is in hallway for some reason.
 - [ ] Have text selection boxes be the same width (max) and then center the text.
 - [ ] Change text boxes to be zelda style.
 

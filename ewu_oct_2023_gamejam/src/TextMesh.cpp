@@ -601,30 +601,43 @@ namespace textmesh
 			changeRequests.erase(changeRequests.begin());
 			numChangeReqests--;
 		}
-		
+
+		std::vector<size_t> deleteIndices;  // To delete all at once instead of matching addresses with `std::erase_if`
 		size_t numDelRequests = deleteRequests.size();
 		while (numDelRequests > 0)
 		{
 			TextMesh* tm = deleteRequests[0];
-			std::erase_if(textmeshes, [&](TextMesh& tml) {
-				if (&tml == tm)
+			for (size_t i = 0; i < textmeshes.size(); i++)
+			{
+				TextMesh& tml = textmeshes[i];
+				if (tm == &tml)
 				{
-					if (tml.indexCount > 0)
-					{
-						// Cleanup previously created vertex index buffers.
-						vmaDestroyBuffer(engine->_allocator, tml.vertexBuffer._buffer, tml.vertexBuffer._allocation);
-						vmaDestroyBuffer(engine->_allocator, tml.indexBuffer._buffer, tml.indexBuffer._allocation);
-					}
-					return true;
+					deleteIndices.push_back(i);
+					break;
 				}
-				return false;
-			});
-
-			if (numDelRequests == 1)  // Last delete request
-				sortTextMeshesByTypeFace();  // To keep descriptor set switches to a minimum.
-
+			}
 			deleteRequests.erase(deleteRequests.begin());
 			numDelRequests--;
+		}
+		if (!deleteIndices.empty())
+		{
+			// Run thru delete!
+			std::sort(deleteIndices.rbegin(), deleteIndices.rend());
+			for (size_t i : deleteIndices)
+			{
+				TextMesh& tml = textmeshes[i];
+				if (tml.indexCount > 0)
+				{
+					// Cleanup previously created vertex index buffers.
+					vmaDestroyBuffer(engine->_allocator, tml.vertexBuffer._buffer, tml.vertexBuffer._allocation);
+					vmaDestroyBuffer(engine->_allocator, tml.indexBuffer._buffer, tml.indexBuffer._allocation);
+				}
+				// @NOTE: you're still deleting stuff right here. In order for textmesh pointers to have
+				//        a guarantee that where they're pointing is up to date and correct, you'll HAVE
+				//        TO DO THE SAME POOL SYSTEM as render object manager.  -Timo 2023/11/12
+				textmeshes.erase(textmeshes.begin() + i);
+			}
+			sortTextMeshesByTypeFace();
 		}
 	}
 }

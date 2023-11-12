@@ -39,6 +39,9 @@ struct MainMenu_XData
         float_t enabledAmount = -1.0f;  // < 0.0 is invisible. | >0.0 is visible.
     };
     Bio bio1, bio2, bio3;
+
+    float_t allowStartGameTimer = 2.0f;
+    textmesh::TextMesh* startGamePromptText;
 };
 
 
@@ -173,6 +176,11 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     glm_vec3_copy(vec3{ -4.5f, -0.5f, 0.0f }, _data->bio3.description->renderPosition);
     _data->bio3.description->scale = 0.5f;
     _data->bio3.description->excludeFromBulkRender = true;
+
+    _data->startGamePromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Spacebar to Start.");
+    glm_vec3_copy(vec3{ 0.0f, -4.5f, 0.0f }, _data->startGamePromptText->renderPosition);
+    _data->startGamePromptText->scale = 0.5f;
+    _data->startGamePromptText->excludeFromBulkRender = true;
 }
 
 MainMenu::~MainMenu()
@@ -183,6 +191,7 @@ MainMenu::~MainMenu()
     textmesh::destroyAndUnregisterTextMesh(_data->bio2.description);
     textmesh::destroyAndUnregisterTextMesh(_data->bio3.name);
     textmesh::destroyAndUnregisterTextMesh(_data->bio3.description);
+    textmesh::destroyAndUnregisterTextMesh(_data->startGamePromptText);
 
     _data->rom->unregisterRenderObjects(_data->tarotCardROs);
     _data->rom->unregisterRenderObjects({ _data->renderObj });
@@ -197,12 +206,7 @@ void MainMenu::physicsUpdate(const float_t& physicsDeltaTime)
 
 void MainMenu::update(const float_t& deltaTime)
 {
-    // if (input::onKeyJumpPress)
-    // {
-    //     globalState::resetGameState();
-    //     scene::loadScene("hello_hello_world.ssdat", true);
-    // }
-    if (input::onKeyJumpPress)
+    if (input::onKeyJumpPress && !_data->launchingCards)
     {
         _data->cardLaunchIntervalTimer = 0.0f;
         _data->currentDrawIdx = 0;
@@ -233,7 +237,17 @@ void MainMenu::update(const float_t& deltaTime)
         }
 
         if (_data->currentCard >= _data->tarotCardROs.size())
-            _data->launchingCards = false;
+        {
+            _data->allowStartGameTimer -= deltaTime;
+            bool allowStart = (_data->allowStartGameTimer < 0.0f);
+            _data->startGamePromptText->excludeFromBulkRender = !allowStart;
+            if (allowStart && input::onKeyJumpPress)
+            {
+                // Start new game.
+                globalState::resetGameState();
+                scene::loadScene("hello_hello_world.ssdat", true);
+            }
+        }
     }
 
     _data->bio1.name->excludeFromBulkRender =
@@ -300,4 +314,5 @@ void MainMenu::renderImGui()
     imguiTextMesh2("bio2.description", _data->bio2.description);
     imguiTextMesh2("bio3.name", _data->bio3.name);
     imguiTextMesh2("bio3.description", _data->bio3.description);
+    imguiTextMesh2("startGamePromptText", _data->startGamePromptText);
 }
