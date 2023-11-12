@@ -126,22 +126,18 @@
     - [x] Apply to date character speech bubble.
     - [x] Apply to contestant speech bubble.
 - [ ] ~~Add text showing if trust level got better or not in the dating sim~~
-    - [ ] ~~Add flowers particle effect for good reaction.~~ Tint image green then fadeaway for good reaction.
-    - [ ] ~~Add disgusted particle effect for bad reaction.~~ Tint image red then fadeaway for bad reaction.
+    - [ ] ~~Add flowers particle effect for good reaction.~~ ~~Tint image green then fadeaway for good reaction.~~ 
+    - [ ] ~~Add disgusted particle effect for bad reaction.~~ ~~Tint image red then fadeaway for bad reaction.~~ Squish and stretch.
     - [x] Add the corresponding sounds for the reactions.
         > Now you can use where those sfx are being played as where to add in the reactions.
 - [x] Add text showing how far away from date in hallway
+- [ ] Game over and game win screens
+    - [ ] Correctly shows the correct date pic for the game win screens.
 - [ ] Create 3d interior for hallway and ballroom
     - [ ] Create 3d exporting tool for the voxel fields.
 
 
-- [ ] Game over and game win screens
-    - [ ] Correctly shows the correct date pic for the game win screens.
 
-How do we handle if a contestant other than the player gets a date success?
-    GAME OVER, you LOSE, type deal.
-How do we handle if there are no more places to uncover or <# of dates?
-    This will not happen. When you reset to Phase 1, the whole entire room gets reset and everything is covered up again.
 
 - [ ] Phase 0: View Tarot cards
     - [x] 10 cards show up, and 3 are flipped over
@@ -151,7 +147,19 @@ How do we handle if there are no more places to uncover or <# of dates?
     - [ ] Press any key to continue to Phase 1.
 
 
+## Things to do if I have time before the deadline.
+
+- [ ] Have text selection boxes be the same width (max) and then center the text.
+- [ ] Change text boxes to be zelda style.
+
+
 ## Action Items for Otomege part of Game.
 
 - [x] Blur out background of 3d game.
 - [x] Show UI for selecting 3 buttons for answers and then a textbox for what the other says.
+
+
+How do we handle if a contestant other than the player gets a date success?
+    GAME OVER, you LOSE, type deal.
+How do we handle if there are no more places to uncover or <# of dates?
+    This will not happen. When you reset to Phase 1, the whole entire room gets reset and everything is covered up again.

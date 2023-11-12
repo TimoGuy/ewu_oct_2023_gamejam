@@ -25,7 +25,7 @@ struct MainMenu_XData
     std::vector<RenderObject*> tarotCardROs;
 
     mat4 launchTransform;
-    float_t cardLaunchInterval = 0.1f;
+    float_t cardLaunchInterval = 0.05f;
     float_t cardLaunchIntervalTimer = 0.0f;
     std::vector<size_t> tarotCardDrawIndices;
     size_t currentDrawIdx = 0;
