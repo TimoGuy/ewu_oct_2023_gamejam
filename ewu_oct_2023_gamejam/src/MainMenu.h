@@ -13,7 +13,7 @@ public:
     static const std::string TYPE_NAME;
     std::string getTypeName() { return TYPE_NAME; };
 
-    MainMenu(EntityManager* em, RenderObjectManager* rom, DataSerialized* ds);
+    MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds);
     ~MainMenu();
 
     void physicsUpdate(const float_t& physicsDeltaTime);

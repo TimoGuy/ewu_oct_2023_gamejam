@@ -144,8 +144,9 @@ How do we handle if there are no more places to uncover or <# of dates?
     This will not happen. When you reset to Phase 1, the whole entire room gets reset and everything is covered up again.
 
 - [ ] Phase 0: View Tarot cards
-    - [ ] 10 cards show up, and 3 are flipped over
-    - [ ] Move to the center of the screen and they show the bios of the 3 girls.
+    - [x] 10 cards show up, and 3 are flipped over
+    - [x] Move to the center of the screen ~~and they show the bios of the 3 girls.~~
+    - [ ] Show the bios in text underneath the cards.
     - [ ] Press any key to continue to Phase 1.
 
 
