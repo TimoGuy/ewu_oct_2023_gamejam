@@ -491,7 +491,8 @@ namespace globalState
     {
         if (showCountdown() && !phase1.loadTriggerFlag)
         {
-            playTimeRemaining -= deltaTime;
+            // @DEBUG: @NOCHECKIN: prevent playtime from going down.
+            // playTimeRemaining -= deltaTime;
         }
 
         if (currentPhase == GamePhases::P1_HALLWAY && !phase2.loadTriggerFlag)
