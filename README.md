@@ -143,9 +143,27 @@
 
 - [ ] Create 3d interior for hallway and ballroom
     - [f] Create 3d exporting tool for the voxel fields.
+    - [x] Create blockout for the hall and ballroom
+    - [x] Remove the contestant B's or change where they spawn in chase phase.
+    - [ ] Add more windows and a doorway for ballroom.
 
-- [ ] Add in music for chase and main menu
-- [ ] Add in start game and exit game buttons for main menu
+- [x] Add in music for main menu
+- [ ] Add in music for chase hallway.
+    - [ ] Display ui quads for the ready go!
+    - [ ] Disable character and date movement until the go!
+- [ ] ~~Add in start game and exit game buttons for main menu~~ Just add text
+    - [ ] "Press Spacebar to draw tarot cards for dates."
+    - [ ] "Press Esc to exit anytime."
+
+- [ ] Add assets for characters etc.
+    - [ ] Nefertiti
+    - [ ] Ophelia
+    - [ ] Isabella
+    - [ ] MC
+    - [ ] Title screen
+
+- [ ] Disable imgui on startup.
+- [ ] Set startup cam to game cam instead of freecam.
 
 
 ## Things to do if I have time before the deadline.

@@ -558,20 +558,22 @@ void VulkanEngine::renderMainRenderpass(const FrameData& currentFrame, VkCommand
 	// Switch from zprepass subpass to main subpass
 	vkCmdNextSubpass(cmd, VK_SUBPASS_CONTENTS_INLINE);
 
-	// Render skybox.
-	if (globalState::renderSkybox)
-		if (_skyboxIsSnapshotImage)
-		{
-			Material& snapshotImageMaterial = *getMaterial("snapshotImageMaterial");
-			vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipeline);
-			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipelineLayout, 0, 1, &snapshotImageMaterial.textureSet, 0, nullptr);
-			vkCmdDraw(cmd, 3, 1, 0, 0);
-		}
-		else
-		{
-			Material& skyboxMaterial = *getMaterial("skyboxMaterial");
-			renderSkybox(cmd, skyboxMaterial, currentFrame.globalDescriptor, _roManager->getModel("Box", nullptr, [](){}));
-		}
+	// @NOTE: for EWU Game Jam.
+	//        There is absolutely no need to render the skybox. It should be black for 99% of the time. The only thing you can see "outside" will be the scenery.  -Timo 2023/11/13
+	// // Render skybox.
+	// if (globalState::renderSkybox)
+	// 	if (_skyboxIsSnapshotImage)
+	// 	{
+	// 		Material& snapshotImageMaterial = *getMaterial("snapshotImageMaterial");
+	// 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipeline);
+	// 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, snapshotImageMaterial.pipelineLayout, 0, 1, &snapshotImageMaterial.textureSet, 0, nullptr);
+	// 		vkCmdDraw(cmd, 3, 1, 0, 0);
+	// 	}
+	// 	else
+	// 	{
+	// 		Material& skyboxMaterial = *getMaterial("skyboxMaterial");
+	// 		renderSkybox(cmd, skyboxMaterial, currentFrame.globalDescriptor, _roManager->getModel("Box", nullptr, [](){}));
+	// 	}
 
 	// Bind material and render renderobjects.
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, defaultMaterial.pipeline);

@@ -58,7 +58,7 @@ namespace globalState
          phase0.numCoveredItemsToSpawn = 3;  // @DEBUG
         glm_vec3_copy(vec3{ 243.0f, 0.5f, 20.0f }, phase1.contASpawnPosition);
         glm_vec3_copy(vec3{ 233.0f, 0.5f, 20.0f }, phase1.dateSpawnPosition);
-        glm_vec3_copy(vec3{ 243.0f, -1.5f, 12.5f }, phase1.contBSpawnPosition);
+        glm_vec3_copy(vec3{ 243.0f, -1.5f, -20.0f/*12.5f*/ }, phase1.contBSpawnPosition);
         glm_vec3_copy(vec3{ -3.0f, 0.0f, 0.0f }, phase1.contBSpawnStride);
         phase1.numHazardsToSpawn = 12;
         phase1.hazardStartDistance = -42.0f;
