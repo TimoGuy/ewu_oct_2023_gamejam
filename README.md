@@ -161,6 +161,7 @@
     - [ ] Isabella
     - [ ] MC
     - [ ] Title screen
+    - [ ] Dating background.
 
 - [ ] Disable imgui on startup.
 - [ ] Set startup cam to game cam instead of freecam.
