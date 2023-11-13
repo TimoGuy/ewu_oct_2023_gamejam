@@ -112,7 +112,7 @@ void VulkanEngine::init()
 constexpr size_t numPerfs = 15;
 uint64_t perfs[numPerfs];
 
-vec4 lightDir = { 0.144958f, 0.01f, 0.506855f, 0.0f };
+vec4 lightDir = { -0.304f, 0.711f, 0.634f, 0.0f };
 
 void VulkanEngine::run()
 {
@@ -6235,7 +6235,10 @@ void VulkanEngine::renderImGuiContent(float_t deltaTime, ImGuiIO& io)
 	ImGui::Begin("PBR Shading Properties", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar  | ImGuiWindowFlags_NoMove);
 	{
 		if (ImGui::DragFloat3("Light Direction", _pbrRendering.gpuSceneShadingProps.lightDir))
-			glm_normalize(_pbrRendering.gpuSceneShadingProps.lightDir);		
+			glm_normalize(_pbrRendering.gpuSceneShadingProps.lightDir);
+
+		if (ImGui::Button("Set light direction to current view direction."))
+			glm_vec3_negate_to(_camera->sceneCamera.facingDirection, _pbrRendering.gpuSceneShadingProps.lightDir);
 
 		ImGui::DragFloat("Exposure", &_pbrRendering.gpuSceneShadingProps.exposure, 0.1f, 0.1f, 10.0f);
 		ImGui::DragFloat("Gamma", &_pbrRendering.gpuSceneShadingProps.gamma, 0.1f, 0.1f, 4.0f);

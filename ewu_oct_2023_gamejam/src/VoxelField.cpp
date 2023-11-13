@@ -119,6 +119,8 @@ VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectMana
 
 VoxelField::~VoxelField()
 {
+    if (_data->displayModelRO != nullptr)
+        _data->rom->unregisterRenderObjects({ _data->displayModelRO });
     delete _data->editorState.editingVoxelRenderObjsMutex;
     deleteVoxelRenderObjects(*_data);
     physengine::destroyVoxelField(_data->vfpd);
@@ -1393,6 +1395,8 @@ void VoxelField::renderImGui()
             glm_translate(_data->displayModelTransform, pos);
             glm_quat_rotate(_data->displayModelTransform, rotV, _data->displayModelTransform);
             glm_scale(_data->displayModelTransform, sca);
+            if (_data->displayModelRO != nullptr)
+                glm_mat4_copy(_data->displayModelTransform, _data->displayModelRO->transformMatrix);
         }
     }
 
@@ -1444,7 +1448,7 @@ inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string
     std::vector<RenderObject> inROs;
     std::vector<RenderObject**> outRORefs;
     for (auto& shape : inCollisionShapes)
-        createInRO(data, data.voxelModel, RenderLayer::VISIBLE, attachedEntityGuid, shape, inROs);
+        createInRO(data, data.voxelModel, /*RenderLayer::VISIBLE @NOTE: for EWU Game Jam.*/RenderLayer::BUILDER, attachedEntityGuid, shape, inROs);
     for (auto& shape : inTriggerShapes)
     {
         createInRO(data, data.triggerModel, RenderLayer::BUILDER, attachedEntityGuid, shape, inROs);
