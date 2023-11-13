@@ -31,6 +31,10 @@ struct VoxelField_XData
     std::vector<RenderObject*> voxelRenderObjs;
     std::vector<mat4s> voxelRenderObjLocalTransforms;
 
+    RenderObject* displayModelRO = nullptr;
+    std::string displayModelFname = "NULL";
+    mat4 displayModelTransform = GLM_MAT4_IDENTITY_INIT;
+
     struct VoxelPosToCameraRailGuid
     {
         vec3 triggerOrigin;
@@ -63,6 +67,25 @@ inline void assembleVoxelRenderObjects(VoxelField_XData& data, const std::string
 inline void deleteVoxelRenderObjects(VoxelField_XData& data);
 void triggerLoadLightingIfExists(VoxelField_XData& d, const std::string& guid);
 
+void createAndAssignDisplayModel(VoxelField_XData* d, VoxelField* _this, const std::string& myGuid)
+{
+    if (d->displayModelRO != nullptr)
+        d->rom->unregisterRenderObjects({ d->displayModelRO });
+    if (d->displayModelFname != "NULL")
+    {
+        d->rom->registerRenderObjects({
+                {
+                    .model = d->rom->getModel(d->displayModelFname, _this, [](){}),
+                    .renderLayer = RenderLayer::VISIBLE,
+                    .attachedEntityGuid = myGuid,
+                }
+            },
+            { &d->displayModelRO }
+        );
+        glm_mat4_copy(d->displayModelTransform, d->displayModelRO->transformMatrix);
+    }
+}
+
 
 VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds) : Entity(em, ds), _data(new VoxelField_XData())
 {
@@ -91,6 +114,7 @@ VoxelField::VoxelField(VulkanEngine* engine, EntityManager* em, RenderObjectMana
     physengine::cookVoxelDataIntoShape(*_data->vfpd, getGUID(), shapes, triggers);
     assembleVoxelRenderObjects(*_data, getGUID(), shapes, triggers);
     triggerLoadLightingIfExists(*_data, getGUID());
+    createAndAssignDisplayModel(_data, this, getGUID());
 }
 
 VoxelField::~VoxelField()
@@ -753,6 +777,10 @@ void VoxelField::dump(DataSerializer& ds)
         ds.dumpVec3(_data->voxelPosToCameraRailGuid[i].triggerOrigin);
         ds.dumpString(_data->voxelPosToCameraRailGuid[i].camRailGuid);
     }
+
+    // Write out display model.
+    ds.dumpString(_data->displayModelFname);
+    ds.dumpMat4(_data->displayModelTransform);
 }
 
 void VoxelField::load(DataSerialized& ds)
@@ -800,6 +828,13 @@ void VoxelField::load(DataSerialized& ds)
             ds.loadVec3(_data->voxelPosToCameraRailGuid[i].triggerOrigin);
             ds.loadString(_data->voxelPosToCameraRailGuid[i].camRailGuid);
         }
+    }
+
+    // Load in model.
+    if (ds.getSerializedValuesCount() >= 2)
+    {
+        ds.loadString(_data->displayModelFname);
+        ds.loadMat4(_data->displayModelTransform);
     }
 }
 
@@ -1329,6 +1364,36 @@ void VoxelField::renderImGui()
             break;
         }
         break;
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Display Model");
+    static std::string dirtyFname = _data->displayModelFname;
+    ImGui::InputText("Fname", &dirtyFname);
+    if (dirtyFname != _data->displayModelFname);
+        if (ImGui::Button("Apply new Fname"))
+        {
+            _data->displayModelFname = dirtyFname;
+            createAndAssignDisplayModel(_data, this, getGUID());
+        }
+    {
+        vec4 pos;
+        mat4 rot;
+        vec3 sca;
+        glm_decompose(_data->displayModelTransform, pos, rot, sca);
+        versor rotV;
+        glm_mat4_quat(rot, rotV);
+        bool changed = false;
+        changed |= ImGui::DragFloat3("Pos##ASDFASDF17171717123", pos);
+        changed |= ImGui::DragFloat4("Rot##ASDFASDF17171717123", rotV);
+        changed |= ImGui::DragFloat3("Sca##ASDFASDF17171717123", sca);
+        if (changed)
+        {
+            glm_mat4_identity(_data->displayModelTransform);
+            glm_translate(_data->displayModelTransform, pos);
+            glm_quat_rotate(_data->displayModelTransform, rotV, _data->displayModelTransform);
+            glm_scale(_data->displayModelTransform, sca);
+        }
     }
 
     _data->isPicked = true;

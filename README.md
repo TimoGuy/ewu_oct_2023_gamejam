@@ -142,7 +142,7 @@
     - [x] Press any key to continue to Phase 1.
 
 - [ ] Create 3d interior for hallway and ballroom
-    - [ ] Create 3d exporting tool for the voxel fields.
+    - [f] Create 3d exporting tool for the voxel fields.
 
 - [ ] Add in music for chase and main menu
 - [ ] Add in start game and exit game buttons for main menu
