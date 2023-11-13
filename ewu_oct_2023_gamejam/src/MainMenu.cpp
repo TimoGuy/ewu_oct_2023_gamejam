@@ -42,6 +42,10 @@ struct MainMenu_XData
 
     float_t allowStartGameTimer = 2.0f;
     textmesh::TextMesh* startGamePromptText;
+
+    // Sfx.
+    int32_t titleMusicId;
+    float_t titleMusicVolume = 1.0f;
 };
 
 
@@ -181,6 +185,10 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     glm_vec3_copy(vec3{ 0.0f, -4.5f, 0.0f }, _data->startGamePromptText->renderPosition);
     _data->startGamePromptText->scale = 0.5f;
     _data->startGamePromptText->excludeFromBulkRender = true;
+
+    // Play looped track.
+    _data->titleMusicId = AudioEngine::getInstance().playSound("res/music/title.ogg", true);
+    _data->titleMusicVolume = 1.0f;
 }
 
 MainMenu::~MainMenu()
@@ -212,10 +220,21 @@ void MainMenu::update(const float_t& deltaTime)
         _data->currentDrawIdx = 0;
         _data->currentCard = 0;
         _data->launchingCards = true;
+
+        AudioEngine::getInstance().playSound("res/sfx/wip_start_game.wav", false);
     }
 
     if (_data->launchingCards)
     {
+        // Fade out title music.
+        if (_data->titleMusicVolume > 0.0f)
+        {
+            _data->titleMusicVolume -= deltaTime * 2.0f;  // @HARDCODE.
+            AudioEngine::getInstance().setChannelVolume(_data->titleMusicId, AudioEngine::getInstance().volumeToDb(_data->titleMusicVolume));
+            if (_data->titleMusicVolume <= 0.0f)
+                AudioEngine::getInstance().stopChannel(_data->titleMusicId);
+        }
+
         _data->cardLaunchIntervalTimer += deltaTime;
         while (_data->currentCard < _data->tarotCardROs.size() &&
             _data->cardLaunchIntervalTimer > _data->cardLaunchInterval)
