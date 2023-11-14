@@ -193,6 +193,9 @@
     - [x] Title screen
     - [x] Dating background.
 
+- [ ] Sfx for winning the game.
+- [ ] You win and you lose screens.
+
 - [x] Write prompts for the 3 ppl.
     - [x] Fix J and j from the word "reject"
 
