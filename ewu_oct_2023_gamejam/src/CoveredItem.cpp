@@ -208,6 +208,7 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
                     _data->renderObj->renderLayer = RenderLayer::INVISIBLE;
                     globalState::phase0.setDateDummyPosition(_data->dateId, _data->position);
                     globalState::phase0.uncoverDateDummy(_data->dateId);
+                    globalState::phase0.uncoveredDateSfx();
                     globalState::phase1.transitionToPhase1(_data->dateId, _data->interactingContestantId);
                 }
             }

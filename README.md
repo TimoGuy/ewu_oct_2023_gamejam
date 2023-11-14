@@ -160,26 +160,30 @@
 - [x] Add sfx for character getting stunned.
 - [x] Add sfx for card flip in main menu.
 
-- [ ] Add credits page (just a bunch of ui quads)
-    - [ ] TimoEngine
+- [x] Add credits page (just a bunch of ui quads)
+    - [x] TimoEngine
     - [x] Vulkan
     - [x] FMOD
     - [x] SDL
     - [x] Jolt Physics
-    - [ ] Special thanks
-        - [ ] ArsenalFortitude
-        - [ ] Sascha Willems
-        - [ ] Joey de Vries (learnopengl.com)
-        - [ ] vblanco20-1 (vkguide.dev)
-        - [ ] Wendy's
-        - [ ] Timo's toe
-        - [ ] Oreilly's Auto Parts
-        - [ ] NomNom for allowing me time to work on this game that I did not utilize.
-        - [ ] Maverick for my donut.
+    - [x] Special thanks
+        - [x] ArsenalFortitude
+        - [x] Sascha Willems
+        - [x] Joey de Vries (learnopengl.com)
+        - [x] vblanco20-1 (vkguide.dev)
+        - [x] Wendy's
+        - [x] Timo's toe
+        - [x] Oreilly's Auto Parts
+        - [x] NomNom for allowing me time to work on this game that I did not utilize.
+        - [x] Maverick for my donut.
 
 - [x] ~~Add in start game and exit game buttons for main menu~~ Just add text
     - [x] "Press Spacebar to draw tarot cards for dates."
     - [x] "Press Esc to exit anytime."
+
+- [x] Add bgm for searching time.
+    - [x] Add sfx for finding a date.
+    - [x] Add sfx for time expiring.
 
 - [ ] Add assets for characters etc.
     - [ ] Nefertiti

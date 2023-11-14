@@ -20,6 +20,7 @@
 #include "DatingInterface.h"
 #include "MainMenu.h"
 #include "GameOverMenu.h"
+#include "LogosDisplay.h"
 
 
 // @PALETTE: where to add serialized names for the entities
@@ -34,6 +35,7 @@ const std::vector<std::string> ENTITY_TYPE_NAMES = {
     ":datinginterface",
     ":mainmenu",
     ":gameovermenu",
+    ":logosdisplay",
 };
 const std::string Character::TYPE_NAME        = ENTITY_TYPE_NAMES[0];
 const std::string NoteTaker::TYPE_NAME        = ENTITY_TYPE_NAMES[1];
@@ -45,6 +47,7 @@ const std::string Hazard::TYPE_NAME           = ENTITY_TYPE_NAMES[6];
 const std::string DatingInterface::TYPE_NAME  = ENTITY_TYPE_NAMES[7];
 const std::string MainMenu::TYPE_NAME         = ENTITY_TYPE_NAMES[8];
 const std::string GameOverMenu::TYPE_NAME     = ENTITY_TYPE_NAMES[9];
+const std::string LogosDisplay::TYPE_NAME     = ENTITY_TYPE_NAMES[10];
 
 
 namespace scene
@@ -112,6 +115,8 @@ namespace scene
             ent = new MainMenu(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
         if (objectName == GameOverMenu::TYPE_NAME)
             ent = new GameOverMenu(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
+        if (objectName == LogosDisplay::TYPE_NAME)
+            ent = new LogosDisplay(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
 
         if (ent == nullptr)
         {

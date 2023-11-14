@@ -2550,6 +2550,7 @@ void Character::physicsUpdate(const float_t& physicsDeltaTime)
 
         if (globalState::gameIsOver())
         {
+            globalState::phase0.timeExpiredSfx();
             globalState::gameFinishState.isWin = false;
             scene::loadScene("game_over.ssdat", true);
         }

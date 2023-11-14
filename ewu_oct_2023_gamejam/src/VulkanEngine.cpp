@@ -1860,6 +1860,40 @@ void VulkanEngine::loadImages()
 		_loadedTextures["TitleLogo"] = texture;
 	}
 
+	// Load LogoDisplay logos @HARDCODE
+	struct LogoDisplayLogo
+	{
+		std::string fname;
+		std::string textureName;
+	};
+	std::vector<LogoDisplayLogo> logoDisplayLogos = {
+		{ "res/textures/ui/logos/logo_shinkasuru_timo_kikansha.png", "LogoTimoEngine" },
+		{ "res/textures/ui/logos/logo_vulkan.png", "LogoVulkan" },
+		{ "res/textures/ui/logos/logo_fmod.png", "LogoFMOD" },
+		{ "res/textures/ui/logos/logo_sdl.png", "LogoSDL" },
+		{ "res/textures/ui/logos/logo_gltf.png", "LogoglTF" },
+		{ "res/textures/ui/logos/logo_jolt.png", "LogoJolt" },
+		{ "res/textures/ui/logos/special_thanks.png", "SpecialThanks" },
+	};
+	for (LogoDisplayLogo ldl : logoDisplayLogos)
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, ldl.fname.c_str(), VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures[ldl.textureName] = texture;
+	}
+
 	// Load imguiTextureLayerVisible
 	{
 		Texture textureLayerVisible;

@@ -93,6 +93,7 @@ namespace textmesh
 	void loadFontSDF(std::string sdfTextureFilePath, std::string fontFilePath, std::string fontName);
 	TextMesh* createAndRegisterTextMesh(std::string fontName, HorizontalAlignment halign, VerticalAlignment valign, float_t maxLineLength, std::string text);
 	void destroyAndUnregisterTextMesh(TextMesh* tm);
+	void EXTREMELYHACKYANDIDONTLIKETHATIFEELLIKEITEXISTS_DestroyAndUnregisterAll();
 	void regenerateTextMeshMesh(TextMesh* textmesh, std::string text);
 	void uploadUICameraDataToGPU();
 	void renderTextMesh(VkCommandBuffer cmd, TextMesh& tm, bool bindFont);

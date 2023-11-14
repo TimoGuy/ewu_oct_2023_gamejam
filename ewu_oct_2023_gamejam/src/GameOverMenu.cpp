@@ -27,7 +27,7 @@ struct GameOverMenu_XData
     ui::UIQuad* loseArt;
     ui::UIQuad* dateArt[3];
 
-    float_t enableReturnToMainMenuTimer = 3.0f;
+    float_t enableReturnToMainMenuTimer = 5.0f;//3.0f;
     textmesh::TextMesh* returnToMainMenuPromptText;
 };
 
@@ -46,6 +46,8 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
 
     globalState::isGameActive = false;
     globalState::renderSkybox = false;
+
+    textmesh::EXTREMELYHACKYANDIDONTLIKETHATIFEELLIKEITEXISTS_DestroyAndUnregisterAll();
 
     _data->rom->registerRenderObjects({
             {
@@ -75,7 +77,7 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
     glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->dateArt[2]->scale);
     _data->dateArt[2]->visible = false;
 
-    _data->returnToMainMenuPromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Spacebar to Return to Main Menu.");
+    _data->returnToMainMenuPromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Esc to exit the game.");
     glm_vec3_copy(vec3{ 0.0f, -6.0f, 0.0f }, _data->returnToMainMenuPromptText->renderPosition);
     _data->returnToMainMenuPromptText->scale = 0.5f;
     _data->returnToMainMenuPromptText->excludeFromBulkRender = true;
@@ -106,7 +108,7 @@ void GameOverMenu::update(const float_t& deltaTime)
         _data->enableReturnToMainMenuTimer -= deltaTime;
     if (canReturn && input::onKeyJumpPress)
     {
-        scene::loadScene("first.ssdat", true);
+        // scene::loadScene("first.ssdat", true);  // @INCOMPLETE: restarting the game and setting a new game state just doesn't work for some reason.
     }
 
     // @DEBUG: prevent art from updating.

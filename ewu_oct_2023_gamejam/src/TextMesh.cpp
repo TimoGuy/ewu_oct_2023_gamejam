@@ -484,19 +484,22 @@ namespace textmesh
 
 	TextMesh* createAndRegisterTextMesh(std::string fontName, HorizontalAlignment halign, VerticalAlignment valign, float_t maxLineLength, std::string text)
 	{
-		if (textmeshes.size() >= RENDER_OBJECTS_MAX_CAPACITY)
 		{
-			std::cerr << "ERROR: New text mesh cannot be created because textmesh list is at capacity (" << RENDER_OBJECTS_MAX_CAPACITY << ")" << std::endl;
-			return nullptr;
+			std::lock_guard<std::mutex> lg(acrRequestsMutex);
+			if (textmeshes.size() >= RENDER_OBJECTS_MAX_CAPACITY)
+			{
+				std::cerr << "ERROR: New text mesh cannot be created because textmesh list is at capacity (" << RENDER_OBJECTS_MAX_CAPACITY << ")" << std::endl;
+				return nullptr;
+			}
+			textmeshes.push_back(TextMesh());
+			TypeFace* tf = getTypeFace(fontName);
+			textmeshes.back().typeFace = tf;
+			textmeshes.back().halign = halign;
+			textmeshes.back().valign = valign;
+			textmeshes.back().maxLineLength = maxLineLength;
+			
+			sortTextMeshesByTypeFace();  // To keep descriptor set switches to a minimum.
 		}
-		textmeshes.push_back(TextMesh());
-		TypeFace* tf = getTypeFace(fontName);
-		textmeshes.back().typeFace = tf;
-		textmeshes.back().halign = halign;
-		textmeshes.back().valign = valign;
-		textmeshes.back().maxLineLength = maxLineLength;
-		
-		sortTextMeshesByTypeFace();  // To keep descriptor set switches to a minimum.
 		addChangeRequest(&textmeshes.back(), text);
 
 		return &textmeshes.back();
@@ -505,6 +508,15 @@ namespace textmesh
 	void destroyAndUnregisterTextMesh(TextMesh* tm)
 	{
 		addDeleteRequest(tm);
+	}
+
+	void EXTREMELYHACKYANDIDONTLIKETHATIFEELLIKEITEXISTS_DestroyAndUnregisterAll()
+	{
+		std::lock_guard<std::mutex> lg(acrRequestsMutex);
+		for (auto& tm : textmeshes)
+		{
+			tm.excludeFromBulkRender = true;  // @HACK: even more hacky than before, now it just hides all textmeshes that didn't get deleted properly. BECAUSE THERE IS LESS THAN 24 HOURS LEFT!!!!  -Timo 2023/11/14 01:31am
+		}
 	}
 
 	void regenerateTextMeshMesh(TextMesh* tm, std::string text)
@@ -593,15 +605,7 @@ namespace textmesh
 		std::lock_guard<std::mutex> lg(acrRequestsMutex);
 		vkDeviceWaitIdle(engine->_device);
 
-		size_t numChangeReqests = changeRequests.size();
-		while (numChangeReqests > 0)
-		{
-			ChangeRequest& cr = changeRequests[0];
-			generateTextMeshMesh(*cr.tm, cr.newText);
-			changeRequests.erase(changeRequests.begin());
-			numChangeReqests--;
-		}
-
+		// Delete textmeshes.
 		std::vector<size_t> deleteIndices;  // To delete all at once instead of matching addresses with `std::erase_if`
 		size_t numDelRequests = deleteRequests.size();
 		while (numDelRequests > 0)
@@ -638,6 +642,16 @@ namespace textmesh
 				textmeshes.erase(textmeshes.begin() + i);
 			}
 			sortTextMeshesByTypeFace();
+		}
+
+		// Add/change textmeshes.
+		size_t numChangeReqests = changeRequests.size();
+		while (numChangeReqests > 0)
+		{
+			ChangeRequest& cr = changeRequests[0];
+			generateTextMeshMesh(*cr.tm, cr.newText);
+			changeRequests.erase(changeRequests.begin());
+			numChangeReqests--;
 		}
 	}
 }

@@ -46,7 +46,7 @@ namespace globalState
         // Reset state.
         currentPhase = GamePhases::P0_UNCOVER;
         isGameActive = true;
-        playTimeRemaining = 150.0f;  // 2 min 30 sec
+        playTimeRemaining = 5.0f;//150.0f;  // 2 min 30 sec
         phase0 = Phase0();
         phase1 = Phase1();
         phase2 = Phase2();
@@ -264,9 +264,6 @@ namespace globalState
         phase0.transitionToPhase0(false);
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
-
-        // @NOTE: this shouldn't be here, but it's a pre-warm for the hallway music bc it needs to sync up with the ui elements.
-        AudioEngine::getInstance().loadSound("res/music/chase_hall.ogg");
     }
 
     void gotoWinGame()
@@ -291,6 +288,18 @@ namespace globalState
         if (useTransitionTimer)
             phase0.transitionTimer = 1.0f;
         phase0.loadTriggerFlag = true;
+    }
+
+    void Phase0::timeExpiredSfx()
+    {
+        AudioEngine::getInstance().stopChannel(phase0.bgmChannelId);
+        AudioEngine::getInstance().playSound("res/sfx/timer_expired_w_lose_announcement.wav");
+    }
+
+    void Phase0::uncoveredDateSfx()
+    {
+        AudioEngine::getInstance().stopChannel(phase0.bgmChannelId);
+        AudioEngine::getInstance().playSound("res/sfx/uncover_surprised.wav");
     }
 
     Phase0 phase0 = Phase0();
@@ -505,7 +514,7 @@ namespace globalState
         if (showCountdown() && !phase1.loadTriggerFlag)
         {
             // @DEBUG: @NOCHECKIN: prevent playtime from going down.
-            // playTimeRemaining -= deltaTime;
+            playTimeRemaining -= deltaTime;
         }
 
         if (currentPhase == GamePhases::P1_HALLWAY && !phase2.loadTriggerFlag)
@@ -591,6 +600,9 @@ namespace globalState
                 phase0.dateDummyCharacter[i]->setDateDummyIndex(i);
                 phase0.dateDummyCharacter[i]->setRenderLayer(RenderLayer::INVISIBLE);
             }
+
+            // Play bgm.
+            phase0.bgmChannelId = AudioEngine::getInstance().playSound("res/music/searchies.ogg", true);
 
             // Finished.
             currentPhase = GamePhases::P0_UNCOVER;

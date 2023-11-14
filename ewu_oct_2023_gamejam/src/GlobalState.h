@@ -61,6 +61,7 @@ namespace globalState
         size_t                    nextContestantIdx = 0;
         Character*                dateDummyCharacter[NUM_CONTESTANTS];  // @NOTE: the dummy character has no collision and just shakes when revealed.
         size_t                    nextDateDummyIdx = 0;
+        int32_t                   bgmChannelId;
 
         void registerContestant(Character* c, bool isPlayer)
         {
@@ -75,6 +76,8 @@ namespace globalState
         void setDateDummyPosition(size_t dateIdx, vec3 position);
         void uncoverDateDummy(size_t dateIdx);
         void transitionToPhase0(bool useTransitionTimer);
+        void timeExpiredSfx();
+        void uncoveredDateSfx();
     };
     extern Phase0 phase0;
 
