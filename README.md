@@ -146,11 +146,28 @@
     - [x] Create blockout for the hall and ballroom
     - [x] Remove the contestant B's or change where they spawn in chase phase.
     - [ ] Add more windows and a doorway for ballroom.
+    - [ ] Add dining table with chairs between contA and date at the chase hall.
+    - [f] Add door that contA can go thru that's really close (left) that ends the chase hall early.
 
 - [x] Add in music for main menu
-- [ ] Add in music for chase hallway.
-    - [ ] Display ui quads for the ready go!
-    - [ ] Disable character and date movement until the go!
+- [x] Add in music for chase hallway.
+    - [x] Add music
+    - [x] Display ui quads for the ready go!
+    - [x] Disable character and date movement until the go!
+    - [x] Add sfx for date getting to door.
+
+- [ ] Add credits page (just a bunch of ui quads)
+    - [ ] TimoEngine
+    - [x] Vulkan
+    - [x] FMOD
+    - [x] SDL
+    - [x] Jolt Physics
+    - [ ] Special thanks
+        - [ ] ArsenalFortitude
+        - [ ] Sascha Willems
+        - [ ] Joey de Vries (learnopengl.com)
+        - [ ] vblanco20-1 (vkguide.dev)
+
 - [ ] ~~Add in start game and exit game buttons for main menu~~ Just add text
     - [ ] "Press Spacebar to draw tarot cards for dates."
     - [ ] "Press Esc to exit anytime."
@@ -163,8 +180,12 @@
     - [ ] Title screen
     - [ ] Dating background.
 
-- [ ] Disable imgui on startup.
-- [ ] Set startup cam to game cam instead of freecam.
+- [ ] Final wrapup.
+    - [x] Fix J and j spacing.
+    - [ ] Disable imgui on startup.
+    - [ ] Start game in fullscreen (use f11 to toggle screen size).
+    - [ ] Set startup cam to game cam instead of freecam.
+    - [ ] EXTRA: implement volumetric lighting.
 
 
 ## Things to do if I have time before the deadline.
