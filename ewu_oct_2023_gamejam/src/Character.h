@@ -38,7 +38,7 @@ public:
     void setAsCameraTargetObject();
     void reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact);
     bool isPlayer();
-    void stun(float_t time);
+    void stun(float_t time, bool playSfx);
     bool isStunned();
     float_t getFacingDirection();
     void getPosition(vec3& outPosition);

@@ -2973,7 +2973,8 @@ bool Character::processMessage(DataSerialized& message)
         stun(  // @HARDCODE
             (_data->characterType == CHARACTER_TYPE_MONSTER) ?
             0.75f :
-            1.0f
+            1.0f,
+            true
         );
         return true;
     }
@@ -3357,8 +3358,11 @@ bool Character::isPlayer()
     return (_data->characterType == CHARACTER_TYPE_PLAYER);
 }
 
-void Character::stun(float_t time)
+void Character::stun(float_t time, bool playSfx)
 {
+    if (playSfx && !isStunned())
+        // AudioEngine::getInstance().playSound("res/sfx/stunned.wav");
+        AudioEngine::getInstance().playSound("res/sfx/hurt.wav");
     _data->stunTimer = time;
 }
 

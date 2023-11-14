@@ -659,8 +659,8 @@ namespace globalState
             phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?
                                                    // @REPLY: I guess what this would do is (CONTEXT: when the date moves to the end of the hallway, it deactivates itself) tell the date to activate and start moving down the hall. There should really only be a `moveDownHallway = true` that's needed.
             constexpr float_t timeBeforeGo = 3.111f;
-            phase1.contACharacter->stun(timeBeforeGo);
-            phase1.dateCharacter->stun(timeBeforeGo);
+            phase1.contACharacter->stun(timeBeforeGo, false);
+            phase1.dateCharacter->stun(timeBeforeGo, false);
             phase1.bgmChannelId = AudioEngine::getInstance().playSound("res/music/chase_hall.ogg", false);
 
             // Finished.
@@ -674,7 +674,7 @@ namespace globalState
             skyboxIsSnapshotImage = false;
             phase2.datingInterface->deactivate();
             phase0.contestants[phase0.playerContestantIdx]->setAsCameraTargetObject();
-            phase1.contACharacter->stun(1.5f);  // @HARDCODE.
+            phase1.contACharacter->stun(1.5f, true);  // @HARDCODE.
             currentPhase = GamePhases::P1_HALLWAY;
             phase1.returnFromPhase2TriggerFlag = false;
         }

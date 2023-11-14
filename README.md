@@ -156,8 +156,8 @@
     - [x] Disable character and date movement until the go!
     - [x] Add sfx for date getting to door.
 
-- [ ] Add sfx for guillotine.
-- [ ] Add sfx for character getting stunned.
+- [x] Add sfx for guillotine.
+- [x] Add sfx for character getting stunned.
 
 - [ ] Add credits page (just a bunch of ui quads)
     - [ ] TimoEngine
@@ -170,6 +170,11 @@
         - [ ] Sascha Willems
         - [ ] Joey de Vries (learnopengl.com)
         - [ ] vblanco20-1 (vkguide.dev)
+        - [ ] Wendy's
+        - [ ] Timo's toe
+        - [ ] Oreilly's Auto Parts
+        - [ ] NomNom for allowing me time to work on this game that I did not utilize.
+        - [ ] Maverick for my donut.
 
 - [ ] ~~Add in start game and exit game buttons for main menu~~ Just add text
     - [ ] "Press Spacebar to draw tarot cards for dates."

@@ -3,6 +3,7 @@
 #include <iostream>
 #include "GlobalState.h"
 #include "RenderObject.h"
+#include "AudioEngine.h"
 #include "EntityManager.h"
 #include "DataSerialization.h"
 #include "RandomNumberGenerator.h"
@@ -114,6 +115,11 @@ void Hazard::physicsUpdate(const float_t& physicsDeltaTime)
         {
             _data->renderObj->animator->setTrigger("goto_set_off");
             _data->hazardTimer = 0;
+            if (globalState::currentPhase == globalState::GamePhases::P1_HALLWAY)
+                AudioEngine::getInstance().playSoundFromList({
+                    "res/sfx/guillotine_1.wav",
+                    "res/sfx/guillotine_2.wav",
+                });
         }
     }
 
