@@ -195,11 +195,15 @@
 
 - [x] Anim system for characters.
 
-- [ ] Sfx for winning the game.
+- [x] Sfx for winning the game.
 - [ ] You win and you lose screens.
+    - [ ] Win
+    - [ ] Lose
 
 - [x] Write prompts for the 3 ppl.
     - [x] Fix J and j from the word "reject"
+
+- [x] Hides guillotine better.
 
 - [ ] Final wrapup.
     - [x] Fix J and j spacing.

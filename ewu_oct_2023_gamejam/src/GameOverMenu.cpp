@@ -62,7 +62,7 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
     _data->camera->mainCamMode.setMainCamTargetObject(_data->renderObj);
 
     _data->loseArt = ui::registerUIQuad(&engine->_loadedTextures["LoseArt"]);
-    glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->loseArt->scale);
+    glm_vec3_copy(vec3{ 100.0f, 100.0f, 1.0f }, _data->loseArt->scale);
     _data->loseArt->visible = false;
 
     _data->dateArt[0] = ui::registerUIQuad(&engine->_loadedTextures["DateArt0"]);

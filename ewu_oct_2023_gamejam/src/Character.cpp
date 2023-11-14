@@ -68,7 +68,7 @@ struct Character_XData
     CharROAnimation characterAnimationData;
     RenderLayer     characterROsRenderLayer;
     float_t         modelYOff = 0.0f;
-    float_t         animTimePerFrame = 0.0416667f;  // 24fps by default.
+    float_t         animTimePerFrame = 0.0833333333f;  // 12fps by default.
     float_t         animTimer = 0.0f;
 
     enum class AnimState

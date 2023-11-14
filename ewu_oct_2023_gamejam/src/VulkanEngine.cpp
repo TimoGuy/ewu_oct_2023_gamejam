@@ -99,7 +99,7 @@ void VulkanEngine::init()
 
 	AudioEngine::getInstance().initialize();
 	physengine::start(_entityManager);
-	globalState::initGlobalState(_camera->sceneCamera, _entityManager);
+	globalState::initGlobalState(_camera->mainCamMode, _camera->sceneCamera, _entityManager);
 	scene::init(this);
 
 	while (!physengine::isInitialized);  // Spin lock so that new scene doesn't get loaded before physics are finished initializing.

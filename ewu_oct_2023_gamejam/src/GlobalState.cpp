@@ -266,8 +266,14 @@ namespace globalState
         // phase2.loadTriggerFlag = true;  // @DEBUG
     }
 
+    MainCamMode* mainCamModeRef = nullptr;
+
     void gotoWinGame()
     {
+        AudioEngine::getInstance().stopChannel(phase1.bgmChannelId);
+        AudioEngine::getInstance().playSound("res/sfx/congratulations_announcement.wav");
+        mainCamModeRef->focusPositionOffset[0] = 0.0f;  // Reset focus pos offset.
+
         gameFinishState.isWin = true;
         gameFinishState.dateIdx = phase2.dateIdx;
         scene::loadScene("game_over.ssdat", true);
@@ -476,8 +482,9 @@ namespace globalState
         });
     }
 
-    void initGlobalState(SceneCamera& sc, EntityManager* em)
+    void initGlobalState(MainCamMode& mcm, SceneCamera& sc, EntityManager* em)
     {
+        mainCamModeRef = &mcm;
         sceneCameraRef = &sc;
         entityManagerRef = em;
 
@@ -602,6 +609,7 @@ namespace globalState
             }
 
             // Play bgm.
+            mainCamModeRef->focusPositionOffset[0] = 0.0f;  // @HARDCODE.
             phase0.bgmChannelId = AudioEngine::getInstance().playSound("res/music/searchies.ogg", true);
 
             // Finished.
@@ -668,6 +676,7 @@ namespace globalState
             }
 
             // Activate Date.
+            mainCamModeRef->focusPositionOffset[0] = -5.0f;  // @HARDCODE.
             phase1.contACharacter->setFacingRight(true);  // Have contA and date face each other at the beginning.
             phase1.dateCharacter->setFacingRight(false);
             phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?

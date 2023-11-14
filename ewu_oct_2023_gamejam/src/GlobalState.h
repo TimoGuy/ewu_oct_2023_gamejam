@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Imports.h"
+struct MainCamMode;
 struct SceneCamera;
 class EntityManager;
 class CameraRail;
@@ -260,7 +261,7 @@ namespace globalState
     };
 
 
-    void initGlobalState(SceneCamera& sc, EntityManager* em);
+    void initGlobalState(MainCamMode& mcm, SceneCamera& sc, EntityManager* em);
     void launchAsyncWriteTask();  // @NOTE: this is simply for things that are marked saved
     void update(float_t deltaTime, bool& requestSnapshotBlit, bool& skyboxIsSnapshotImage);
     void drawDebugVisualization();
