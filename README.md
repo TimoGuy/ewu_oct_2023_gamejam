@@ -190,8 +190,11 @@
     - [ ] Ophelia
     - [ ] Isabella
     - [ ] MC
-    - [ ] Title screen
-    - [ ] Dating background.
+    - [x] Title screen
+    - [x] Dating background.
+
+- [x] Write prompts for the 3 ppl.
+    - [x] Fix J and j from the word "reject"
 
 - [ ] Final wrapup.
     - [x] Fix J and j spacing.

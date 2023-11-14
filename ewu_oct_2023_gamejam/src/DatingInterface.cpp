@@ -21,6 +21,8 @@ struct DatingInterface_XData
 
     RenderObject* renderObj;
 
+    ui::UIQuad* datingBackground;
+
     size_t dateIdx;
     ui::UIQuad* dateQuads[3];
     ui::UIQuad* dateThinkingBoxTex;
@@ -97,6 +99,12 @@ struct DatingInterface_XData
 void initializePositionings(DatingInterface_XData* d)
 {
     // @HARDCODE: this is all hardcoded!!!
+    d->datingBackground->renderOrder = 100.0f;
+    glm_vec3_copy(vec3{ 0.0f, 0.0f, 0.0f }, d->datingBackground->position);
+    glm_vec3_copy(vec3{ 1086.0f, 600.0f, 1.0f }, d->datingBackground->scale);
+    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->datingBackground->tint);
+
+
     for (size_t i = 0; i < 3; i++)
     {
         d->dateQuads[i]->renderOrder = 10.0f;
@@ -112,7 +120,7 @@ void initializePositionings(DatingInterface_XData* d)
     d->dateThinkingBoxFill->renderOrder = 1.0f;
     glm_vec3_copy(vec3{ -100.0f, 373.0f, 0.0f }, d->dateThinkingBoxFill->position);
     glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->dateThinkingBoxFill->scale);
-    glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, d->dateThinkingBoxFill->tint);
+    glm_vec4_copy(vec4{ 0.1098039216f, 0.0549019608f, 0.0549019608f, 1.0f }, d->dateThinkingBoxFill->tint);
 
     d->dateThinkingTrailingBubbles->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ -101.0f, 276.0f, 0.0f }, d->dateThinkingTrailingBubbles->position);
@@ -137,7 +145,7 @@ void initializePositionings(DatingInterface_XData* d)
     d->contestantThinkingBoxFill->renderOrder = 1.0f;
     glm_vec3_copy(vec3{ 148.0f, 240.0f, 0.0f }, d->contestantThinkingBoxFill->position);
     glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->contestantThinkingBoxFill->scale);
-    glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, d->contestantThinkingBoxFill->tint);
+    glm_vec4_copy(vec4{ 0.2588235294f, 0.5607843137f, 0.1960784314f, 1.0f }, d->contestantThinkingBoxFill->tint);
 
     d->contestantThinkingTrailingBubbles->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ 456.0f, 142.0f, 0.0f }, d->contestantThinkingTrailingBubbles->position);
@@ -204,6 +212,8 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
 {
     d->currentStage = newStage;
     d->stageTransitionTimer = -1.0f;  // Clear timer.
+
+    d->datingBackground->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE);
 
     d->dateQuads[0]->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE && d->dateIdx == 0);
     d->dateQuads[1]->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE && d->dateIdx == 1);
@@ -364,7 +374,7 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     }
     if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ACCEPT_DATE_INVITE)
     {
-        AudioEngine::getInstance().playSound("res/sfx/wip_Sys_ExtraHeartUp_01.wav");
+        AudioEngine::getInstance().playSound("res/sfx/good_response.wav");
         textmesh::regenerateTextMeshMesh(
             d->dateSpeechText,
             "Yes. I would love to."
@@ -398,7 +408,7 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         if (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_EXECUTE)
         {
             if (d->dateAnswerPositively)
-                AudioEngine::getInstance().playSound("res/sfx/wip_Sys_ExtraHeartUp_01.wav");
+                AudioEngine::getInstance().playSound("res/sfx/good_response.wav");
             else
                 AudioEngine::getInstance().playSound("res/sfx/icky_squish.wav");
         }
@@ -425,6 +435,7 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
     );
     glm_translate(_data->renderObj->transformMatrix, vec3{ 0.0f, 500.0f, 0.0f });
 
+    _data->datingBackground = ui::registerUIQuad(&engine->_loadedTextures["DatingBackground"]);
     _data->dateQuads[0] = ui::registerUIQuad(&engine->_loadedTextures["Date1"]);
     _data->dateQuads[1] = ui::registerUIQuad(&engine->_loadedTextures["Date2"]);
     _data->dateQuads[2] = ui::registerUIQuad(&engine->_loadedTextures["Date3"]);
@@ -468,6 +479,7 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
 
 DatingInterface::~DatingInterface()
 {
+    ui::unregisterUIQuad(_data->datingBackground);
     ui::unregisterUIQuad(_data->dateQuads[0]);
     ui::unregisterUIQuad(_data->dateQuads[1]);
     ui::unregisterUIQuad(_data->dateQuads[2]);
@@ -867,6 +879,7 @@ void imguiTextMesh(const std::string& textMeshName, textmesh::TextMesh* textMesh
 
 void DatingInterface::renderImGui()
 {
+    imguiUIQuad("datingBackground", _data->datingBackground);
     imguiUIQuad("dateQuads[0]", _data->dateQuads[0]);
     imguiUIQuad("dateQuads[1]", _data->dateQuads[1]);
     imguiUIQuad("dateQuads[2]", _data->dateQuads[2]);

@@ -25,8 +25,8 @@ struct LogosDisplay_XData
     VulkanEngine* engine;
     RenderObject* renderObj;
 
-    float_t displayTimer = 1.0f;
-    float_t moveToMainMenuTimer = 1.5f;
+    float_t displayTimer = 2.0f;
+    float_t moveToMainMenuTimer = 2.5f;
 
     std::vector<std::string> uiLogoTextureNames = {
 		"LogoTimoEngine",

@@ -189,7 +189,7 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     _data->bio1.name->scale = 1.0f;
     _data->bio1.name->excludeFromBulkRender = true;
 
-    _data->bio1.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Mummy from blah blah blah blah blah blah. Jam jam ojango.");
+    _data->bio1.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Mummy who loves\nmoney and status, and\nwill throw away all her\npreferences for them.");
     glm_vec3_copy(vec3{ 9.75f, -0.5f, 0.0f }, _data->bio1.description->renderPosition);
     _data->bio1.description->scale = 0.5f;
     _data->bio1.description->excludeFromBulkRender = true;
@@ -199,7 +199,7 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     _data->bio2.name->scale = 1.0f;
     _data->bio2.name->excludeFromBulkRender = true;
 
-    _data->bio2.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Ghost from blah blah blah blah blah blah.");
+    _data->bio2.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Ghost who gets spooked\neasily, hates her appear-\nance. Uncle beheaded her\nafter she rejected him.");
     glm_vec3_copy(vec3{ 2.6f, -0.5f, 0.0f }, _data->bio2.description->renderPosition);
     _data->bio2.description->scale = 0.5f;
     _data->bio2.description->excludeFromBulkRender = true;
@@ -209,7 +209,7 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     _data->bio3.name->scale = 1.0f;
     _data->bio3.name->excludeFromBulkRender = true;
 
-    _data->bio3.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Vampire from blah blah blah blah blah blah.");
+    _data->bio3.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Blind vampire. Thus is\nvery picky about smells.\nShe is also a history buff\nand is 331 years old.");
     glm_vec3_copy(vec3{ -4.5f, -0.5f, 0.0f }, _data->bio3.description->renderPosition);
     _data->bio3.description->scale = 0.5f;
     _data->bio3.description->excludeFromBulkRender = true;

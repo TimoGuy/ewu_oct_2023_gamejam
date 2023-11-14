@@ -1802,6 +1802,25 @@ void VulkanEngine::loadImages()
 
 		_loadedTextures["DateArt2"] = texture;
 	}
+
+	// Load DatingBackground
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/dating_background.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["DatingBackground"] = texture;
+	}
 	
 	// Load ReadyAnnouncement
 	{
