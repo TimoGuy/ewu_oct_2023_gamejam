@@ -214,7 +214,7 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     _data->bio3.description->scale = 0.5f;
     _data->bio3.description->excludeFromBulkRender = true;
 
-    _data->startGamePromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Spacebar to Start.");
+    _data->startGamePromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Spacebar to Start.\n\n\n\nPress Esc at Any Time to Quit.\nPress F11 to Toggle Fullscreen.");
     glm_vec3_copy(vec3{ 0.0f, -4.5f, 0.0f }, _data->startGamePromptText->renderPosition);
     _data->startGamePromptText->scale = 0.5f;
     _data->startGamePromptText->excludeFromBulkRender = true;
@@ -279,7 +279,7 @@ void MainMenu::update(const float_t& deltaTime)
             _data->currentCard = 0;
             _data->launchingCards = true;
 
-            textmesh::regenerateTextMeshMesh(_data->startGamePromptText, "Press Spacebar to Enter Game.");
+            textmesh::regenerateTextMeshMesh(_data->startGamePromptText, "Press Spacebar to Start the Dating Game.");
             _data->startGamePromptText->excludeFromBulkRender = true;
 
             AudioEngine::getInstance().playSound("res/sfx/wip_start_game.wav", false);

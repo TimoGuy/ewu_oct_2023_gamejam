@@ -56,6 +56,8 @@ void VulkanEngine::init()
 	//
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
+	if (_windowFullscreen)
+		window_flags = (SDL_WindowFlags)(window_flags | SDL_WINDOW_FULLSCREEN_DESKTOP);
 
 	_window = SDL_CreateWindow(
 		("EWU October 2023 GameJam Prealpha - Vulkan" + buildNumber).c_str(),
@@ -154,6 +156,13 @@ void VulkanEngine::run()
 
 
 		perfs[1] = SDL_GetPerformanceCounter();
+		// Toggle fullscreen.
+		if (input::onKeyF11Press)
+		{
+			_windowFullscreen = !_windowFullscreen;
+			SDL_SetWindowFullscreen(_window, _windowFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+		}
+
 		// Update time multiplier
 		if (input::onKeyLSBPress || input::onKeyRSBPress)
 		{

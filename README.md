@@ -177,9 +177,9 @@
         - [ ] NomNom for allowing me time to work on this game that I did not utilize.
         - [ ] Maverick for my donut.
 
-- [ ] ~~Add in start game and exit game buttons for main menu~~ Just add text
-    - [ ] "Press Spacebar to draw tarot cards for dates."
-    - [ ] "Press Esc to exit anytime."
+- [x] ~~Add in start game and exit game buttons for main menu~~ Just add text
+    - [x] "Press Spacebar to draw tarot cards for dates."
+    - [x] "Press Esc to exit anytime."
 
 - [ ] Add assets for characters etc.
     - [ ] Nefertiti
@@ -193,7 +193,7 @@
     - [x] Fix J and j spacing.
     - [x] Disable imgui on startup.
     - [x] Set startup cam to game cam instead of freecam.
-    - [ ] Start game in fullscreen (use f11 to toggle screen size).
+    - [x] Start game in fullscreen (use f11 to toggle screen size).
     - [ ] EXTRA: implement volumetric lighting.
 
 

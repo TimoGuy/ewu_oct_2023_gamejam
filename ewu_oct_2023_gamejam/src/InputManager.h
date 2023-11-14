@@ -41,6 +41,7 @@ namespace input
 		onKeyJumpPress,
 		keyJumpPressed,
 		onKeyInteractPress,
+		onKeyF11Press,
 		onKeyF10Press,
 		onKeyF9Press,
 		onKeyF8Press,
