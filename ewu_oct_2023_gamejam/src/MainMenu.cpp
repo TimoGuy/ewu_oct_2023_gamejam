@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "VkglTFModel.h"
+#include "VulkanEngine.h"
 #include "RenderObject.h"
 #include "EntityManager.h"
 #include "AudioEngine.h"
@@ -11,6 +12,7 @@
 #include "SceneManagement.h"
 #include "GlobalState.h"
 #include "TextMesh.h"
+#include "UIQuad.h"
 #include "Camera.h"
 #include "Debug.h"
 #include "imgui/imgui.h"
@@ -20,6 +22,7 @@ struct MainMenu_XData
 {
     RenderObjectManager* rom;
     Camera* camera;
+    VulkanEngine* engine;
     RenderObject* renderObj;
 
     std::vector<RenderObject*> tarotCardROs;
@@ -31,6 +34,10 @@ struct MainMenu_XData
     size_t currentDrawIdx = 0;
     size_t currentCard = 0;
     bool launchingCards = false;
+
+    ui::UIQuad* uiTitleLogo = nullptr;
+    ui::UIQuad* uiCovering = nullptr;
+    float_t titleLogoAlpha = 0.0f;
 
     struct Bio
     {
@@ -49,7 +56,7 @@ struct MainMenu_XData
 };
 
 
-MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds) : Entity(em, ds), _data(new MainMenu_XData())
+MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds) : Entity(em, ds), _data(new MainMenu_XData())
 {
     Entity::_enablePhysicsUpdate = true;
     Entity::_enableUpdate = true;
@@ -57,6 +64,9 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
 
     _data->rom = rom;
     _data->camera = camera;
+    _data->engine = engine;
+
+    _data->engine->setLightDirection(vec4{ -0.009f, 0.505f, 0.863f, 0.0f });
 
     if (ds)
         load(*ds);
@@ -158,6 +168,21 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
 
     _data->camera->mainCamMode.setMainCamTargetObject(_data->renderObj);
 
+    // Create ui quads.
+    _data->uiTitleLogo = ui::registerUIQuad(&engine->_loadedTextures["TitleLogo"]);
+    _data->uiTitleLogo->renderOrder = -1.0f;
+    glm_vec3_copy(vec3{ 83.0f, 41.0f, 0.0f }, _data->uiTitleLogo->position);
+    glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->uiTitleLogo->scale);
+    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 0.0f }, _data->uiTitleLogo->tint);
+    _data->uiTitleLogo->visible = true;
+    _data->titleLogoAlpha = 0.0f;
+
+    _data->uiCovering = ui::registerUIQuad(&engine->_loadedTextures["empty"]);
+    _data->uiCovering->renderOrder = 100.0f;
+    glm_vec3_copy(vec3{ 1000.0f, 1000.0f, 1.0f }, _data->uiCovering->scale);
+    glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, _data->uiCovering->tint);
+    _data->uiCovering->visible = true;
+
     // Create bios.
     _data->bio1.name = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, -1.0f, "Nefertiti");
     glm_vec3_copy(vec3{ 10.0f, 1.0f, 0.0f }, _data->bio1.name->renderPosition);
@@ -201,6 +226,8 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
 
 MainMenu::~MainMenu()
 {
+    ui::unregisterUIQuad(_data->uiTitleLogo);
+    ui::unregisterUIQuad(_data->uiCovering);
     textmesh::destroyAndUnregisterTextMesh(_data->bio1.name);
     textmesh::destroyAndUnregisterTextMesh(_data->bio1.description);
     textmesh::destroyAndUnregisterTextMesh(_data->bio2.name);
@@ -222,6 +249,18 @@ void MainMenu::physicsUpdate(const float_t& physicsDeltaTime)
 
 void MainMenu::update(const float_t& deltaTime)
 {
+    {
+        _data->titleLogoAlpha += deltaTime / 2.0f * (_data->launchingCards ? -1.0f : 2.0f);
+        _data->titleLogoAlpha = glm_clamp_zo(_data->titleLogoAlpha);
+        glm_vec4_copy(vec4{ _data->titleLogoAlpha, _data->titleLogoAlpha, _data->titleLogoAlpha, _data->titleLogoAlpha }, _data->uiTitleLogo->tint);
+        _data->uiCovering->tint[3] = 1.0f - _data->titleLogoAlpha;
+        if (_data->titleLogoAlpha >= 1.0f)
+        {
+            _data->uiCovering->visible = false;  // Switch off covering permanently once everything loads up.
+            _data->startGamePromptText->excludeFromBulkRender = false;  // Show start game prompt.
+        }
+    }
+
     if (!_data->launchingCards)
     {
         // Fade in title music.
@@ -233,12 +272,15 @@ void MainMenu::update(const float_t& deltaTime)
             AudioEngine::getInstance().setChannelVolume(_data->titleMusicId, AudioEngine::getInstance().volumeToDb(_data->titleMusicVolume));
         }
 
-        if (input::onKeyJumpPress)
+        if (_data->titleLogoAlpha >= 1.0f && input::onKeyJumpPress)  // Only start menu once the logo comes up fully.
         {
             _data->cardLaunchIntervalTimer = 0.0f;
             _data->currentDrawIdx = 0;
             _data->currentCard = 0;
             _data->launchingCards = true;
+
+            textmesh::regenerateTextMeshMesh(_data->startGamePromptText, "Press Spacebar to Enter Game.");
+            _data->startGamePromptText->excludeFromBulkRender = true;
 
             AudioEngine::getInstance().playSound("res/sfx/wip_start_game.wav", false);
         }
@@ -283,6 +325,7 @@ void MainMenu::update(const float_t& deltaTime)
             if (allowStart && input::onKeyJumpPress)
             {
                 // Start new game.
+                _data->engine->setLightDirection(vec4{ -0.243f, 0.740f, 0.627f, 0.0f });
                 globalState::resetGameState();
                 scene::loadScene("hello_hello_world.ssdat", true);
             }
@@ -347,6 +390,11 @@ void imguiTextMesh2(const std::string& textMeshName, textmesh::TextMesh* textMes
 
 void MainMenu::renderImGui()
 {
+    ImGui::Text("Title logo");
+    ImGui::DragFloat3("TL rp", _data->uiTitleLogo->position);
+    ImGui::DragFloat3("TL sca", _data->uiTitleLogo->scale);
+    ImGui::Separator();
+
     imguiTextMesh2("bio1.name", _data->bio1.name);
     imguiTextMesh2("bio1.description", _data->bio1.description);
     imguiTextMesh2("bio2.name", _data->bio2.name);

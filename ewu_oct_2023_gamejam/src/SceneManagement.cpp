@@ -109,7 +109,7 @@ namespace scene
         if (objectName == DatingInterface::TYPE_NAME)
             ent = new DatingInterface(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
         if (objectName == MainMenu::TYPE_NAME)
-            ent = new MainMenu(engine->_entityManager, engine->_roManager, engine->_camera, ds);
+            ent = new MainMenu(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
         if (objectName == GameOverMenu::TYPE_NAME)
             ent = new GameOverMenu(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
 

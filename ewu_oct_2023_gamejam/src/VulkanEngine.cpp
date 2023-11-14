@@ -112,8 +112,8 @@ void VulkanEngine::init()
 constexpr size_t numPerfs = 15;
 uint64_t perfs[numPerfs];
 
-vec4 lightDir = { -0.243f, 0.740f, 0.627f, 0.0f };
-// vec4 lightDir = { -0.192f, 0.854f, -0.484f, 0.0f };
+// vec4 lightDir = { -0.243f, 0.740f, 0.627f, 0.0f };  // Main light direction (set from MainMenu.cpp upon entering the game.)
+vec4 lightDir = { -0.009f, 0.505f, 0.863f, 0.0f };  // Initial light direction (for main menu only. Set in MainMenu.cpp)
 
 void VulkanEngine::run()
 {
@@ -1812,6 +1812,7 @@ void VulkanEngine::loadImages()
 
 		_loadedTextures["ReadyAnnouncement"] = texture;
 	}
+
 	// Load GoAnnouncement
 	{
 		Texture texture;
@@ -1829,6 +1830,25 @@ void VulkanEngine::loadImages()
 			});
 
 		_loadedTextures["GoAnnouncement"] = texture;
+	}
+
+	// Load TitleLogo
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/title.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["TitleLogo"] = texture;
 	}
 
 	// Load imguiTextureLayerVisible
@@ -6082,6 +6102,11 @@ void VulkanEngine::renderPickedObject(VkCommandBuffer cmd, const FrameData& curr
 			vkCmdDrawIndexedIndirect(cmd, currentFrame.indirectDrawCommandBuffer._buffer, indirectOffset, 1, drawStride);
 		}
 	}
+}
+
+void VulkanEngine::setLightDirection(vec4 newLightDir)
+{
+	glm_vec4_copy(newLightDir, _pbrRendering.gpuSceneShadingProps.lightDir);
 }
 
 #ifdef _DEVELOP

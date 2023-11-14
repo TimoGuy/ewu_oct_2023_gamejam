@@ -4,6 +4,7 @@
 class EntityManager;
 class RenderObjectManager;
 struct Camera;
+class VulkanEngine;
 struct MainMenu_XData;
 
 
@@ -13,7 +14,7 @@ public:
     static const std::string TYPE_NAME;
     std::string getTypeName() { return TYPE_NAME; };
 
-    MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds);
+    MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds);
     ~MainMenu();
 
     void physicsUpdate(const float_t& physicsDeltaTime);

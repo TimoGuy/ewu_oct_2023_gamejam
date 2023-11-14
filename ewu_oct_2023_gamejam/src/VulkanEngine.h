@@ -442,6 +442,8 @@ public:
 		float_t alphaMaskCutoff;
 	};
 
+	void setLightDirection(vec4 newLightDir);
+
 private:
 	//
 	// Entities
