@@ -158,6 +158,7 @@
 
 - [x] Add sfx for guillotine.
 - [x] Add sfx for character getting stunned.
+- [x] Add sfx for card flip in main menu.
 
 - [ ] Add credits page (just a bunch of ui quads)
     - [ ] TimoEngine

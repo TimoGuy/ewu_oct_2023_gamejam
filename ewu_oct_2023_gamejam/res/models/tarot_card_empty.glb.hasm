@@ -14,16 +14,19 @@
 :StateDrawTo1_Fly
   animation FlyAround_Draw
   loop      0
+  event     0.75         EventCardFlipSfx
   on_finish StateDrawTo1_Lay
 
 :StateDrawTo2_Fly
   animation FlyAround_Draw
   loop      0
+  event     0.75         EventCardFlipSfx
   on_finish StateDrawTo2_Lay
 
 :StateDrawTo3_Fly
   animation FlyAround_Draw
   loop      0
+  event     0.75         EventCardFlipSfx
   on_finish StateDrawTo3_Lay
 
 :StateDrawTo1_Lay

@@ -109,6 +109,14 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
                 },
             },
             {
+                "EventCardFlipSfx", [&, i]() {
+                    AudioEngine::getInstance().playSoundFromList({
+                        "res/sfx/card_flip_1.wav",
+                        "res/sfx/card_flip_2.wav",
+                    });
+                },
+            },
+            {
                 "EventShowBio1", [&]() {
                     _data->bio1.enabledAmount = 0.0f;
                 },
@@ -187,8 +195,8 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     _data->startGamePromptText->excludeFromBulkRender = true;
 
     // Play looped track.
-    _data->titleMusicId = AudioEngine::getInstance().playSound("res/music/title.ogg", true);
-    _data->titleMusicVolume = 1.0f;
+    _data->titleMusicVolume = 0.0f;
+    _data->titleMusicId = AudioEngine::getInstance().playSound("res/music/title.ogg", true, vec3{ 0.0f, 0.0f, 0.0f }, AudioEngine::getInstance().volumeToDb(_data->titleMusicVolume));
 }
 
 MainMenu::~MainMenu()
@@ -214,14 +222,26 @@ void MainMenu::physicsUpdate(const float_t& physicsDeltaTime)
 
 void MainMenu::update(const float_t& deltaTime)
 {
-    if (input::onKeyJumpPress && !_data->launchingCards)
+    if (!_data->launchingCards)
     {
-        _data->cardLaunchIntervalTimer = 0.0f;
-        _data->currentDrawIdx = 0;
-        _data->currentCard = 0;
-        _data->launchingCards = true;
+        // Fade in title music.
+        if (_data->titleMusicVolume < 1.0f)
+        {
+            _data->titleMusicVolume += deltaTime / 0.075f;
+            if (_data->titleMusicVolume > 1.0f)
+                _data->titleMusicVolume = 1.0f;
+            AudioEngine::getInstance().setChannelVolume(_data->titleMusicId, AudioEngine::getInstance().volumeToDb(_data->titleMusicVolume));
+        }
 
-        AudioEngine::getInstance().playSound("res/sfx/wip_start_game.wav", false);
+        if (input::onKeyJumpPress)
+        {
+            _data->cardLaunchIntervalTimer = 0.0f;
+            _data->currentDrawIdx = 0;
+            _data->currentCard = 0;
+            _data->launchingCards = true;
+
+            AudioEngine::getInstance().playSound("res/sfx/wip_start_game.wav", false);
+        }
     }
 
     if (_data->launchingCards)
