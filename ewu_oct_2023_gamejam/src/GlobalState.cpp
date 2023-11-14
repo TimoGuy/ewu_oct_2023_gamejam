@@ -87,7 +87,7 @@ namespace globalState
                     .answer1   = { "Honestly, for agreeing to participate, a full Hamlet 10." },
                     .question2 = { "So do you know what a meme is?" },
                     .answer2   = { "Who even asks that?" },
-                    .question3 = { "Do you like alone?" },
+                    .question3 = { "Do you live alone?" },
                     .answer3   = { "Why do you wanna know? Creep." },
                 },
                 {
@@ -514,7 +514,7 @@ namespace globalState
         if (showCountdown() && !phase1.loadTriggerFlag)
         {
             // @DEBUG: @NOCHECKIN: prevent playtime from going down.
-            playTimeRemaining -= deltaTime;
+            // playTimeRemaining -= deltaTime;
         }
 
         if (currentPhase == GamePhases::P1_HALLWAY && !phase2.loadTriggerFlag)
@@ -668,6 +668,8 @@ namespace globalState
             }
 
             // Activate Date.
+            phase1.contACharacter->setFacingRight(true);  // Have contA and date face each other at the beginning.
+            phase1.dateCharacter->setFacingRight(false);
             phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?
                                                    // @REPLY: I guess what this would do is (CONTEXT: when the date moves to the end of the hallway, it deactivates itself) tell the date to activate and start moving down the hall. There should really only be a `moveDownHallway = true` that's needed.
             constexpr float_t timeBeforeGo = 3.111f;

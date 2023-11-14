@@ -48,10 +48,34 @@ struct Character_XData
 
     float_t stunTimer = 0.0f;
 
-    RenderObjectManager*     rom;
-    Camera*                  camera;
-    RenderObject*            characterRenderObj;
-    std::string              weaponAttachmentJointName;
+    RenderObjectManager*       rom;
+    Camera*                    camera;
+    std::vector<RenderObject*> characterRenderObjs;
+    std::string                weaponAttachmentJointName;
+
+    struct FrameSet
+    {
+        int8_t baseIdx = -1;
+        int8_t numFrames = -1;
+    };
+    struct CharROAnimation
+    {
+        std::string modelNameBase;
+        FrameSet walkFrontFS;
+        FrameSet walkBackFS;
+        int8_t currentFrame = 0;
+    };
+    CharROAnimation characterAnimationData;
+    RenderLayer     characterROsRenderLayer;
+    float_t         modelYOff = 0.0f;
+    float_t         animTimePerFrame = 0.0416667f;  // 24fps by default.
+    float_t         animTimer = 0.0f;
+
+    enum class AnimState
+    {
+        IDLE_FRONT = 0, IDLE_BACK, WALK_FRONT, WALK_BACK
+    } animState = AnimState::IDLE_FRONT;
+    bool facingRight = true;
 
     physengine::CapsulePhysicsData* cpd;
 
@@ -1375,6 +1399,32 @@ void setWazaToCurrent(Character_XData* d, Character_XData::AttackWaza* nextWaza)
     // d->characterRenderObj->animator->setMask("MaskCombatMode", (d->currentWaza == nullptr));
 }
 
+void registerAllCharacterAnimROs(Character_XData* d, Character* _this, const std::string& myGuid)
+{
+    std::vector<RenderObject> inROs;
+    auto& walkFront = d->characterAnimationData.walkFrontFS;
+    if (walkFront.baseIdx >= 0)
+        for (int8_t i = 0; i < walkFront.numFrames; i++)
+            inROs.push_back({
+                .model = d->rom->getModel(d->characterAnimationData.modelNameBase + "_f_" + std::to_string(i), _this, [](){}),
+                .renderLayer = RenderLayer::INVISIBLE,
+                .attachedEntityGuid = myGuid,
+            });
+    auto& walkBack = d->characterAnimationData.walkBackFS;
+    if (walkBack.baseIdx >= 0)
+        for (int8_t i = 0; i < walkBack.numFrames; i++)
+            inROs.push_back({
+                .model = d->rom->getModel(d->characterAnimationData.modelNameBase + "_b_" + std::to_string(i), _this, [](){}),
+                .renderLayer = RenderLayer::INVISIBLE,
+                .attachedEntityGuid = myGuid,
+            });
+    std::vector<RenderObject**> outROs;
+    d->characterRenderObjs.resize(inROs.size(), nullptr);
+    for (auto& ro : d->characterRenderObjs)
+        outROs.push_back(&ro);
+    d->rom->registerRenderObjects(inROs, outROs);
+}
+
 Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds) : Entity(em, ds), _data(new Character_XData())
 {
     Entity::_enablePhysicsUpdate = true;
@@ -1542,28 +1592,46 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
         },*/
     };
 
-    vkglTF::Model* characterModel = nullptr;
     if (_data->characterType == CHARACTER_TYPE_PLAYER)
-        characterModel = _data->rom->getModel("CharSlimeMC", this, [](){});
-    if (_data->characterType == CHARACTER_TYPE_MONSTER ||
-        _data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
-        characterModel = _data->rom->getModel("CharGhost", this, [](){});
+    {
+        _data->characterAnimationData.modelNameBase = "CharSlimeMC";
+        _data->characterAnimationData.walkFrontFS.baseIdx = 0;
+        _data->characterAnimationData.walkFrontFS.numFrames = 5;
+        _data->characterAnimationData.walkBackFS.baseIdx = 5;
+        _data->characterAnimationData.walkBackFS.numFrames = 5;
+        _data->modelSize = 1.3f;
+        _data->modelYOff = -0.25f;
+    }
+    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        _data->characterAnimationData.modelNameBase = "CharGhost";
+        _data->modelSize = 1.1f;
+        _data->modelYOff = -0.095f;
+        _data->characterAnimationData.walkFrontFS.baseIdx = 0;
+        _data->characterAnimationData.walkFrontFS.numFrames = 4;
+    }
+    if (_data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
+    {
+        _data->characterAnimationData.modelNameBase = "CharGhost";
+        _data->modelSize = 1.1f;
+        _data->modelYOff = -0.095f;
+        _data->characterAnimationData.walkFrontFS.baseIdx = 0;
+        _data->characterAnimationData.walkFrontFS.numFrames = 4;
+    }
     if (_data->characterType == CHARACTER_TYPE_CHASER)
-        characterModel = _data->rom->getModel("CharOpponent", this, [](){});
-
-    _data->rom->registerRenderObjects({
-            {
-                .model = characterModel,
-                // .animator = new vkglTF::Animator(characterModel, animatorCallbacks),  // @NOTE: for EWU Game Jam.
-                .renderLayer = RenderLayer::VISIBLE,
-                .attachedEntityGuid = getGUID(),
-            }
-        },
-        { &_data->characterRenderObj  }
-    );
+    {
+        _data->characterAnimationData.modelNameBase = "CharOpponent";
+        _data->modelSize = 1.0f;
+        _data->modelYOff = 0.0f;
+        _data->characterAnimationData.walkFrontFS.baseIdx = 0;
+        _data->characterAnimationData.walkFrontFS.numFrames = 1;
+    }
+    registerAllCharacterAnimROs(_data, this, getGUID());
+    _data->characterROsRenderLayer = RenderLayer::VISIBLE;
 
     // @HARDCODED: there should be a sensing algorithm to know which lightgrid to assign itself to.
-    for (auto& inst : _data->characterRenderObj->calculatedModelInstances)
+    for (auto& characterRO : _data->characterRenderObjs)
+    for (auto& inst : characterRO->calculatedModelInstances)
         inst.voxelFieldLightingGridID = 1;
 
     bool useCCD = (_data->characterType == CHARACTER_TYPE_PLAYER);
@@ -1632,8 +1700,8 @@ Character::~Character()
         textmesh::destroyAndUnregisterTextMesh(_data->uiDistanceToPlayerText);
     }
 
-    // delete _data->characterRenderObj->animator;  // @NOTE: for EWU Game Jam.  
-    _data->rom->unregisterRenderObjects({ _data->characterRenderObj });
+    // delete _data->characterRenderObj->animator;  // @NOTE: for EWU Game Jam.
+    _data->rom->unregisterRenderObjects(_data->characterRenderObjs);
     _data->rom->removeModelCallbacks(this);
 
     if (_data->characterType != CHARACTER_TYPE_MONSTER_DUMMY)
@@ -1694,6 +1762,12 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
                 if (input::keyEPressed)
                     glm_vec2_zero(input);  // Remove input if (attempting) interacting with something.
 
+                if (std::abs(input[0]) > 0.1f)
+                    d->facingRight = (input[0] > 0.0f ? true : false);
+
+                if (std::abs(input[1]) > 0.1f)
+                    d->animState = (input[1] > 0.0f ? Character_XData::AnimState::WALK_BACK : Character_XData::AnimState::WALK_FRONT);
+
                 // Transform key inputs to world space input.
                 vec3 flatCameraFacingDirection = {
                     d->camera->sceneCamera.facingDirection[0],
@@ -1715,6 +1789,8 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
                 {
                     d->worldSpaceInput[0] = -1.0f;
                     d->worldSpaceInput[2] = 0.0f;
+                    d->facingRight = true;
+                    d->animState = Character_XData::AnimState::WALK_FRONT;
                 }
 
 #define IS_USING_AWESOME_SYSTEM_TOOK_AWHILE_TO_DESIGN_BUT_AFTER_PROTOTYPING_FOUND_OUT_WE_NEED_TO_DO_SOMETHING_DIFFERENT 0
@@ -1806,6 +1882,11 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
         bool isMoving = glm_vec3_norm2(d->worldSpaceInput) < 0.01f;  // @NOCHECKIN: this name sucks. Should be `isIdle`.
         if (isMoving)
         {
+            d->animState =
+                (d->animState == Character_XData::AnimState::WALK_FRONT || d->animState == Character_XData::AnimState::IDLE_FRONT ?
+                    Character_XData::AnimState::IDLE_FRONT :
+                    Character_XData::AnimState::IDLE_BACK);
+
             glm_vec3_zero(d->worldSpaceInput);
             if (d->prevIsGrounded &&
                 (d->prevIsGrounded != d->prevPrevIsGrounded ||
@@ -1814,6 +1895,11 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
         }
         else
         {
+            d->animState =
+                (d->animState == Character_XData::AnimState::WALK_FRONT || d->animState == Character_XData::AnimState::IDLE_FRONT ?
+                    Character_XData::AnimState::WALK_FRONT :
+                    Character_XData::AnimState::WALK_BACK);
+
             float_t magnitude = glm_clamp_zo(glm_vec3_norm(d->worldSpaceInput));
             glm_vec3_scale_as(d->worldSpaceInput, magnitude, d->worldSpaceInput);
             if (d->prevIsGrounded)
@@ -2721,6 +2807,40 @@ void Character::update(const float_t& deltaTime)
             }
         }
     }
+
+    // Cycle thru animation.
+    if (_data->characterRenderObjs.size() > 0)
+    {
+        auto& cad = _data->characterAnimationData;
+        Character_XData::FrameSet currentFrameSet =
+            (_data->animState == Character_XData::AnimState::IDLE_FRONT ||
+            _data->animState == Character_XData::AnimState::WALK_FRONT ?
+                _data->characterAnimationData.walkFrontFS :
+                _data->characterAnimationData.walkBackFS);
+        if (_data->animState == Character_XData::AnimState::IDLE_FRONT ||
+            _data->animState == Character_XData::AnimState::IDLE_BACK)
+            currentFrameSet.numFrames = 1;  // Just use the corresponding front back frame sets and set the number of frames to 1 instead of a proper idle anim.
+
+        bool changed = false;
+        _data->animTimer += deltaTime;
+        while (_data->animTimer >= _data->animTimePerFrame)
+        {
+            int8_t basedCF = cad.currentFrame - currentFrameSet.baseIdx;
+            basedCF = (basedCF + 1) % currentFrameSet.numFrames;
+            cad.currentFrame = basedCF + currentFrameSet.baseIdx;
+            _data->animTimer -= _data->animTimePerFrame;
+            changed = true;
+        }
+        if (changed)
+            for (size_t i = 0; i < _data->characterRenderObjs.size(); i++)
+            {
+                auto& ro = _data->characterRenderObjs[i];
+                ro->renderLayer =
+                    (i == cad.currentFrame ?
+                        _data->characterROsRenderLayer :
+                        RenderLayer::INVISIBLE);
+            }
+    }
 }
 
 void Character::lateUpdate(const float_t& deltaTime)
@@ -2758,7 +2878,7 @@ void Character::lateUpdate(const float_t& deltaTime)
     }
     mat4 rotation2;
     {
-        vec3 eulerAngles = { 0.0f, std::atan2f(_data->camera->sceneCamera.facingDirection[0], _data->camera->sceneCamera.facingDirection[2]) + glm_rad(90.0f), 0.0f };
+        vec3 eulerAngles = { 0.0f, std::atan2f(_data->camera->sceneCamera.facingDirection[0], _data->camera->sceneCamera.facingDirection[2]) + glm_rad(90.0f + (_data->facingRight ? 180.0f : 0.0f)), 0.0f };
         glm_euler_zyx(eulerAngles, rotation2);
     }
 
@@ -2767,7 +2887,9 @@ void Character::lateUpdate(const float_t& deltaTime)
     glm_mul_rot(transform, rotation, transform);
     glm_mul_rot(transform, rotation2, transform);
     glm_scale(transform, vec3{ _data->modelSize, _data->modelSize, _data->modelSize });
-    glm_mat4_copy(transform, _data->characterRenderObj->transformMatrix);
+    glm_translate(transform, vec3{ 0.0f, _data->modelYOff, 0.0f });
+    glm_mat4_copy(transform, _data->characterRenderObjs[0]->transformMatrix);  // This one is the one the camera is attached to.
+    glm_mat4_copy(transform, _data->characterRenderObjs[_data->characterAnimationData.currentFrame]->transformMatrix);
 
     // mat4 attachmentJointMat;  // @NOTE: for EWU Game Jam.
     // _data->characterRenderObj->animator->getJointMatrix(_data->weaponAttachmentJointName, attachmentJointMat);
@@ -3055,6 +3177,10 @@ void defaultRenderImGui(Character_XData* d)
         ImGui::DragFloat("wazaHitTimescale", &d->wazaHitTimescale);
         ImGui::DragFloat("wazaHitTimescaleOnHit", &d->wazaHitTimescaleOnHit);
         ImGui::DragFloat("wazaHitTimescaleReturnToOneSpeed", &d->wazaHitTimescaleReturnToOneSpeed);
+
+        ImGui::Separator();
+        ImGui::DragFloat("modelYOff", &d->modelYOff, 0.01f);
+        ImGui::DragFloat("animTimePerFrame", &d->animTimePerFrame, 0.01f);
     }
 
     ImGui::Separator();
@@ -3298,7 +3424,7 @@ void Character::renderImGui()
 
 void Character::setAsCameraTargetObject()
 {
-    _data->camera->mainCamMode.setMainCamTargetObject(_data->characterRenderObj);  // @NOTE: I believe that there should be some kind of main camera system that targets the player by default but when entering different volumes etc. the target changes depending.... essentially the system needs to be more built out imo
+    _data->camera->mainCamMode.setMainCamTargetObject(_data->characterRenderObjs[0]);  // @NOTE: I believe that there should be some kind of main camera system that targets the player by default but when entering different volumes etc. the target changes depending.... essentially the system needs to be more built out imo
 }
 
 void Character::reportPhysicsContact(const JPH::Body& otherBody, const JPH::ContactManifold& manifold, JPH::ContactSettings* ioSettings, bool persistedContact)
@@ -3372,6 +3498,12 @@ bool Character::isStunned()
     return (_data->stunTimer > 0.0f);
 }
 
+void Character::setFacingRight(bool facingRight)
+{
+    _data->facingRight = facingRight;
+    _data->animState = Character_XData::AnimState::IDLE_FRONT;  // @HACK: this shouldn't be here. But the deadline is <12 hours eh!  -Timo 2023/11/14 12:47pm
+}
+
 float_t Character::getFacingDirection()
 {
     return _data->facingDirection;
@@ -3394,27 +3526,31 @@ void Character::setContestantIndex(size_t contestantId)
     _data->contestantId = contestantId;
 }
 
-void loadNewDateModel(Character_XData* d, Character* _this)
+void loadNewDateModel(Character_XData* d, Character* _this, const std::string& myGuid)
 {
-    std::string modelPath = "";
     switch(d->dateId)
     {
         case 0:
-            modelPath = "CharGhost";
+            d->characterAnimationData.modelNameBase = "CharGhost";
+            d->modelSize = 1.1f;
+            d->modelYOff = -0.095f;
             break;
 
         case 1:
-            modelPath = "CharMummy";
+            d->characterAnimationData.modelNameBase = "CharMummy";
+            d->modelSize = 1.1f;
+            d->modelYOff = -0.15f;
             break;
 
         case 2:
-            modelPath = "CharBat";
+            d->characterAnimationData.modelNameBase = "CharBat";
+            d->modelSize = 1.0f;
+            d->modelYOff = -0.04f;
             break;
     }
-    d->characterRenderObj->model = d->rom->getModel(modelPath, _this, [](){});
-    RenderObject newRO = *d->characterRenderObj;
-    d->rom->unregisterRenderObjects({ d->characterRenderObj });
-    d->rom->registerRenderObjects({ newRO }, { &d->characterRenderObj });
+    d->rom->unregisterRenderObjects(d->characterRenderObjs);
+    d->characterRenderObjs.clear();
+    registerAllCharacterAnimROs(d, _this, myGuid);
 }
 
 void Character::activateDate(size_t dateId)
@@ -3423,7 +3559,7 @@ void Character::activateDate(size_t dateId)
         return;
 
     _data->dateId = dateId;
-    loadNewDateModel(_data, this);
+    loadNewDateModel(_data, this, getGUID());
     _data->isDateRunningDownHallway = true;
     _data->uiReadyAnnouncement->visible = true;
     _data->uiGoAnnouncement->visible = false;
@@ -3438,7 +3574,7 @@ void Character::setDateDummyIndex(size_t dateId)
     }
 
     _data->dateId = dateId;
-    loadNewDateModel(_data, this);
+    loadNewDateModel(_data, this, getGUID());
 }
 
 void Character::moreOrLessSpawnAtPosition(vec3 position)
@@ -3457,5 +3593,5 @@ void Character::moreOrLessSpawnAtPosition(vec3 position)
 
 void Character::setRenderLayer(const RenderLayer& renderLayer)
 {
-    _data->characterRenderObj->renderLayer = renderLayer;
+    _data->characterROsRenderLayer = renderLayer;
 }

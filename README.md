@@ -185,13 +185,15 @@
     - [x] Add sfx for finding a date.
     - [x] Add sfx for time expiring.
 
-- [ ] Add assets for characters etc.
-    - [ ] Nefertiti
-    - [ ] Ophelia
-    - [ ] Isabella
-    - [ ] MC
+- [x] Add assets for characters etc.
+    - [x] Nefertiti
+    - [x] Ophelia
+    - [x] Isabella
+    - [x] MC
     - [x] Title screen
     - [x] Dating background.
+
+- [x] Anim system for characters.
 
 - [ ] Sfx for winning the game.
 - [ ] You win and you lose screens.

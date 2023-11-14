@@ -40,6 +40,7 @@ public:
     bool isPlayer();
     void stun(float_t time, bool playSfx);
     bool isStunned();
+    void setFacingRight(bool facingRight);
     float_t getFacingDirection();
     void getPosition(vec3& outPosition);
     void setContestantIndex(size_t contestantId);
