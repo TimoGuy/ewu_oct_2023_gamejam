@@ -156,7 +156,7 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     _data->bio1.name->scale = 1.0f;
     _data->bio1.name->excludeFromBulkRender = true;
 
-    _data->bio1.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Mummy from blah blah blah blah blah blah.");
+    _data->bio1.description = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::TOP, 13.0f, "Mummy from blah blah blah blah blah blah. Jam jam ojango.");
     glm_vec3_copy(vec3{ 9.75f, -0.5f, 0.0f }, _data->bio1.description->renderPosition);
     _data->bio1.description->scale = 0.5f;
     _data->bio1.description->excludeFromBulkRender = true;

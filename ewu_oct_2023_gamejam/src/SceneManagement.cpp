@@ -93,7 +93,7 @@ namespace scene
     {
         Entity* ent = nullptr;
         if (objectName == Character::TYPE_NAME)
-            ent = new Character(engine->_entityManager, engine->_roManager, engine->_camera, ds);
+            ent = new Character(engine->_entityManager, engine->_roManager, engine->_camera, engine, ds);
         if (objectName == NoteTaker::TYPE_NAME)
             ent = new NoteTaker(engine->_entityManager, engine->_roManager, ds);
         if (objectName == VoxelField::TYPE_NAME)

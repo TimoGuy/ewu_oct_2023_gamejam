@@ -3,6 +3,7 @@
 #include "DataSerialization.h"
 #include "RandomNumberGenerator.h"
 #include "Debug.h"
+#include "AudioEngine.h"
 #include "StringHelper.h"
 #include "Camera.h"
 #include "CameraRail.h"
@@ -52,7 +53,7 @@ namespace globalState
 
         // @HARDCODE values.
         // @NOCHECKIN: @TODO: fill in the correct values when creating.
-        glm_vec3_copy(vec3{ 20.0f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
+        glm_vec3_copy(vec3{ -39.5f, 0.5f, 13.5f }, phase0.spawnBoundsOrigin);
         glm_vec2_copy(vec2{ 13.5f, 16.0f }, phase0.spawnBoundsExtent);
         //phase0.numCoveredItemsToSpawn = 30;  // About 10 per contestant... ish.
          phase0.numCoveredItemsToSpawn = 3;  // @DEBUG
@@ -263,6 +264,9 @@ namespace globalState
         phase0.transitionToPhase0(false);
         // phase1.loadTriggerFlag = true;  // @DEBUG
         // phase2.loadTriggerFlag = true;  // @DEBUG
+
+        // @NOTE: this shouldn't be here, but it's a pre-warm for the hallway music bc it needs to sync up with the ui elements.
+        AudioEngine::getInstance().loadSound("res/music/chase_hall.ogg");
     }
 
     void gotoWinGame()
@@ -290,6 +294,15 @@ namespace globalState
     }
 
     Phase0 phase0 = Phase0();
+
+    void Phase1::getToEndOfHallSfx()
+    {
+        AudioEngine::getInstance().stopChannel(phase1.bgmChannelId);
+        AudioEngine::getInstance().playSoundFromList({
+            "res/sfx/door_open_shut_1.wav",
+            "res/sfx/door_open_shut_2.wav",
+        });
+    }
 
     void Phase1::transitionToPhase1(size_t dateId, size_t contestantId)
     {
@@ -645,6 +658,10 @@ namespace globalState
             // Activate Date.
             phase1.dateCharacter->activateDate(phase1.dateIdx);  // @NOCHECKIN: is there even anything that this needs to do?
                                                    // @REPLY: I guess what this would do is (CONTEXT: when the date moves to the end of the hallway, it deactivates itself) tell the date to activate and start moving down the hall. There should really only be a `moveDownHallway = true` that's needed.
+            constexpr float_t timeBeforeGo = 3.111f;
+            phase1.contACharacter->stun(timeBeforeGo);
+            phase1.dateCharacter->stun(timeBeforeGo);
+            phase1.bgmChannelId = AudioEngine::getInstance().playSound("res/music/chase_hall.ogg", false);
 
             // Finished.
             currentPhase = GamePhases::P1_HALLWAY;

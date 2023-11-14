@@ -156,6 +156,9 @@
     - [x] Disable character and date movement until the go!
     - [x] Add sfx for date getting to door.
 
+- [ ] Add sfx for guillotine.
+- [ ] Add sfx for character getting stunned.
+
 - [ ] Add credits page (just a bunch of ui quads)
     - [ ] TimoEngine
     - [x] Vulkan
@@ -182,9 +185,9 @@
 
 - [ ] Final wrapup.
     - [x] Fix J and j spacing.
-    - [ ] Disable imgui on startup.
+    - [x] Disable imgui on startup.
+    - [x] Set startup cam to game cam instead of freecam.
     - [ ] Start game in fullscreen (use f11 to toggle screen size).
-    - [ ] Set startup cam to game cam instead of freecam.
     - [ ] EXTRA: implement volumetric lighting.
 
 

@@ -98,6 +98,7 @@ namespace globalState
         float_t              hazardEndDistance;
         float_t              finishLineDistance;
         float_t              contADatePhase2ActivationDistance;
+        int32_t              bgmChannelId;
 
         void clearContestants()
         {
@@ -130,6 +131,7 @@ namespace globalState
         {
             return contASpawnPosition[0] + finishLineDistance;
         }
+        void getToEndOfHallSfx();
         void transitionToPhase1(size_t dateId, size_t contestantId);
         void transitionToPhase1FromPhase2();
     };

@@ -199,6 +199,10 @@ void CoveredItem::physicsUpdate(const float_t& physicsDeltaTime)
                 _data->renderObj->animator->setTrigger("goto_uncover");
                 _data->isUncovering = false;  // @NOTE: don't set progress render obj to invisible bc want the "finish-disappear" anim to play and trigger the `GoInvisible` event.
                 _data->isCovered = false;
+                AudioEngine::getInstance().playSoundFromList({
+                    "res/sfx/uncover_1.wav",
+                    "res/sfx/uncover_2.wav",
+                });
                 if (_data->dateId >= 0)
                 {
                     _data->renderObj->renderLayer = RenderLayer::INVISIBLE;

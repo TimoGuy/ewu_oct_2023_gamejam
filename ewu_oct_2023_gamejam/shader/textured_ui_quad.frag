@@ -17,7 +17,7 @@ layout(push_constant) uniform UIQuadSettings
 	layout(offset = 112) float nineSlicingBoundY2;
 } uqs;
 
-#define ONE_THIRD 0.333333333333333
+#define ONE_THIRD 0.333333333333333333333333333
 
 void main()
 {

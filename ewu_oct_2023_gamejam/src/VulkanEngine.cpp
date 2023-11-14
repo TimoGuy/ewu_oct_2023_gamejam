@@ -113,6 +113,7 @@ constexpr size_t numPerfs = 15;
 uint64_t perfs[numPerfs];
 
 vec4 lightDir = { -0.243f, 0.740f, 0.627f, 0.0f };
+// vec4 lightDir = { -0.192f, 0.854f, -0.484f, 0.0f };
 
 void VulkanEngine::run()
 {
@@ -1791,6 +1792,43 @@ void VulkanEngine::loadImages()
 			});
 
 		_loadedTextures["DateArt2"] = texture;
+	}
+	
+	// Load ReadyAnnouncement
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/ready_announcement.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["ReadyAnnouncement"] = texture;
+	}
+	// Load GoAnnouncement
+	{
+		Texture texture;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/go_announcement.png", VK_FORMAT_R8G8B8A8_SRGB, 0, texture.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, texture.image._image, VK_IMAGE_ASPECT_COLOR_BIT, texture.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &texture.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(texture.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &texture.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, texture.sampler, nullptr);
+			vkDestroyImageView(_device, texture.imageView, nullptr);
+			});
+
+		_loadedTextures["GoAnnouncement"] = texture;
 	}
 
 	// Load imguiTextureLayerVisible
@@ -6759,7 +6797,7 @@ void VulkanEngine::renderImGui(float_t deltaTime)
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-	static bool showImguiRender = true;
+	static bool showImguiRender = false;
 	if (input::onKeyF1Press)
 		showImguiRender = !showImguiRender;
 

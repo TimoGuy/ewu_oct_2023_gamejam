@@ -6,6 +6,7 @@
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include "Imports.h"
 #include "PhysUtil.h"
+#include "VulkanEngine.h"
 #include "PhysicsEngine.h"
 #include "VkglTFModel.h"
 #include "RenderObject.h"
@@ -19,6 +20,7 @@
 #include "GlobalState.h"
 #include "StringHelper.h"
 #include "HarvestableItem.h"
+#include "UIQuad.h"
 #include "Debug.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
@@ -40,6 +42,9 @@ struct Character_XData
     size_t dateId             = (size_t)-1;  // @NOTE: only applicable if is MONSTER_DUMMY or MONSTER type of character.
     bool   isDateRunningDownHallway = false;
     textmesh::TextMesh* uiDistanceToPlayerText = nullptr;
+    ui::UIQuad* uiReadyAnnouncement = nullptr;
+    ui::UIQuad* uiGoAnnouncement = nullptr;
+    float_t goAnnouncementHoldTime = 0.0f;
 
     float_t stunTimer = 0.0f;
 
@@ -1370,7 +1375,7 @@ void setWazaToCurrent(Character_XData* d, Character_XData::AttackWaza* nextWaza)
     // d->characterRenderObj->animator->setMask("MaskCombatMode", (d->currentWaza == nullptr));
 }
 
-Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds) : Entity(em, ds), _data(new Character_XData())
+Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds) : Entity(em, ds), _data(new Character_XData())
 {
     Entity::_enablePhysicsUpdate = true;
     Entity::_enableUpdate = true;
@@ -1390,6 +1395,12 @@ Character::Character(EntityManager* em, RenderObjectManager* rom, Camera* camera
     else if (_data->characterType == CHARACTER_TYPE_MONSTER)
     {
         globalState::phase1.registerDateChar(this);
+        _data->uiReadyAnnouncement = ui::registerUIQuad(&engine->_loadedTextures["ReadyAnnouncement"]);
+        glm_vec3_copy(vec3{ 200.0f, 200.0f, 1.0f }, _data->uiReadyAnnouncement->scale);
+        _data->uiReadyAnnouncement->visible = false;
+        _data->uiGoAnnouncement = ui::registerUIQuad(&engine->_loadedTextures["GoAnnouncement"]);
+        glm_vec3_copy(vec3{ 200.0f, 200.0f, 1.0f }, _data->uiGoAnnouncement->scale);
+        _data->uiGoAnnouncement->visible = false;
     }
     else if (_data->characterType == CHARACTER_TYPE_MONSTER_DUMMY)
     {
@@ -1599,6 +1610,12 @@ Character::~Character()
 {
     hotswapres::removeOwnedCallbacks(this);
 
+    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        ui::unregisterUIQuad(_data->uiReadyAnnouncement);
+        ui::unregisterUIQuad(_data->uiGoAnnouncement);
+    }
+
     if (_data->notification.message != nullptr)
         textmesh::destroyAndUnregisterTextMesh(_data->notification.message);
     textmesh::destroyAndUnregisterTextMesh(_data->uiMaterializeItem);
@@ -1649,7 +1666,7 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
     if (d->characterType == CHARACTER_TYPE_MONSTER)
     {
         // Calc and display how far player is from me.
-        d->uiDistanceToPlayerText->excludeFromBulkRender = (!d->isDateRunningDownHallway || globalState::currentPhase != globalState::GamePhases::P1_HALLWAY);
+        d->uiDistanceToPlayerText->excludeFromBulkRender = (!d->isDateRunningDownHallway || _this->isStunned() || globalState::currentPhase != globalState::GamePhases::P1_HALLWAY);
         if (d->isDateRunningDownHallway)
         {
             float_t distanceToPlayer = glm_vec3_distance(*globalState::playerPositionRef, d->position);
@@ -1828,6 +1845,8 @@ void defaultPhysicsUpdate(const float_t& physicsDeltaTime, Character* _this, Cha
             input::keyBPressed)  // @NOCHECKIN: @DEBUG
         {
             d->isDateRunningDownHallway = false;
+
+            globalState::phase1.getToEndOfHallSfx();
 
             // Go back to phase 0.
             globalState::phase0.transitionToPhase0(true);
@@ -2618,6 +2637,37 @@ void Character::update(const float_t& deltaTime)
         }
     }
 
+    if (_data->characterType == CHARACTER_TYPE_MONSTER)
+    {
+        if (_data->isDateRunningDownHallway)
+        {
+            // Switch off the ready and start announcements.
+            if (_data->uiReadyAnnouncement->visible && !isStunned())
+            {
+                _data->uiReadyAnnouncement->visible = false;
+                _data->uiGoAnnouncement->visible = true;
+                _data->goAnnouncementHoldTime = 1.0f;
+            }
+
+            // Fade out start announcement.
+            if (_data->goAnnouncementHoldTime > 0.0f)
+            {
+                _data->goAnnouncementHoldTime -= deltaTime;
+                if (_data->goAnnouncementHoldTime <= 0.0f)
+                {
+                    _data->uiGoAnnouncement->visible = false;
+                }
+                else if (_data->goAnnouncementHoldTime < 0.5f)
+                {
+                    float_t alpha = _data->goAnnouncementHoldTime / 0.5f;
+                    _data->uiGoAnnouncement->tint[3] = alpha;
+                }
+                else
+                    _data->uiGoAnnouncement->tint[3] = 1.0f;
+            }
+        }
+    }
+
     if (textbox::isProcessingMessage())
         return;
 
@@ -3370,6 +3420,8 @@ void Character::activateDate(size_t dateId)
     _data->dateId = dateId;
     loadNewDateModel(_data, this);
     _data->isDateRunningDownHallway = true;
+    _data->uiReadyAnnouncement->visible = true;
+    _data->uiGoAnnouncement->visible = false;
 }
 
 void Character::setDateDummyIndex(size_t dateId)

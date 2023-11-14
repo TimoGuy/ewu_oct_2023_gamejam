@@ -12,6 +12,7 @@ namespace JPH
     class ContactSettings;
 }
 enum class RenderLayer;
+class VulkanEngine;
 
 
 class Character : public Entity
@@ -20,7 +21,7 @@ public:
     static const std::string TYPE_NAME;
     std::string getTypeName() { return TYPE_NAME; };
 
-    Character(EntityManager* em, RenderObjectManager* rom, Camera* camera, DataSerialized* ds);
+    Character(EntityManager* em, RenderObjectManager* rom, Camera* camera, VulkanEngine* engine, DataSerialized* ds);
     ~Character();
 
     void physicsUpdate(const float_t& physicsDeltaTime);

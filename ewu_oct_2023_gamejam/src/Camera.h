@@ -91,7 +91,7 @@ struct MainCamMode
 
 		float_t depthOfFieldSmoothTime = 0.000001f;
 		vec3    DOFPropsVelocities;
-		vec3    DOFPropsRelaxedState = { 27.4f, 6.0f, 15.0f };  //{ 50.0f, 50.0f, 40.0f };
+		vec3    DOFPropsRelaxedState = { 24.4f, 12.0f, 15.0f };  //{ 50.0f, 50.0f, 40.0f };
 	} opponentTargetTransition;
 
 	struct CameraRailSettings
@@ -156,7 +156,7 @@ private:
 	VulkanEngine* _engine;
 
 	static const uint32_t _numCameraModes = 2;
-	uint32_t _cameraMode = _cameraMode_freeCamMode;
+	uint32_t _cameraMode = _cameraMode_mainCamMode;
 	CameraModeChangeEvent _changeEvents[_numCameraModes];
 	bool _flagNextStepChangeCameraMode = false;
 

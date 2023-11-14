@@ -140,7 +140,7 @@ void initializePositionings(DatingInterface_XData* d)
     glm_vec4_copy(vec4{ 0.0f, 0.0f, 0.0f, 1.0f }, d->contestantThinkingBoxFill->tint);
 
     d->contestantThinkingTrailingBubbles->renderOrder = 0.0f;
-    glm_vec3_copy(vec3{ 456.0f, 39.0f, 0.0f }, d->contestantThinkingTrailingBubbles->position);
+    glm_vec3_copy(vec3{ 456.0f, 142.0f, 0.0f }, d->contestantThinkingTrailingBubbles->position);
     glm_vec3_copy(vec3{ 66.0f, 35.0f, 1.0f }, d->contestantThinkingTrailingBubbles->scale);
 
     d->contestantSpeechBox->renderOrder = 0.0f;

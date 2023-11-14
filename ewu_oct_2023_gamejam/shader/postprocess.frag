@@ -84,7 +84,7 @@ void main()
 	vec4 dofNearColorAndCoC = texture(dofNearImage, inUV);
 	rawColor.rgb = mix(rawColor.rgb, dofNearColorAndCoC.rgb, dofNearColorAndCoC.a);
 
-	// @DEBUG: See DOF ranges.
+	// // @DEBUG: See DOF ranges.
 	// if (dofNearColorAndCoC.a > 0.0)
 	// 	rawColor.r = 1.0;
 	// if (dofFarColorAndCoC.a > 0.0)
@@ -109,4 +109,8 @@ void main()
 		mix(color, uiColor.rgb, uiColor.a),
 		1.0
 	);
+
+	// // @DEBUG: see crosshairs for center of screen.
+	// if (abs(inUV.x - 0.5) < 0.001 || abs(inUV.y - 0.5) < 0.001)
+	// 	outColor.rgb = -outColor.rgb;
 }
