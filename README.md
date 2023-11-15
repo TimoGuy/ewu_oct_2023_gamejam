@@ -217,7 +217,7 @@
     - [x] Mix hallway chase music with dating simulator sfx.
     - [x] Hold prompt up for longer from date.
     - [x] Get prompt for selecting menu items in dating simulator.
-    - [ ] Add silhouettes to tarot cards.
+    - [x] Add silhouettes to tarot cards.
     - [ ] Finish environment art.
     - [ ] FIX BUG: crashing when game over.
     - [ ] EXTRA: implement volumetric lighting.

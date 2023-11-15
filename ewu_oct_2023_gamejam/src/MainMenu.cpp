@@ -30,9 +30,8 @@ struct MainMenu_XData
     mat4 launchTransform;
     float_t cardLaunchInterval = 0.05f;
     float_t cardLaunchIntervalTimer = 0.0f;
-    std::vector<size_t> tarotCardDrawIndices;
-    size_t currentDrawIdx = 0;
     size_t currentCard = 0;
+    std::vector<size_t> shufflingPerm;
     bool launchingCards = false;
 
     ui::UIQuad* uiTitleLogo = nullptr;
@@ -83,35 +82,23 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
         },
         { &_data->renderObj }
     );
-
-    // Choose which cards to draw.
-    constexpr size_t numTarotCards = 78;
-    for (size_t i = 0; i < 3; i++)
-    {
-        bool collided;
-        size_t idx;
-        do
-        {
-            collided = false;
-            idx = rng::randomIntegerRange(0, numTarotCards - 1);
-            for (size_t di : _data->tarotCardDrawIndices)
-                if (di == idx)
-                {
-                    collided = true;
-                    break;
-                }
-        } while (collided);
-        _data->tarotCardDrawIndices.push_back(idx);
-    }
-    std::sort(_data->tarotCardDrawIndices.begin(), _data->tarotCardDrawIndices.end());
     
     // Create render objects.
+    constexpr size_t numTarotCards = 78;
     std::vector<RenderObject> inROs;
     std::vector<RenderObject**> outROs;
     _data->tarotCardROs.resize(numTarotCards, nullptr);
     for (size_t i = 0; i < numTarotCards; i++)
     {
-        vkglTF::Model* model = _data->rom->getModel("tarot_card_empty", this, [](){});
+        vkglTF::Model* model = nullptr;
+        if (i == 0)
+            model = _data->rom->getModel("tarot_card_mummy", this, [](){});
+        else if (i == 1)
+            model = _data->rom->getModel("tarot_card_ghost", this, [](){});
+        else if (i == 2)
+            model = _data->rom->getModel("tarot_card_vampire", this, [](){});
+        else
+            model = _data->rom->getModel("tarot_card_empty", this, [](){});
         std::vector<vkglTF::Animator::AnimatorCallback> callbacks = {
             {
                 "EventHideMe", [&, i]() {
@@ -152,12 +139,17 @@ MainMenu::MainMenu(EntityManager* em, RenderObjectManager* rom, Camera* camera, 
     }
     _data->rom->registerRenderObjects(inROs, outROs);
 
+    // Choose which cards to draw.
+    for (size_t i = 0; i < numTarotCards; i++)
+        _data->shufflingPerm.push_back(i);
+    rng::shuffleVectorSizeType(_data->shufflingPerm);
+
     constexpr float_t strideY = 0.02f;
     float_t currentY = 0.0f;
     for (int64_t i = _data->tarotCardROs.size() - 1; i >= 0; i--)
     {
         // Set transform.
-        auto& transform = _data->tarotCardROs[i]->transformMatrix;
+        auto& transform = _data->tarotCardROs[_data->shufflingPerm[i]]->transformMatrix;
         glm_mat4_identity(transform);
         glm_translate(transform, vec3{ 0.0f, currentY, 0.0f });
         currentY += strideY;
@@ -275,7 +267,6 @@ void MainMenu::update(const float_t& deltaTime)
         if (_data->titleLogoAlpha >= 1.0f && input::onKeyJumpPress)  // Only start menu once the logo comes up fully.
         {
             _data->cardLaunchIntervalTimer = 0.0f;
-            _data->currentDrawIdx = 0;
             _data->currentCard = 0;
             _data->launchingCards = true;
 
@@ -301,15 +292,13 @@ void MainMenu::update(const float_t& deltaTime)
         while (_data->currentCard < _data->tarotCardROs.size() &&
             _data->cardLaunchIntervalTimer > _data->cardLaunchInterval)
         {
-            auto& tarotCard = _data->tarotCardROs[_data->currentCard];
+            auto& tarotCard = _data->tarotCardROs[_data->shufflingPerm[_data->currentCard]];
             glm_mat4_copy(_data->launchTransform, tarotCard->transformMatrix);
 
             // Choose whether card is drawn or discarded.
-            if (_data->currentDrawIdx < _data->tarotCardDrawIndices.size() &&
-                _data->tarotCardDrawIndices[_data->currentDrawIdx] == _data->currentCard)
+            if (_data->shufflingPerm[_data->currentCard] < 3)
             {
-                tarotCard->animator->setTrigger("draw_to_" + std::to_string(_data->currentDrawIdx + 1));
-                _data->currentDrawIdx++;
+                tarotCard->animator->setTrigger("draw_to_" + std::to_string(_data->shufflingPerm[_data->currentCard] + 1));
             }
             else
                 tarotCard->animator->setTrigger("goto_fly_around");

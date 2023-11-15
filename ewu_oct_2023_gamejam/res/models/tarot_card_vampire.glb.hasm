@@ -1,0 +1,45 @@
+:StateIdle
+  animation Idle
+  loop      0
+  trans     goto_fly_around       StateFlyAround
+  trans     draw_to_1      StateDrawTo1_Fly
+  trans     draw_to_2      StateDrawTo2_Fly
+  trans     draw_to_3      StateDrawTo3_Fly
+
+:StateFlyAround
+  animation FlyAround
+  loop      0
+  event     0.8749999    EventHideMe
+
+:StateDrawTo1_Fly
+  animation FlyAround_Draw
+  loop      0
+  event     0.75         EventCardFlipSfx
+  on_finish StateDrawTo1_Lay
+
+:StateDrawTo2_Fly
+  animation FlyAround_Draw
+  loop      0
+  event     0.75         EventCardFlipSfx
+  on_finish StateDrawTo2_Lay
+
+:StateDrawTo3_Fly
+  animation FlyAround_Draw
+  loop      0
+  event     0.75         EventCardFlipSfx
+  on_finish StateDrawTo3_Lay
+
+:StateDrawTo1_Lay
+  animation Draw_ToPos1
+  loop      0
+  event     0.3749999    EventShowBio1
+
+:StateDrawTo2_Lay
+  animation Draw_ToPos2
+  loop      0
+  event     0.3749999    EventShowBio2
+
+:StateDrawTo3_Lay
+  animation Draw_ToPos3
+  loop      0
+  event     0.3749999    EventShowBio3
