@@ -243,8 +243,8 @@ namespace textmesh
 
 		// Upload font settings
 		GPUSDFFontSettings fontSettings = {  // @HARDCODE: for now it's default settings only, but catch me!
-			.fillColor = { 25 / 255.0f, 25 / 255.0f, 25 / 255.0f, 0.0f },
-			.outlineColor = { 26 / 255.0f, 102 / 255.0f, 50 / 255.0f, 0.0f },
+			.fillColor = { 240 / 255.0f, 240 / 255.0f, 240 / 255.0f, 0.0f },
+			.outlineColor = { 120 / 255.0f, 120 / 255.0f, 120 / 255.0f, 0.0f },
 			.outlineWidth = 0.55f,
 			.outline = (float_t)true,
 		};

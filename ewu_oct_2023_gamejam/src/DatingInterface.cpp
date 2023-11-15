@@ -140,7 +140,7 @@ void initializePositionings(DatingInterface_XData* d)
     d->contestantThinkingBoxTex->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ 310.0f, 209.0f, 0.0f }, d->contestantThinkingBoxTex->position);
     glm_vec3_copy(vec3{ 200.0f, 100.0f, 1.0f }, d->contestantThinkingBoxTex->scale);
-    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantThinkingBoxTex->tint);
+    glm_vec4_copy(vec4{ 0.1529411765f, 0.2313725490f, 0.1568627451f, 1.0f }, d->contestantThinkingBoxTex->tint);
 
     d->contestantThinkingBoxFill->renderOrder = 1.0f;
     glm_vec3_copy(vec3{ 148.0f, 240.0f, 0.0f }, d->contestantThinkingBoxFill->position);
@@ -150,6 +150,7 @@ void initializePositionings(DatingInterface_XData* d)
     d->contestantThinkingTrailingBubbles->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ 456.0f, 142.0f, 0.0f }, d->contestantThinkingTrailingBubbles->position);
     glm_vec3_copy(vec3{ 66.0f, 35.0f, 1.0f }, d->contestantThinkingTrailingBubbles->scale);
+    glm_vec4_copy(vec4{ 0.1529411765f, 0.2313725490f, 0.1568627451f, 1.0f }, d->contestantThinkingTrailingBubbles->tint);
 
     d->contestantSpeechBox->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ 292.0f, 142.0f, 0.0f }, d->contestantSpeechBox->position);
@@ -157,7 +158,7 @@ void initializePositionings(DatingInterface_XData* d)
     d->contestantSpeechBox->useNineSlicing = true;
     d->contestantSpeechBox->nineSlicingSizeX = 20.0f;
     d->contestantSpeechBox->nineSlicingSizeY = 20.0f;
-    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantSpeechBox->tint);
+    glm_vec4_copy(vec4{ 0.1529411765f, 0.2313725490f, 0.1568627451f, 1.0f }, d->contestantSpeechBox->tint);
 
     glm_vec3_copy(vec3{ 122.0f, 148.0f, 0.0f }, d->contestantSpeechText->renderPosition);
 
@@ -181,7 +182,7 @@ void initializePositionings(DatingInterface_XData* d)
         b.background->useNineSlicing = true;
         b.background->nineSlicingSizeX = 20.0f;
         b.background->nineSlicingSizeY = 20.0f;
-        glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, b.background->tint);  // Fade out if disabled!
+        glm_vec4_copy(vec4{ 0.1529411765f, 0.2313725490f, 0.1568627451f, 1.0f }, b.background->tint);  // Fade out if disabled!
         vec3 offset = { -134.0f, 7.0f, 0.0f };
         glm_vec3_add(currentPosition, offset, b.text->renderPosition);
     }

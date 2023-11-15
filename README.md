@@ -198,7 +198,7 @@
 - [x] Sfx for winning the game.
 - [ ] You win and you lose screens.
     - [ ] Win
-    - [ ] Lose
+    - [x] Lose
 
 - [x] Write prompts for the 3 ppl.
     - [x] Fix J and j from the word "reject"
@@ -211,6 +211,10 @@
     - [x] Set startup cam to game cam instead of freecam.
     - [x] Start game in fullscreen (use f11 to toggle screen size).
     - [x] Allow support for arrow keys too.
+    - [ ] Insert date profiles into dating simulator.
+    - [ ] Add silhouettes to tarot cards.
+    - [ ] Finish environment art.
+    - [ ] FIX BUG: crashing when game over.
     - [ ] EXTRA: implement volumetric lighting.
 
 
