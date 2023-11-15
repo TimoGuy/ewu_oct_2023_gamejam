@@ -210,6 +210,7 @@
     - [x] Disable imgui on startup.
     - [x] Set startup cam to game cam instead of freecam.
     - [x] Start game in fullscreen (use f11 to toggle screen size).
+    - [x] Allow support for arrow keys too.
     - [ ] EXTRA: implement volumetric lighting.
 
 

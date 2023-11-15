@@ -127,12 +127,12 @@ void input::processInput(bool* isRunning, bool* isWindowMinimized)
 			if (e.key.repeat)
 				break;  // @NOTE: ignore key repeats (i.e. when you hold a key down and it repeats the character) (e.g. aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
 
-			if (e.key.keysym.sym == SDLK_w)                                           input::onKeyUpPress = (e.key.type == SDL_KEYDOWN);
-			if (e.key.keysym.sym == SDLK_w)                                           input::keyUpPressed = (e.key.type == SDL_KEYDOWN);
-			if (e.key.keysym.sym == SDLK_s)                                           input::onKeyDownPress = (e.key.type == SDL_KEYDOWN);
-			if (e.key.keysym.sym == SDLK_s)                                           input::keyDownPressed = (e.key.type == SDL_KEYDOWN);
-			if (e.key.keysym.sym == SDLK_a)                                           input::keyLeftPressed = (e.key.type == SDL_KEYDOWN);
-			if (e.key.keysym.sym == SDLK_d)                                           input::keyRightPressed = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_w || e.key.keysym.sym == SDLK_UP)            input::onKeyUpPress = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_w || e.key.keysym.sym == SDLK_UP)            input::keyUpPressed = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_s || e.key.keysym.sym == SDLK_DOWN)          input::onKeyDownPress = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_s || e.key.keysym.sym == SDLK_DOWN)          input::keyDownPressed = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_a || e.key.keysym.sym == SDLK_LEFT)          input::keyLeftPressed = (e.key.type == SDL_KEYDOWN);
+			if (e.key.keysym.sym == SDLK_d || e.key.keysym.sym == SDLK_RIGHT)         input::keyRightPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_q)                                           input::keyWorldDownPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_e)                                           input::keyWorldUpPressed = (e.key.type == SDL_KEYDOWN);
 			if (e.key.keysym.sym == SDLK_LSHIFT || e.key.keysym.sym == SDLK_RSHIFT)   input::keyShiftPressed = (e.key.type == SDL_KEYDOWN);
