@@ -1594,10 +1594,10 @@ void VulkanEngine::loadImages()
 		_loadedTextures["Date3"] = texture;
 	}
 
-	// Load thinkingBox
+	// Load thinkingBox (left)
 	{
 		Texture thinkingBox;
-		vkutil::loadImageFromFile(*this, "res/textures/ui/thinking_box.png", VK_FORMAT_R8G8B8A8_SRGB, 0, thinkingBox.image);
+		vkutil::loadImageFromFile(*this, "res/textures/ui/thinking_box_left.png", VK_FORMAT_R8G8B8A8_SRGB, 0, thinkingBox.image);
 
 		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, thinkingBox.image._image, VK_IMAGE_ASPECT_COLOR_BIT, thinkingBox.image._mipLevels);
 		vkCreateImageView(_device, &imageInfo, nullptr, &thinkingBox.imageView);
@@ -1610,7 +1610,26 @@ void VulkanEngine::loadImages()
 			vkDestroyImageView(_device, thinkingBox.imageView, nullptr);
 			});
 
-		_loadedTextures["ThinkingBox"] = thinkingBox;
+		_loadedTextures["ThinkingBoxLeft"] = thinkingBox;
+	}
+
+	// Load thinkingBox (right)
+	{
+		Texture thinkingBox;
+		vkutil::loadImageFromFile(*this, "res/textures/ui/thinking_box_right.png", VK_FORMAT_R8G8B8A8_SRGB, 0, thinkingBox.image);
+
+		VkImageViewCreateInfo imageInfo = vkinit::imageviewCreateInfo(VK_FORMAT_R8G8B8A8_SRGB, thinkingBox.image._image, VK_IMAGE_ASPECT_COLOR_BIT, thinkingBox.image._mipLevels);
+		vkCreateImageView(_device, &imageInfo, nullptr, &thinkingBox.imageView);
+
+		VkSamplerCreateInfo samplerInfo = vkinit::samplerCreateInfo(static_cast<float_t>(thinkingBox.image._mipLevels), VK_FILTER_LINEAR);
+		vkCreateSampler(_device, &samplerInfo, nullptr, &thinkingBox.sampler);
+
+		_mainDeletionQueue.pushFunction([=]() {
+			vkDestroySampler(_device, thinkingBox.sampler, nullptr);
+			vkDestroyImageView(_device, thinkingBox.imageView, nullptr);
+			});
+
+		_loadedTextures["ThinkingBoxRight"] = thinkingBox;
 	}
 
 	// Load thinkingBoxTrailLeft

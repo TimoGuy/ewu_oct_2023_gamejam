@@ -213,8 +213,8 @@
     - [x] Allow support for arrow keys too.
     - [x] Add new ready start icons.
     - [x] Insert date profiles into dating simulator.
+    - [x] Add new text bubble.
     - [ ] Add silhouettes to tarot cards.
-    - [ ] Add new text bubble.
     - [ ] Finish environment art.
     - [ ] FIX BUG: crashing when game over.
     - [ ] EXTRA: implement volumetric lighting.

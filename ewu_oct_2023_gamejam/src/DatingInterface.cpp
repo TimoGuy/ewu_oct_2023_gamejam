@@ -40,8 +40,7 @@ struct DatingInterface_XData
     ui::UIQuad* contestantSpeechBox;
     float_t contestantThinkingTimer = 0.0f;
 
-    float_t boxFillXOffset = -160.0f;
-    float_t boxFillAmountMultiplier = 137.0f;
+    float_t boxFillAmountMultiplier = 121.0f;
     const float_t contestantThinkingTimerTime = 10.0f;
     const float_t dateThinkingTimerTime = 5.0f;
 
@@ -118,9 +117,9 @@ void initializePositionings(DatingInterface_XData* d)
     glm_vec4_copy(vec4{ 0.5647058824f, 0.2f, 0.2f, 1.0f }, d->dateThinkingBoxTex->tint);
 
     d->dateThinkingBoxFill->renderOrder = 1.0f;
-    glm_vec3_copy(vec3{ -100.0f, 373.0f, 0.0f }, d->dateThinkingBoxFill->position);
+    glm_vec3_copy(vec3{ -46.0f, 343.0f, 0.0f }, d->dateThinkingBoxFill->position);
     glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->dateThinkingBoxFill->scale);
-    glm_vec4_copy(vec4{ 0.1098039216f, 0.0549019608f, 0.0549019608f, 1.0f }, d->dateThinkingBoxFill->tint);
+    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->dateThinkingBoxFill->tint);
 
     d->dateThinkingTrailingBubbles->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ -101.0f, 276.0f, 0.0f }, d->dateThinkingTrailingBubbles->position);
@@ -138,14 +137,14 @@ void initializePositionings(DatingInterface_XData* d)
     glm_vec3_copy(vec3{ -133.0f, 385.0f, 0.0f }, d->dateSpeechText->renderPosition);
 
     d->contestantThinkingBoxTex->renderOrder = 0.0f;
-    glm_vec3_copy(vec3{ 310.0f, 209.0f, 0.0f }, d->contestantThinkingBoxTex->position);
+    glm_vec3_copy(vec3{ 310.0f, 341.0f, 0.0f }, d->contestantThinkingBoxTex->position);
     glm_vec3_copy(vec3{ 200.0f, 100.0f, 1.0f }, d->contestantThinkingBoxTex->scale);
     glm_vec4_copy(vec4{ 0.1529411765f, 0.2313725490f, 0.1568627451f, 1.0f }, d->contestantThinkingBoxTex->tint);
 
     d->contestantThinkingBoxFill->renderOrder = 1.0f;
-    glm_vec3_copy(vec3{ 148.0f, 240.0f, 0.0f }, d->contestantThinkingBoxFill->position);
+    glm_vec3_copy(vec3{ 148.0f, 343.0f, 0.0f }, d->contestantThinkingBoxFill->position);
     glm_vec3_copy(vec3{ 0.0f, 25.0f, 1.0f }, d->contestantThinkingBoxFill->scale);
-    glm_vec4_copy(vec4{ 0.2588235294f, 0.5607843137f, 0.1960784314f, 1.0f }, d->contestantThinkingBoxFill->tint);
+    glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->contestantThinkingBoxFill->tint);
 
     d->contestantThinkingTrailingBubbles->renderOrder = 0.0f;
     glm_vec3_copy(vec3{ 456.0f, 142.0f, 0.0f }, d->contestantThinkingTrailingBubbles->position);
@@ -225,6 +224,9 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         d->dateThinkingTrailingBubbles->visible =
             (d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ANSWER_THINKING ||
             d->currentStage == DatingInterface_XData::DATING_STAGE::DATE_ASK_THINKING);
+
+    d->dateThinkingTrailingBubbles->visible = false;  // @HACK.
+
     if (d->dateThinkingBoxFill->visible)
         d->dateThinkingTimer = 0.0f;
 
@@ -240,6 +242,9 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
         d->contestantThinkingTrailingBubbles->visible =
             (d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT ||
             d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT);
+
+    d->contestantThinkingTrailingBubbles->visible = false;  // @HACK.
+
     if (d->contestantThinkingBoxFill->visible)
         d->contestantThinkingTimer = 0.0f;
 
@@ -440,13 +445,13 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
     _data->dateQuads[0] = ui::registerUIQuad(&engine->_loadedTextures["Date1"]);
     _data->dateQuads[1] = ui::registerUIQuad(&engine->_loadedTextures["Date2"]);
     _data->dateQuads[2] = ui::registerUIQuad(&engine->_loadedTextures["Date3"]);
-    _data->dateThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBox"]);
+    _data->dateThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxLeft"]);
     _data->dateThinkingBoxFill = ui::registerUIQuad(nullptr);
     _data->dateThinkingTrailingBubbles = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxTrailLeft"]);
     _data->dateSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "message");
     _data->dateSpeechText->isPositionScreenspace = true;
     _data->dateSpeechText->scale = 40.0f;
-    _data->contestantThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBox"]);
+    _data->contestantThinkingBoxTex = ui::registerUIQuad(&engine->_loadedTextures["ThinkingBoxRight"]);
     _data->contestantThinkingBoxFill = ui::registerUIQuad(nullptr);
     _data->contestantSpeechText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::LEFT, textmesh::MID, 20.0f, "message");
     _data->contestantSpeechText->isPositionScreenspace = true;
@@ -698,8 +703,8 @@ void DatingInterface::update(const float_t& deltaTime)
         float_t fillAmount = _data->dateThinkingTimer / _data->dateThinkingTimerTime;
         float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
-            60.0f + _data->boxFillXOffset + fillAmountReal,
-            373.0f,
+            -46.0f + fillAmountReal,
+            343.0f,
             0.0f
         };
         vec3 scale = {
@@ -718,8 +723,8 @@ void DatingInterface::update(const float_t& deltaTime)
         float_t fillAmount = _data->contestantThinkingTimer / _data->contestantThinkingTimerTime;
         float_t fillAmountReal = _data->boxFillAmountMultiplier * glm_clamp_zo(fillAmount);
         vec3 position = {
-            310.0f + _data->boxFillXOffset + fillAmountReal,
-            240.0f,
+            172.0f + fillAmountReal,
+            343.0f,
             0.0f
         };
         vec3 scale = {
@@ -907,7 +912,6 @@ void DatingInterface::renderImGui()
         imguiTextMesh("buttons[" + std::to_string(i) + "].text", _data->buttons[i].text);
     }
 
-    ImGui::DragFloat("boxFillXOffset", &_data->boxFillXOffset);
     ImGui::DragFloat("boxFillAmountMultiplier", &_data->boxFillAmountMultiplier);
 }
 
