@@ -196,8 +196,8 @@
 - [x] Anim system for characters.
 
 - [x] Sfx for winning the game.
-- [ ] You win and you lose screens.
-    - [ ] Win
+- [x] You win and you lose screens.
+    - [x] Win
     - [x] Lose
 
 - [x] Write prompts for the 3 ppl.
@@ -214,6 +214,7 @@
     - [x] Add new ready start icons.
     - [x] Insert date profiles into dating simulator.
     - [x] Add new text bubble.
+    - [ ] Mix hallway chase music with dating simulator sfx.
     - [ ] Add silhouettes to tarot cards.
     - [ ] Finish environment art.
     - [ ] FIX BUG: crashing when game over.

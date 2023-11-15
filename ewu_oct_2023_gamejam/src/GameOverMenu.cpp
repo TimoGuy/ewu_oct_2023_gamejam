@@ -25,6 +25,7 @@ struct GameOverMenu_XData
     RenderObject* renderObj;
 
     ui::UIQuad* loseArt;
+    ui::UIQuad* wonArt;
     ui::UIQuad* dateArt[3];
 
     float_t enableReturnToMainMenuTimer = 5.0f;//3.0f;
@@ -65,16 +66,22 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
     glm_vec3_copy(vec3{ 100.0f, 100.0f, 1.0f }, _data->loseArt->scale);
     _data->loseArt->visible = false;
 
+    _data->wonArt = ui::registerUIQuad(&engine->_loadedTextures["WonArt"]);
+    glm_vec3_copy(vec3{ 425.0f, 81.0f, 0.0f }, _data->wonArt->position);
+    glm_vec3_copy(vec3{ 150.0f, 150.0f, 1.0f }, _data->wonArt->scale);
+    _data->wonArt->renderOrder = -1.0f;
+    _data->wonArt->visible = false;
+
     _data->dateArt[0] = ui::registerUIQuad(&engine->_loadedTextures["DateArt0"]);
-    glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->dateArt[0]->scale);
+    glm_vec3_copy(vec3{ 960.0f, 960.0f, 1.0f }, _data->dateArt[0]->scale);
     _data->dateArt[0]->visible = false;
 
     _data->dateArt[1] = ui::registerUIQuad(&engine->_loadedTextures["DateArt1"]);
-    glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->dateArt[1]->scale);
+    glm_vec3_copy(vec3{ 960.0f, 960.0f, 1.0f }, _data->dateArt[1]->scale);
     _data->dateArt[1]->visible = false;
 
     _data->dateArt[2] = ui::registerUIQuad(&engine->_loadedTextures["DateArt2"]);
-    glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, _data->dateArt[2]->scale);
+    glm_vec3_copy(vec3{ 960.0f, 960.0f, 1.0f }, _data->dateArt[2]->scale);
     _data->dateArt[2]->visible = false;
 
     _data->returnToMainMenuPromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Esc to exit the game.");
@@ -86,6 +93,7 @@ GameOverMenu::GameOverMenu(EntityManager* em, RenderObjectManager* rom, Camera* 
 GameOverMenu::~GameOverMenu()
 {
     textmesh::destroyAndUnregisterTextMesh(_data->returnToMainMenuPromptText);
+    ui::unregisterUIQuad(_data->wonArt);
     ui::unregisterUIQuad(_data->loseArt);
     for (size_t i = 0; i < 3; i++)
         ui::unregisterUIQuad(_data->dateArt[i]);
@@ -115,6 +123,7 @@ void GameOverMenu::update(const float_t& deltaTime)
     // return;
 
     _data->loseArt->visible = !globalState::gameFinishState.isWin;
+    _data->wonArt->visible = globalState::gameFinishState.isWin;
     for (size_t i = 0; i < 3; i++)
         _data->dateArt[i]->visible = (globalState::gameFinishState.isWin && globalState::gameFinishState.dateIdx == i);
 }
@@ -199,7 +208,14 @@ void imguiTextMesh3(const std::string& textMeshName, textmesh::TextMesh* textMes
 
 void GameOverMenu::renderImGui()
 {
+    ImGui::Checkbox("globalState::gameFinishState.isWin", &globalState::gameFinishState.isWin);
+    int32_t asdfasdf = globalState::gameFinishState.dateIdx;
+    if (ImGui::InputInt("globalState::gameFinishState.dateIdx", &asdfasdf))
+        globalState::gameFinishState.dateIdx = (int8_t)glm_clamp(asdfasdf, 0, 2);
+    ImGui::Separator();
+
     imguiUIQuad2("loseArt", _data->loseArt);
+    imguiUIQuad2("wonArt", _data->wonArt);
     imguiUIQuad2("dateArt[0]", _data->dateArt[0]);
     imguiUIQuad2("dateArt[1]", _data->dateArt[1]);
     imguiUIQuad2("dateArt[2]", _data->dateArt[2]);
