@@ -22,6 +22,7 @@ struct DatingInterface_XData
     RenderObject* renderObj;
 
     ui::UIQuad* datingBackground;
+    textmesh::TextMesh* actionPromptText = nullptr;
 
     size_t dateIdx;
     ui::UIQuad* dateQuads[3];
@@ -103,6 +104,7 @@ void initializePositionings(DatingInterface_XData* d)
     glm_vec3_copy(vec3{ 1086.0f, 600.0f, 1.0f }, d->datingBackground->scale);
     glm_vec4_copy(vec4{ 1.0f, 1.0f, 1.0f, 1.0f }, d->datingBackground->tint);
 
+    glm_vec3_copy(vec3{ 0.0f, -488.0f, 0.0f }, d->actionPromptText->renderPosition);
 
     for (size_t i = 0; i < 3; i++)
     {
@@ -214,6 +216,9 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
     d->stageTransitionTimer = -1.0f;  // Clear timer.
 
     d->datingBackground->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE);
+    d->actionPromptText->excludeFromBulkRender =
+        !(d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ANSWER_SELECT ||
+        d->currentStage == DatingInterface_XData::DATING_STAGE::CONTESTANT_ASK_SELECT);
 
     d->dateQuads[0]->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE && d->dateIdx == 0);
     d->dateQuads[1]->visible = (d->currentStage > DatingInterface_XData::DATING_STAGE::NONE && d->dateIdx == 1);
@@ -418,7 +423,7 @@ void setupStage(DatingInterface_XData* d, DatingInterface_XData::DATING_STAGE ne
             else
                 AudioEngine::getInstance().playSound("res/sfx/icky_squish.wav");
         }
-        d->stageTransitionTimer = 1.5f;
+        d->stageTransitionTimer = 2.5f;
     }
 }
 
@@ -442,6 +447,9 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
     glm_translate(_data->renderObj->transformMatrix, vec3{ 0.0f, 500.0f, 0.0f });
 
     _data->datingBackground = ui::registerUIQuad(&engine->_loadedTextures["DatingBackground"]);
+    _data->actionPromptText = textmesh::createAndRegisterTextMesh("defaultFont", textmesh::CENTER, textmesh::MID, -1.0f, "Press Spacebar to select dialogue.");
+    _data->actionPromptText->isPositionScreenspace = true;
+    _data->actionPromptText->scale = 40.0f;
     _data->dateQuads[0] = ui::registerUIQuad(&engine->_loadedTextures["Date1"]);
     _data->dateQuads[1] = ui::registerUIQuad(&engine->_loadedTextures["Date2"]);
     _data->dateQuads[2] = ui::registerUIQuad(&engine->_loadedTextures["Date3"]);
@@ -486,6 +494,7 @@ DatingInterface::DatingInterface(EntityManager* em, RenderObjectManager* rom, Ca
 DatingInterface::~DatingInterface()
 {
     ui::unregisterUIQuad(_data->datingBackground);
+    textmesh::destroyAndUnregisterTextMesh(_data->actionPromptText);
     ui::unregisterUIQuad(_data->dateQuads[0]);
     ui::unregisterUIQuad(_data->dateQuads[1]);
     ui::unregisterUIQuad(_data->dateQuads[2]);

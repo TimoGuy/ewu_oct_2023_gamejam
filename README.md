@@ -214,7 +214,9 @@
     - [x] Add new ready start icons.
     - [x] Insert date profiles into dating simulator.
     - [x] Add new text bubble.
-    - [ ] Mix hallway chase music with dating simulator sfx.
+    - [x] Mix hallway chase music with dating simulator sfx.
+    - [x] Hold prompt up for longer from date.
+    - [x] Get prompt for selecting menu items in dating simulator.
     - [ ] Add silhouettes to tarot cards.
     - [ ] Finish environment art.
     - [ ] FIX BUG: crashing when game over.
