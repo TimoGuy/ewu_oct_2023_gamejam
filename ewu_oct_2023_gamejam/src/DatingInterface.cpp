@@ -108,7 +108,7 @@ void initializePositionings(DatingInterface_XData* d)
     for (size_t i = 0; i < 3; i++)
     {
         d->dateQuads[i]->renderOrder = 10.0f;
-        glm_vec3_copy(vec3{ -456.0f, 0.0f, 0.0f }, d->dateQuads[i]->position);
+        glm_vec3_copy(vec3{ -456.0f, -45.0f, 0.0f }, d->dateQuads[i]->position);
         glm_vec3_copy(vec3{ 500.0f, 500.0f, 1.0f }, d->dateQuads[i]->scale);
     }
 
