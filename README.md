@@ -218,7 +218,7 @@
     - [x] Hold prompt up for longer from date.
     - [x] Get prompt for selecting menu items in dating simulator.
     - [x] Add silhouettes to tarot cards.
-    - [ ] Finish environment art.
+    - [x] Finish environment art.
     - [ ] FIX BUG: crashing when game over.
     - [ ] EXTRA: implement volumetric lighting.
 
