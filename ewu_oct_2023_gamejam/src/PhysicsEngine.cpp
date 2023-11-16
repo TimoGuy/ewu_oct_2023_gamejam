@@ -1323,6 +1323,8 @@ namespace physengine
             CapsulePhysicsData& cpd = capsulePool[capsuleIndices[i]];
             glm_vec3_copy(cpd.currentCOMPosition, cpd.prevCOMPosition);
         }
+
+        // @NOTE: @FIXME: @INCORRECT: just setting the prev transform and then *sometime* the new transform is gonna come in `tock()` means that at bad times the interpolated transform will be lerping between two COMs that are identical. The evaluated COM in the `tock()` needs to be set in the queue as the next current, then during this `tick()` the positions will get set as the different COMs.  -Timo 2023/11/16
     }
 
     void tock()
